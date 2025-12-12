@@ -1,0 +1,19 @@
+# Bağımlılıklar (Bunlar yüklenmez, çok ağır)
+node_modules/
+*/node_modules/
+
+# Gizli Anahtarlar (Güvenlik için yüklenmez)
+.env
+*/.env
+
+# Next.js Build Dosyaları
+.next/
+*/.next/
+out/
+
+# Loglar ve Sistem Dosyaları
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.DS_Store
+Thumbs.db
