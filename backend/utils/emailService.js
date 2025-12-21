@@ -3,25 +3,26 @@ const nodemailer = require('nodemailer');
 
 // Taşıyıcıyı (Transporter) Oluştur
 const transporter = nodemailer.createTransport({
-  service: 'gmail',
   host: 'smtp.gmail.com',
-  port: 465,
-  secure: true, // 465 için true, 587 için false
+  port: 587, // 465 yerine 587 kullanıyoruz (Daha kararlı)
+  secure: false, // 587 için false olmalı (STARTTLS kullanır)
   auth: {
-    user: process.env.EMAIL_USER, // Render Environment'dan okuyacak
-    pass: process.env.EMAIL_PASS, // Render Environment'dan okuyacak
+    user: process.env.EMAIL_USER, 
+    pass: process.env.EMAIL_PASS, 
   },
+  tls: {
+    rejectUnauthorized: false // Bazen sertifika hatası verirse bunu yoksayması için
+  }
 });
 
 // Mail Gönderme Fonksiyonu
-const sendEmail = async (to, subject, text, html) => {
+const sendEmail = async (to, subject, htmlContent) => {
   try {
     const mailOptions = {
       from: `"OMÜ Rezervasyon Sistemi" <${process.env.EMAIL_USER}>`,
       to: to,
       subject: subject,
-      text: text,
-      html: html,
+      html: htmlContent, // HTML içerik gönderiyoruz
     };
 
     const info = await transporter.sendMail(mailOptions);
