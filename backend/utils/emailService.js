@@ -1,29 +1,33 @@
 const nodemailer = require('nodemailer');
 
-// Taşıyıcı (Postacı) Ayarları
+// Taşıyıcıyı (Transporter) Oluştur
 const transporter = nodemailer.createTransport({
   service: 'gmail',
+  host: 'smtp.gmail.com',
+  port: 465,
+  secure: true, // 465 için true, 587 için false
   auth: {
-    user: 'tbafb1907@gmail.com', // <-- BURAYI DEĞİŞTİR
-    pass: 'qack svgc kmxq mawl'       // <-- BURAYI DEĞİŞTİR (Boşluksuz yaz)
-  }
+    user: process.env.EMAIL_USER, // Render Environment'dan okuyacak
+    pass: process.env.EMAIL_PASS, // Render Environment'dan okuyacak
+  },
 });
 
 // Mail Gönderme Fonksiyonu
-const sendEmail = async (to, subject, htmlContent) => {
+const sendEmail = async (to, subject, text, html) => {
   try {
     const mailOptions = {
-      from: '"OMÜ Rezervasyon Sistemi" <no-reply@omu.edu.tr>', // Gönderen adı
-      to: to, // Kime gidecek
-      subject: subject, // Konu
-      html: htmlContent // İçerik (HTML formatında)
+      from: `"OMÜ Rezervasyon Sistemi" <${process.env.EMAIL_USER}>`,
+      to: to,
+      subject: subject,
+      text: text,
+      html: html,
     };
 
     const info = await transporter.sendMail(mailOptions);
-    console.log('E-posta gönderildi: ' + info.response);
+    console.log('✅ Mail başarıyla gönderildi: %s', info.messageId);
     return true;
   } catch (error) {
-    console.error('E-posta gönderme hatası:', error);
+    console.error('❌ Mail gönderme hatası:', error);
     return false;
   }
 };

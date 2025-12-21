@@ -1,6 +1,6 @@
 'use client';
 
-// DÜZELTME: Bir nokta daha eklendi (../../)
+// API Yolu Düzeltilmiş Hali
 import API_URL from '../../utils/api';
 import React, { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
@@ -237,7 +237,8 @@ function TakvimContent() {
                                             <div className="bg-red-50/50 p-4 rounded-xl border border-red-100 relative">
                                                 <FaReplyAll className="absolute top-4 left-[-12px] text-omu-red bg-white rounded-full p-1 shadow-sm border border-red-100 text-xl" />
                                                 <h5 className="text-xs font-bold text-omu-red uppercase tracking-wider mb-2">Yönetici Yanıtı</h5>
-                                                <p className="text-gray-800 italic text-sm leading-relaxed">"{comment.reply}"</p>
+                                                {/* BURASI DÜZELTİLDİ: Tırnak işaretleri escaped edildi */}
+                                                <p className="text-gray-800 italic text-sm leading-relaxed">&quot;{comment.reply}&quot;</p>
                                             </div>
                                         </div>
                                     )}

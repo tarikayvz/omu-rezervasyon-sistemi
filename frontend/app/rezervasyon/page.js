@@ -1,39 +1,67 @@
 'use client';
 
-// DÜZELTME: Bir nokta daha eklendi (../../)
 import API_URL from '../../utils/api';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { useSearchParams } from 'next/navigation';
 import Header from '../../components/Header';
 import { FaUser, FaBuilding, FaPhone, FaEnvelope } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 
-
 export default function RezervasyonPage() {
+  const searchParams = useSearchParams();
+
   const [formData, setFormData] = useState({
     title: '', department: '', organizer: '', email: '', phone: '',
     hall: 'mavi', startDate: '', endDate: '', startTime: '', endTime: '', description: ''
   });
-  const [status, setStatus] = useState(null); // 'loading', 'success', 'error'
+  const [status, setStatus] = useState(null);
+
+  // --- ÇOKLU GÜN İÇİN GÜNCELLENDİ ---
+  useEffect(() => {
+    // URL'den gelen parametreleri oku
+    const urlStartDate = searchParams.get('startDate');
+    const urlStartTime = searchParams.get('startTime');
+    const urlEndDate = searchParams.get('endDate');
+    const urlEndTime = searchParams.get('endTime');
+    const urlHall = searchParams.get('hall');
+
+    // Eğer URL'den veri geldiyse formu doldur
+    if (urlStartDate && urlStartTime && urlHall) {
+        setFormData(prev => ({
+            ...prev,
+            // Eğer endDate gelmediyse (eski linkler için), startDate ile aynı yap
+            startDate: urlStartDate,
+            endDate: urlEndDate || urlStartDate, 
+            startTime: urlStartTime,
+            endTime: urlEndTime || '17:00', // Varsayılan bitiş yoksa
+            hall: urlHall
+        }));
+        
+        if(urlEndDate && urlStartDate !== urlEndDate) {
+            toast.info(`Çoklu gün seçildi: ${urlStartDate} -> ${urlEndDate}`, { position: "top-center" });
+        } else {
+            toast.info(`Tarih ve Salon seçildi: ${urlHall.toUpperCase()}`, { position: "top-center" });
+        }
+    }
+  }, [searchParams]);
+  // -----------------------------------
 
   const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // Tarihleri oluştur
     const startDateTime = new Date(`${formData.startDate}T${formData.startTime}`);
     const endDateTime = new Date(`${formData.endDate}T${formData.endTime}`);
-    const now = new Date(); // Şu anki zaman
+    const now = new Date(); 
 
-    // GEÇMİŞ TARİH ENGELİ
     if (startDateTime < now) {
         return toast.warning('Geçmiş bir zamana rezervasyon yapamazsınız! ⏳');
     }
 
-    // Bitiş tarihi kontrolü
     if (endDateTime <= startDateTime) {
-        return toast.warning("Bitiş saati başlangıçtan sonra olmalıdır!");
+        return toast.warning("Bitiş tarihi/saati başlangıçtan sonra olmalıdır!");
     }
     
     setStatus('loading');
@@ -44,11 +72,10 @@ export default function RezervasyonPage() {
       });
       setStatus('success');
       toast.success('Rezervasyon talebiniz başarıyla alındı! 🎉');
-      // Formu temizle
       setFormData({ title: '', department: '', organizer: '', email: '', phone: '', hall: 'mavi', startDate: '', endDate: '', startTime: '', endTime: '', description: '' });
     } catch (error) {
       console.error(error);
-      if (error.response?.status === 409) toast.warning('Seçilen tarih ve saatte salon dolu! ⚠️');
+      if (error.response?.status === 409) toast.warning('Seçilen tarih aralığında salon dolu! ⚠️');
       else if (error.response?.status === 400) toast.error(error.response.data.message); 
       else toast.error('Bir hata oluştu.');
       setStatus('idle');
@@ -62,11 +89,10 @@ export default function RezervasyonPage() {
       <div className="container mx-auto px-4 py-12">
         <div className="max-w-4xl mx-auto bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100">
           
-          {/* Header Banner */}
           <div className="bg-gray-900 text-white p-10 text-center relative overflow-hidden">
             <div className="absolute top-0 left-0 w-full h-full bg-omu-red/10"></div>
             <h2 className="text-3xl font-extrabold mb-2 relative z-10">Salon Rezervasyon Formu</h2>
-            <p className="text-gray-400 relative z-10">Etkinliğinizi planlayın, takvimi kontrol edip başvurunuzu yapın.</p>
+            <p className="text-gray-400 relative z-10">Lütfen bilgileri eksiksiz doldurunuz.</p>
           </div>
 
           <div className="p-8 md:p-12">
