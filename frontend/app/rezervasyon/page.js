@@ -1,10 +1,12 @@
 'use client';
 
+import API_URL from '../utils/api';
 import React, { useState } from 'react';
 import axios from 'axios';
 import Header from '../../components/Header';
 import { FaUser, FaBuilding, FaPhone, FaEnvelope, FaCalendarAlt, FaClock, FaCheckCircle, FaExclamationCircle } from 'react-icons/fa';
 import { toast } from 'react-toastify'; // Toastify ekledik
+
 
 export default function RezervasyonPage() {
   const [formData, setFormData] = useState({
@@ -37,7 +39,7 @@ export default function RezervasyonPage() {
     setStatus('loading');
 
     try {
-      await axios.post('http://localhost:5000/api/events', {
+      await axios.post(`${API_URL}/events`, {
         ...formData, startDate: startDateTime, endDate: endDateTime
       });
       setStatus('success');

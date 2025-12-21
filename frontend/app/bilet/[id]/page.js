@@ -1,11 +1,13 @@
 'use client';
 
+import API_URL from '../utils/api';
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useParams } from 'next/navigation';
 import { QRCodeSVG } from 'qrcode.react'; 
 import { FaCalendarAlt, FaClock, FaMapMarkerAlt, FaUser, FaCheckCircle, FaPrint } from 'react-icons/fa';
 import Header from '../../../components/Header';
+
 
 export default function BiletPage() {
   const { id } = useParams();
@@ -15,7 +17,8 @@ export default function BiletPage() {
   useEffect(() => {
     const fetchEvent = async () => {
       try {
-        const res = await axios.get(`http://localhost:5000/api/events`);
+        // const res = await axios.get(`http://localhost:5000/api/events`);
+        const res = await axios.get(`${API_URL}/events`);
         const found = res.data.find(e => e.id.toString() === id);
         setEvent(found);
         setLoading(false);

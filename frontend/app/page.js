@@ -5,8 +5,14 @@ import axios from 'axios';
 import Header from '../components/Header';
 import Link from 'next/link';
 import { FaChevronRight, FaCalendarAlt, FaMapMarkerAlt, FaArrowRight, FaClock, FaCalendarCheck } from 'react-icons/fa';
+// API_URL EKLENDİ
+import API_URL from '../utils/api';
 
-// --- NETFLIX STİLİ SLIDER (Resim Sığdırma Çözümü) ---
+// Resimler için "http://localhost:5000" yerine Canlı Sunucu Adresini ayarla
+// API_URL "..../api" ile bittiği için, resimlerde kullanmak üzere "/api" kısmını siliyoruz.
+const BASE_URL = API_URL.replace('/api', '');
+
+// --- NETFLIX STİLİ SLIDER ---
 function AnnouncementSlider({ images, title, link, date }) {
   const [currentIndex, setCurrentIndex] = useState(0);
 
@@ -24,15 +30,15 @@ function AnnouncementSlider({ images, title, link, date }) {
           {images.length > 0 ? (
             images.map((img, index) => (
                 <div key={index} className={`absolute inset-0 transition-opacity duration-1000 ease-in-out flex items-center justify-center ${index === currentIndex ? 'opacity-100' : 'opacity-0'}`}>
-                    {/* 1. KATMAN: Arka Plan (Bulanık ve Dolduran) */}
+                    {/* 1. KATMAN: Arka Plan (Bulanık) - BASE_URL KULLANILDI */}
                     <div 
                         className="absolute inset-0 bg-cover bg-center blur-xl opacity-60 scale-110" 
-                        style={{ backgroundImage: `url(http://localhost:5000${img})` }}
+                        style={{ backgroundImage: `url(${BASE_URL}${img})` }}
                     ></div>
                     
-                    {/* 2. KATMAN: Ön Plan (Net ve Sığdırılmış Resim) */}
+                    {/* 2. KATMAN: Ön Plan (Net) - BASE_URL KULLANILDI */}
                     <img 
-                        src={`http://localhost:5000${img}`} 
+                        src={`${BASE_URL}${img}`} 
                         alt={title} 
                         className="relative w-full h-full object-contain z-10 drop-shadow-2xl" 
                     />
@@ -42,7 +48,6 @@ function AnnouncementSlider({ images, title, link, date }) {
             <div className="w-full h-full bg-gray-800 flex items-center justify-center"><span className="text-4xl font-bold text-gray-700">OMÜ</span></div>
           )}
           
-          {/* İçerik Yazısı (Altta) */}
           <div className="absolute bottom-0 left-0 p-8 w-full bg-gradient-to-t from-black via-black/60 to-transparent z-20">
              <div className="inline-flex items-center gap-2 bg-omu-red text-white text-xs font-bold px-3 py-1 rounded-full mb-3 shadow-lg border border-red-500/50">
                 <FaCalendarAlt /> {new Date(date).toLocaleDateString('tr-TR')}
@@ -54,7 +59,6 @@ function AnnouncementSlider({ images, title, link, date }) {
           </div>
        </Link>
 
-       {/* Slayt Noktaları */}
        {images.length > 1 && (
          <div className="absolute bottom-8 right-8 flex gap-2 z-30">
             {images.map((_, idx) => (
@@ -68,23 +72,22 @@ function AnnouncementSlider({ images, title, link, date }) {
 
 export default function Home() {
   const [announcements, setAnnouncements] = useState([]);
-  const [upcomingEvents, setUpcomingEvents] = useState([]); // Sağ taraf (Ajanda) için
+  const [upcomingEvents, setUpcomingEvents] = useState([]); 
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // 1. Duyuruları Çek
-        const resAnn = await axios.get('http://localhost:5000/api/announcements');
+        // 1. Duyuruları Çek - API_URL KULLANILDI
+        const resAnn = await axios.get(`${API_URL}/announcements`);
         setAnnouncements(resAnn.data);
         
-        // 2. Etkinlikleri Çek (Sağ taraf için)
-        const resEvt = await axios.get('http://localhost:5000/api/events');
+        // 2. Etkinlikleri Çek - API_URL KULLANILDI
+        const resEvt = await axios.get(`${API_URL}/events`);
         
-        // Sadece onayı alınmış ve tarihi geçmemiş etkinlikleri filtrele
         const futureEvents = resEvt.data
-            .filter(e => e.isApproved && new Date(e.endDate) >= new Date()) // Gelecek ve Onaylı
-            .sort((a, b) => new Date(a.startDate) - new Date(b.startDate))  // Tarihe göre sırala (En yakın en üstte)
-            .slice(0, 5); // İlk 5 tanesini al
+            .filter(e => e.isApproved && new Date(e.endDate) >= new Date()) 
+            .sort((a, b) => new Date(a.startDate) - new Date(b.startDate))  
+            .slice(0, 5); 
 
         setUpcomingEvents(futureEvents);
       } catch (error) { console.error(error); }
@@ -98,7 +101,6 @@ export default function Home() {
       
       <main className="container mx-auto px-4 py-10">
         
-        {/* --- İKİYE BÖLÜNMÜŞ ÜST KISIM (Manşet & Ajanda) --- */}
         <div className="grid lg:grid-cols-12 gap-8 mb-16">
             
             {/* SOL TARAFFER (%66): MANŞET DUYURULAR */}
@@ -119,14 +121,15 @@ export default function Home() {
                             date={announcements[0].date}
                         />
                         
-                        {/* Altındaki Küçük Kartlar (Varsa) */}
+                        {/* Altındaki Küçük Kartlar */}
                         {announcements.length > 1 && (
                             <div className="grid md:grid-cols-2 gap-4 mt-6">
                                 {announcements.slice(1, 3).map((ann) => (
                                     <Link key={ann.id} href={`/duyuru/${ann.id}`} className="flex bg-white p-4 rounded-2xl shadow-sm hover:shadow-md transition gap-4 border border-gray-100 group items-center">
                                         <div className="w-24 h-24 bg-gray-100 rounded-xl overflow-hidden flex-shrink-0 relative border border-gray-100">
+                                            {/* KÜÇÜK RESİM - BASE_URL KULLANILDI */}
                                             {ann.images && ann.images[0] ? (
-                                                <img src={`http://localhost:5000${ann.images[0]}`} className="w-full h-full object-cover group-hover:scale-110 transition duration-500"/>
+                                                <img src={`${BASE_URL}${ann.images[0]}`} className="w-full h-full object-cover group-hover:scale-110 transition duration-500"/>
                                             ) : <div className="w-full h-full flex items-center justify-center text-gray-300 font-bold">OMÜ</div>}
                                         </div>
                                         <div className="flex flex-col justify-center min-w-0">
@@ -149,7 +152,6 @@ export default function Home() {
             {/* SAĞ TARAF (%33): YAKLAŞAN ETKİNLİKLER (AJANDA) */}
             <div className="lg:col-span-4">
                 <div className="bg-white rounded-3xl shadow-lg border border-gray-100 p-6 h-full flex flex-col relative overflow-hidden">
-                    {/* Dekoratif Arka Plan */}
                     <div className="absolute top-0 right-0 w-32 h-32 bg-blue-50 rounded-bl-full -z-0"></div>
                     
                     <h2 className="text-xl font-extrabold text-gray-900 mb-6 flex items-center gap-2 relative z-10">
@@ -165,13 +167,11 @@ export default function Home() {
                         ) : (
                             upcomingEvents.map((evt) => (
                                 <div key={evt.id} className="group flex gap-4 items-start border-b border-gray-50 last:border-0 pb-4 last:pb-0 hover:bg-gray-50/50 p-2 rounded-xl transition cursor-default">
-                                    {/* Tarih Kutusu */}
                                     <div className="bg-blue-50 text-blue-700 rounded-xl p-2 text-center min-w-[60px] shadow-sm border border-blue-100 group-hover:bg-blue-600 group-hover:text-white transition duration-300">
                                         <span className="block text-xl font-extrabold leading-none">{new Date(evt.startDate).getDate()}</span>
                                         <span className="text-[10px] font-bold uppercase tracking-wide">{new Date(evt.startDate).toLocaleString('tr-TR', { month: 'short' })}</span>
                                     </div>
                                     
-                                    {/* Bilgi */}
                                     <div className="flex-grow pt-1">
                                         <h4 className="font-bold text-gray-800 text-sm leading-snug line-clamp-2 mb-1 group-hover:text-blue-600 transition">{evt.title}</h4>
                                         <div className="flex items-center gap-3 text-xs text-gray-500 font-medium">
@@ -191,7 +191,7 @@ export default function Home() {
             </div>
         </div>
 
-        {/* --- SALONLAR (Alt Kısım) --- */}
+        {/* --- SALONLAR --- */}
         <section>
           <div className="text-center mb-10">
             <span className="text-omu-red font-bold text-sm tracking-widest uppercase mb-2 block">Rezervasyon</span>
@@ -213,7 +213,6 @@ export default function Home() {
                         <p className="text-gray-500 text-sm mb-6">{salon.desc}</p>
                         <span className="mt-auto text-sm font-bold text-gray-400 group-hover:text-gray-900 transition flex items-center gap-1">Takvimi Gör <FaChevronRight size={10}/></span>
                     </div>
-                    {/* Hover Border Effect */}
                     <div className={`absolute inset-0 ${salon.color} opacity-0 group-hover:opacity-10 transition duration-300`}></div>
                 </Link>
             ))}

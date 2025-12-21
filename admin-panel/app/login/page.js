@@ -11,9 +11,11 @@ export default function LoginPage() {
 
   const handleLogin = (e) => {
     e.preventDefault();
-    if (password === '123') { // Şifreyi buradan değiştirebilirsin
+    // Basit güvenlik kontrolü
+    if (password === '123') { 
+      // Giriş başarılıysa tarayıcıya token kaydet
       localStorage.setItem('adminToken', 'giris_basarili_gizli_anahtar');
-      router.push('/');
+      router.push('/'); // Ana sayfaya yönlendir
     } else {
       setError(true);
       setTimeout(() => setError(false), 2000);
@@ -22,13 +24,13 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 via-gray-800 to-black font-sans relative overflow-hidden">
-      {/* Arka Plan Dekorasyonları */}
-      <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-omu-red/20 rounded-full blur-[100px]"></div>
+      {/* Arka Plan Dekorasyonları (Renkler standart hale getirildi) */}
+      <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-red-600/20 rounded-full blur-[100px]"></div>
       <div className="absolute bottom-[-10%] right-[-10%] w-96 h-96 bg-blue-600/20 rounded-full blur-[100px]"></div>
 
       <div className="bg-white/10 backdrop-blur-lg border border-white/10 p-10 rounded-3xl shadow-2xl w-full max-w-md relative z-10">
         <div className="text-center mb-8">
-          <div className="w-20 h-20 bg-gradient-to-tr from-omu-red to-orange-600 rounded-2xl mx-auto flex items-center justify-center shadow-lg mb-4 transform rotate-3 hover:rotate-0 transition duration-500">
+          <div className="w-20 h-20 bg-gradient-to-tr from-red-600 to-orange-600 rounded-2xl mx-auto flex items-center justify-center shadow-lg mb-4 transform rotate-3 hover:rotate-0 transition duration-500">
             <FaUserShield className="text-white text-4xl" />
           </div>
           <h1 className="text-3xl font-bold text-white mb-2">Yönetici Girişi</h1>
@@ -41,7 +43,7 @@ export default function LoginPage() {
             <input 
               type="password" 
               placeholder="Yönetici Şifresi" 
-              className="w-full bg-gray-900/50 text-white pl-12 pr-4 py-3.5 rounded-xl border border-gray-700 focus:border-omu-red focus:ring-2 focus:ring-omu-red/50 outline-none transition placeholder-gray-500"
+              className="w-full bg-gray-900/50 text-white pl-12 pr-4 py-3.5 rounded-xl border border-gray-700 focus:border-red-600 focus:ring-2 focus:ring-red-600/50 outline-none transition placeholder-gray-500"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
@@ -50,7 +52,7 @@ export default function LoginPage() {
           <button 
             type="submit" 
             className={`w-full py-4 rounded-xl font-bold text-white shadow-lg flex items-center justify-center gap-2 transition-all duration-300 transform active:scale-95
-            ${error ? 'bg-red-600 animate-shake' : 'bg-gradient-to-r from-omu-red to-orange-600 hover:shadow-orange-500/25'}`}
+            ${error ? 'bg-red-600 animate-shake' : 'bg-gradient-to-r from-red-600 to-orange-600 hover:shadow-orange-500/25'}`}
           >
             {error ? 'Hatalı Şifre!' : <>Giriş Yap <FaArrowRight /></>}
           </button>

@@ -3,8 +3,13 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useParams, useRouter } from 'next/navigation';
+// Header 3 seviye yukarıda olduğu için utils de muhtemelen oradadır
 import Header from '../../../components/Header';
 import { FaCalendarAlt, FaArrowLeft, FaShareAlt } from 'react-icons/fa';
+import API_URL from '../../../utils/api';
+
+// Resimler için Ana Sunucu Adresini ayarla (Sonundaki /api'yi siler)
+const BASE_URL = API_URL.replace('/api', '');
 
 export default function DuyuruDetayPage() {
   const { id } = useParams();
@@ -15,7 +20,8 @@ export default function DuyuruDetayPage() {
   useEffect(() => {
     const fetchAnnouncement = async () => {
       try {
-        const res = await axios.get(`http://localhost:5000/api/announcements/${id}`);
+        // DÜZELTİLDİ: API_URL kullanıldı
+        const res = await axios.get(`${API_URL}/announcements/${id}`);
         setAnnouncement(res.data);
         setLoading(false);
       } catch (error) { console.error(error); setLoading(false); }
@@ -56,7 +62,8 @@ export default function DuyuruDetayPage() {
                 <div className={`grid gap-4 ${announcement.images.length === 1 ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2'}`}>
                     {announcement.images.map((img, idx) => (
                         <div key={idx} className={`relative rounded-2xl overflow-hidden shadow-lg group ${announcement.images.length === 1 ? 'h-[500px]' : 'h-80'}`}>
-                             <img src={`http://localhost:5000${img}`} alt={`${announcement.title}-${idx}`} className="w-full h-full object-cover transition duration-700 group-hover:scale-105" />
+                             {/* DÜZELTİLDİ: localhost yerine BASE_URL kullanıldı */}
+                             <img src={`${BASE_URL}${img}`} alt={`${announcement.title}-${idx}`} className="w-full h-full object-cover transition duration-700 group-hover:scale-105" />
                         </div>
                     ))}
                 </div>

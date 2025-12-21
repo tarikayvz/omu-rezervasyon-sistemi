@@ -3,12 +3,21 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useRouter } from 'next/navigation';
-import { FaTrash, FaArrowLeft, FaUpload, FaImages, FaPlus, FaEdit, FaTimes, FaSave } from 'react-icons/fa';
+import { FaTrash, FaArrowLeft, FaUpload, FaImages, FaPlus, FaEdit, FaSave } from 'react-icons/fa';
 import { toast } from 'react-toastify';
+// API_URL EKLENDİ (Admin panelinde utils/api.js oluşturduğunu varsayıyoruz)
+// Eğer yoksa, oluşturup içine Render linkini koymalısın.
+import API_URL from '../../utils/api';
+
+// Resimler için Ana Sunucu Adresi (Sonundaki /api silinir)
+const BASE_URL = API_URL.replace('/api', '');
 
 export default function DuyurularPage() {
   const router = useRouter();
   const [announcements, setAnnouncements] = useState([]);
+  
+  // Form State'leri
+  const [editingId, setEditingId] = useState(null); // Düzenleme Modu için
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [images, setImages] = useState([]); 
@@ -23,7 +32,8 @@ export default function DuyurularPage() {
 
   const fetchAnnouncements = async () => {
     try {
-      const res = await axios.get('http://localhost:5000/api/announcements');
+      // DÜZELTİLDİ: API_URL kullanıldı
+      const res = await axios.get(`${API_URL}/announcements`);
       setAnnouncements(res.data);
     } catch (error) { console.error(error); }
   };
@@ -32,6 +42,25 @@ export default function DuyurularPage() {
     const files = Array.from(e.target.files);
     setImages(files);
     setPreviews(files.map(file => URL.createObjectURL(file)));
+  };
+
+  // LİSTEDEN SEÇİP DÜZENLEME MODUNA GEÇME
+  const handleEditClick = (ann) => {
+    setEditingId(ann.id);
+    setTitle(ann.title);
+    setDescription(ann.description);
+    // Mevcut resimleri göster (BASE_URL ile)
+    setPreviews(ann.images ? ann.images.map(img => `${BASE_URL}${img}`) : []);
+    setImages([]); 
+    window.scrollTo({ top: 0, behavior: 'smooth' }); 
+  };
+
+  const handleCancelEdit = () => {
+    setEditingId(null);
+    setTitle('');
+    setDescription('');
+    setImages([]);
+    setPreviews([]);
   };
 
   const handleSubmit = async (e) => {
@@ -45,17 +74,30 @@ export default function DuyurularPage() {
     images.forEach((img) => formData.append('images', img));
 
     try {
-      await axios.post('http://localhost:5000/api/announcements', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
-      setTitle(''); setDescription(''); setImages([]); setPreviews([]);
+      if (editingId) {
+        // GÜNCELLEME İŞLEMİ (PUT) - API_URL
+        await axios.put(`${API_URL}/announcements/${editingId}`, formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+        toast.success('Duyuru güncellendi! ✅');
+      } else {
+        // YENİ EKLEME İŞLEMİ (POST) - API_URL
+        await axios.post(`${API_URL}/announcements`, formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+        toast.success('Duyuru yayınlandı! 🎉');
+      }
+      handleCancelEdit(); 
       fetchAnnouncements();
-      toast.success('Duyuru yayınlandı!');
     } catch (error) { toast.error('Hata oluştu.'); } 
     finally { setLoading(false); }
   };
 
-  const handleDelete = async (id) => {
+  const handleDelete = async (e, id) => {
+    e.stopPropagation();
     if(!confirm('Silmek istediğine emin misin?')) return;
-    try { await axios.delete(`http://localhost:5000/api/announcements/${id}`); fetchAnnouncements(); toast.info('Silindi.'); } 
+    try { 
+        // DÜZELTİLDİ: API_URL kullanıldı
+        await axios.delete(`${API_URL}/announcements/${id}`); 
+        fetchAnnouncements(); 
+        toast.info('Silindi.'); 
+    } 
     catch (error) { toast.error('Hata.'); }
   };
 
@@ -66,30 +108,33 @@ export default function DuyurularPage() {
           <button onClick={() => router.push('/')} className="bg-white p-4 rounded-full shadow-sm hover:shadow-md text-gray-700 transition"><FaArrowLeft /></button>
           <div>
             <h1 className="text-3xl font-extrabold text-gray-900">Duyuru Yönetimi</h1>
-            <p className="text-gray-500">Web sitesinde görünecek haberleri yönetin</p>
+            <p className="text-gray-500">Duyuruları ekleyin veya düzenlemek için listeye tıklayın.</p>
           </div>
         </div>
 
         <div className="grid lg:grid-cols-12 gap-8">
           {/* Form Alanı */}
           <div className="lg:col-span-5">
-            <div className="bg-white p-8 rounded-3xl shadow-lg border border-gray-100 sticky top-8">
-                <h2 className="text-xl font-bold mb-6 flex items-center gap-2 text-gray-800"><span className="bg-omu-red text-white p-2 rounded-lg"><FaPlus size={14}/></span> Yeni Duyuru</h2>
+            <div className={`p-8 rounded-3xl shadow-lg border sticky top-8 transition-all ${editingId ? 'bg-blue-50 border-blue-200' : 'bg-white border-gray-100'}`}>
+                <h2 className={`text-xl font-bold mb-6 flex items-center gap-2 ${editingId ? 'text-blue-800' : 'text-gray-800'}`}>
+                    {editingId ? <><FaEdit /> Düzenle</> : <><FaPlus /> Yeni Duyuru</>}
+                </h2>
+                
                 <form onSubmit={handleSubmit} className="space-y-6">
                     <div>
                         <label className="block text-sm font-bold text-gray-700 mb-2">Başlık</label>
-                        <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} className="w-full p-4 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-omu-red/20 focus:border-omu-red outline-none transition font-medium" placeholder="Duyuru başlığı..." />
+                        <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} className="w-full p-4 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-omu-red/20 outline-none transition font-medium" placeholder="Duyuru başlığı..." />
                     </div>
                     <div>
                         <label className="block text-sm font-bold text-gray-700 mb-2">İçerik</label>
-                        <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows="5" className="w-full p-4 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-omu-red/20 focus:border-omu-red outline-none transition font-medium" placeholder="Detaylar..."></textarea>
+                        <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows="5" className="w-full p-4 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-omu-red/20 outline-none transition font-medium" placeholder="Detaylar..."></textarea>
                     </div>
                     <div>
                         <label className="block text-sm font-bold text-gray-700 mb-2">Görseller</label>
-                        <div className="border-2 border-dashed border-gray-300 rounded-2xl p-6 text-center hover:bg-gray-50 transition cursor-pointer relative group">
+                        <div className="border-2 border-dashed border-gray-300 rounded-2xl p-6 text-center hover:bg-gray-50 transition cursor-pointer relative group bg-white">
                             <input type="file" multiple onChange={handleImageChange} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" accept="image/*" />
                             <FaImages className="mx-auto text-3xl text-gray-400 mb-2 group-hover:text-omu-red transition" />
-                            <p className="text-sm text-gray-500 group-hover:text-gray-700">Fotoğrafları seçmek için tıklayın</p>
+                            <p className="text-sm text-gray-500">Fotoğrafları seçmek için tıklayın</p>
                         </div>
                         {previews.length > 0 && (
                             <div className="flex gap-2 overflow-x-auto py-4">
@@ -97,9 +142,15 @@ export default function DuyurularPage() {
                             </div>
                         )}
                     </div>
-                    <button type="submit" disabled={loading} className="w-full bg-gray-900 text-white font-bold py-4 rounded-xl hover:bg-black transition shadow-lg disabled:opacity-50 flex justify-center items-center gap-2">
-                        {loading ? 'Yükleniyor...' : <><FaUpload /> Yayınla</>}
-                    </button>
+                    
+                    <div className="flex gap-3">
+                        {editingId && (
+                            <button type="button" onClick={handleCancelEdit} className="flex-1 bg-gray-200 text-gray-700 font-bold py-4 rounded-xl hover:bg-gray-300 transition">İptal</button>
+                        )}
+                        <button type="submit" disabled={loading} className={`flex-1 text-white font-bold py-4 rounded-xl transition shadow-lg flex justify-center items-center gap-2 ${editingId ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-900 hover:bg-black'}`}>
+                            {loading ? '...' : editingId ? <><FaSave /> Güncelle</> : <><FaUpload /> Yayınla</>}
+                        </button>
+                    </div>
                 </form>
             </div>
           </div>
@@ -108,10 +159,15 @@ export default function DuyurularPage() {
           <div className="lg:col-span-7 space-y-6">
             <h2 className="text-xl font-bold text-gray-800 mb-4">Yayındaki Duyurular</h2>
             {announcements.map((ann) => (
-                <div key={ann.id} className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex gap-5 hover:shadow-md transition group">
+                <div 
+                    key={ann.id} 
+                    onClick={() => handleEditClick(ann)} 
+                    className={`p-5 rounded-2xl shadow-sm border flex gap-5 transition group cursor-pointer ${editingId === ann.id ? 'bg-blue-50 border-blue-300 ring-2 ring-blue-200' : 'bg-white border-gray-100 hover:shadow-md'}`}
+                >
                     <div className="w-32 h-32 flex-shrink-0 bg-gray-100 rounded-xl overflow-hidden relative">
                         {ann.images && ann.images.length > 0 ? (
-                            <img src={`http://localhost:5000${ann.images[0]}`} className="w-full h-full object-cover group-hover:scale-110 transition duration-500" />
+                            // DÜZELTİLDİ: BASE_URL kullanıldı
+                            <img src={`${BASE_URL}${ann.images[0]}`} className="w-full h-full object-cover group-hover:scale-110 transition duration-500" />
                         ) : <div className="w-full h-full flex items-center justify-center text-xs text-gray-400">Resim Yok</div>}
                     </div>
                     <div className="flex-grow flex flex-col">
@@ -119,7 +175,10 @@ export default function DuyurularPage() {
                         <p className="text-sm text-gray-500 line-clamp-2 mb-4 flex-grow">{ann.description}</p>
                         <div className="flex justify-between items-center mt-auto">
                             <span className="text-xs font-bold text-gray-400 uppercase">{new Date(ann.date).toLocaleDateString('tr-TR')}</span>
-                            <button onClick={() => handleDelete(ann.id)} className="bg-red-50 text-red-600 px-4 py-2 rounded-lg text-sm font-bold hover:bg-red-100 transition flex items-center gap-2"><FaTrash /> Sil</button>
+                            <div className="flex gap-2">
+                                <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">Düzenle</span>
+                                <button onClick={(e) => handleDelete(e, ann.id)} className="bg-red-50 text-red-600 px-3 py-1 rounded text-xs font-bold hover:bg-red-100 transition flex items-center gap-1"><FaTrash /> Sil</button>
+                            </div>
                         </div>
                     </div>
                 </div>

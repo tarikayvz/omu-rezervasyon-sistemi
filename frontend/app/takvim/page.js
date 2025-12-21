@@ -6,9 +6,10 @@ import axios from 'axios';
 import Header from '../../components/Header';
 import { format, isPast, isFuture, isToday } from 'date-fns';
 import { tr } from 'date-fns/locale';
-// İKONLAR GÜNCELLENDİ: FaReplyAll eklendi
 import { FaClock, FaHistory, FaTimes, FaStar, FaCommentDots, FaPaperPlane, FaChevronDown, FaChevronUp, FaUser, FaReply, FaReplyAll } from 'react-icons/fa';
 import { toast } from 'react-toastify';
+// DİKKAT: API_URL eklendi
+import API_URL from '../utils/api';
 
 // --- ÖZEL YILDIZ BİLEŞENİ ---
 const StarRating = ({ rating, setRating, hoverRating, setHoverRating }) => {
@@ -27,7 +28,7 @@ const StarRating = ({ rating, setRating, hoverRating, setHoverRating }) => {
             />
             <FaStar 
               className="transition-colors duration-200" 
-              size={24} // Yıldız boyutu biraz küçültüldü daha kibar durması için
+              size={24} 
               color={ratingValue <= (hoverRating || rating) ? "#ffc107" : "#e5e7eb"} 
               onMouseEnter={() => setHoverRating(ratingValue)}
               onMouseLeave={() => setHoverRating(0)}
@@ -60,7 +61,8 @@ function TakvimContent() {
 
   const fetchEvents = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/api/events');
+      // DÜZELTİLDİ
+      const response = await axios.get(`${API_URL}/events`);
       setEvents(response.data);
       setLoading(false);
     } catch (error) { console.error(error); setLoading(false); }
@@ -68,7 +70,8 @@ function TakvimContent() {
 
   const fetchComments = async (eventId) => {
     try {
-      const res = await axios.get(`http://localhost:5000/api/comments/${eventId}`);
+      // DÜZELTİLDİ
+      const res = await axios.get(`${API_URL}/comments/${eventId}`);
       setComments(res.data);
     } catch (error) { console.error(error); }
   };
@@ -81,10 +84,13 @@ function TakvimContent() {
     
     setCommentLoading(true);
     try {
-      await axios.post('http://localhost:5000/api/comments', {
+      // --- DÜZELTİLDİ: localhost yerine API_URL ---
+      await axios.post(`${API_URL}/comments`, {
         ...newComment,
         eventId: selectedEvent.id
       });
+      // ---------------------------------------------
+      
       fetchComments(selectedEvent.id);
       setNewComment({ username: '', text: '', rating: 0 });
       setHoverRating(0);
@@ -138,7 +144,7 @@ function TakvimContent() {
       {selectedEvent && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-60 backdrop-blur-sm" onClick={closeModal}>
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden relative max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-             {/* Modal Header - Daha modern */}
+             {/* Modal Header */}
              <div className="bg-gray-900 text-white p-6 flex justify-between items-center sticky top-0 z-10">
                 <div>
                     <h2 className="text-xl font-bold leading-tight">{selectedEvent.title}</h2>
@@ -148,7 +154,7 @@ function TakvimContent() {
              </div>
              
              <div className="p-6 md:p-8">
-                {/* Etkinlik Detayları - Daha ferah */}
+                {/* Etkinlik Detayları */}
                 <div className="mb-8">
                     <h3 className="text-sm font-bold text-gray-400 uppercase mb-2 ls-wider">Etkinlik Detayı</h3>
                     <p className="text-gray-700 text-lg leading-relaxed">{selectedEvent.description}</p>
@@ -173,7 +179,7 @@ function TakvimContent() {
                     </div>
                 </div>
 
-                {/* --- DEĞERLENDİRME BÖLÜMÜ (YENİ TASARIM) --- */}
+                {/* --- DEĞERLENDİRME BÖLÜMÜ --- */}
                 {isPast(new Date(selectedEvent.endDate)) && (
                     <div className="border-t border-gray-100 pt-8">
                         
@@ -191,7 +197,7 @@ function TakvimContent() {
                             </button>
                         </div>
                         
-                        {/* Yorum Formu - Daha temiz */}
+                        {/* Yorum Formu */}
                         {showCommentForm && (
                             <form onSubmit={submitComment} className="bg-gray-50 p-6 rounded-2xl border border-gray-200 mb-8 animate-fadeIn shadow-sm">
                                 <h4 className="font-bold text-gray-700 mb-4 text-sm uppercase tracking-wider text-center">Puanınız</h4>
@@ -208,7 +214,7 @@ function TakvimContent() {
                             </form>
                         )}
 
-                        {/* --- YORUM LİSTESİ (PROFESYONEL GÖRÜNÜM) --- */}
+                        {/* --- YORUM LİSTESİ --- */}
                         <div className="space-y-6 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
                             {comments.length === 0 ? (
                                 <div className="text-center py-10 bg-gray-50 rounded-2xl border border-dashed border-gray-300">
@@ -241,12 +247,12 @@ function TakvimContent() {
                                         </div>
                                     </div>
 
-                                    {/* Yorum Metni - Hizalı ve okunaklı */}
+                                    {/* Yorum Metni */}
                                     <div className="pl-14">
                                         <p className="text-gray-700 leading-relaxed">{comment.text}</p>
                                     </div>
 
-                                    {/* --- YÖNETİCİ CEVABI (YENİ PROFESYONEL TASARIM) --- */}
+                                    {/* --- YÖNETİCİ CEVABI --- */}
                                     {comment.reply && (
                                         <div className="mt-4 pl-14">
                                             <div className="bg-red-50/50 p-4 rounded-xl border border-red-100 relative">

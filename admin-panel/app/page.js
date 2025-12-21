@@ -7,11 +7,16 @@ import { useRouter } from 'next/navigation';
 import DashboardStats from '../components/DashboardStats';
 import * as XLSX from 'xlsx';
 import { toast } from 'react-toastify';
+// API_URL EKLENDİ (Eğer admin panelinde utils/api.js yoksa, frontend'deki gibi oluşturmalısın veya buraya direkt linki yazmalısın)
+import API_URL from '../utils/api';
 
 export default function AdminDashboard() {
   const router = useRouter();
   const [events, setEvents] = useState([]);
-  const [filteredEvents, setFilteredEvents] = useState([]);
+  const [filteredEvents, setFilteredComments] = useState([]); // setFilteredEvents ismini düzeltelim, aşağıda setFilteredEvents kullanmışsın ama state adı farklı kalmış olabilir. 
+  // Düzeltme: State adını filteredEvents yapıyorum.
+  const [filteredEventsState, setFilteredEvents] = useState([]); // Çakışmayı önlemek için adını değiştirdim
+
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState(''); 
   const [selectedEvent, setSelectedEvent] = useState(null);
@@ -33,7 +38,8 @@ export default function AdminDashboard() {
 
   const fetchEvents = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/api/events?admin=true');
+      // DÜZELTİLDİ: API_URL kullanıldı
+      const response = await axios.get(`${API_URL}/events?admin=true`);
       setEvents(response.data);
       setFilteredEvents(response.data);
       setLoading(false);
@@ -43,7 +49,7 @@ export default function AdminDashboard() {
   const handleLogout = () => { localStorage.removeItem('adminToken'); router.push('/login'); };
 
   const exportToExcel = () => {
-    const data = filteredEvents.map(e => ({ 'Başlık': e.title, 'Salon': e.hall, 'Başlangıç': new Date(e.startDate).toLocaleString('tr-TR'), 'Düzenleyen': e.organizer, 'Durum': e.isApproved ? 'Onaylı' : 'Bekliyor' }));
+    const data = filteredEventsState.map(e => ({ 'Başlık': e.title, 'Salon': e.hall, 'Başlangıç': new Date(e.startDate).toLocaleString('tr-TR'), 'Düzenleyen': e.organizer, 'Durum': e.isApproved ? 'Onaylı' : 'Bekliyor' }));
     const ws = XLSX.utils.json_to_sheet(data);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Rapor");
@@ -51,22 +57,34 @@ export default function AdminDashboard() {
   };
 
   const handleApprove = async (id) => {
-    try { await axios.put(`http://localhost:5000/api/events/${id}/approve`); closeModal(); fetchEvents(); toast.success('Etkinlik onaylandı! ✅'); } 
+    try { 
+        // DÜZELTİLDİ: API_URL kullanıldı
+        await axios.put(`${API_URL}/events/${id}/approve`); 
+        closeModal(); 
+        fetchEvents(); 
+        toast.success('Etkinlik onaylandı! ✅'); 
+    } 
     catch (error) { toast.error('Hata oluştu.'); }
   };
 
-  const handleDelete = async (e, id) => { // 'e' parametresi eklendi
-    if (e) e.stopPropagation(); // Tıklama olayını durdur (Modal açılmasın)
+  const handleDelete = async (e, id) => { 
+    if (e && e.stopPropagation) e.stopPropagation(); // Tıklama olayını durdur
     if(!confirm('Silmek istediğine emin misin?')) return;
-    try { await axios.delete(`http://localhost:5000/api/events/${id}`); closeModal(); fetchEvents(); toast.info('Etkinlik silindi.'); } 
+    try { 
+        // DÜZELTİLDİ: API_URL kullanıldı
+        await axios.delete(`${API_URL}/events/${id}`); 
+        closeModal(); 
+        fetchEvents(); 
+        toast.info('Etkinlik silindi.'); 
+    } 
     catch (error) { toast.error('Hata oluştu.'); }
   };
 
   const openModal = (e) => { setSelectedEvent(e); document.body.style.overflow = 'hidden'; };
   const closeModal = () => { setSelectedEvent(null); document.body.style.overflow = 'unset'; };
 
-  const pendingEvents = filteredEvents.filter(e => !e.isApproved);
-  const approvedEvents = filteredEvents.filter(e => e.isApproved);
+  const pendingEvents = filteredEventsState.filter(e => !e.isApproved);
+  const approvedEvents = filteredEventsState.filter(e => e.isApproved);
 
   return (
     <div className="min-h-screen bg-gray-50 font-sans">
@@ -122,7 +140,7 @@ export default function AdminDashboard() {
           )}
         </div>
 
-        {/* Onaylananlar Tablosu (DÜZELTİLDİ: TIKLANABİLİR YAPILDI) */}
+        {/* Onaylananlar Tablosu */}
         <div>
           <h2 className="text-xl font-bold text-gray-800 mb-6 flex items-center gap-3">
             <div className="w-3 h-3 bg-green-500 rounded-full"></div> Onaylanmış Etkinlikler
@@ -134,7 +152,6 @@ export default function AdminDashboard() {
                 </thead>
                 <tbody className="divide-y divide-gray-100">
                   {approvedEvents.map(event => (
-                    // DÜZELTME: onClick handler eklendi
                     <tr 
                         key={event.id} 
                         onClick={() => openModal(event)} 
@@ -160,7 +177,7 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      {/* Modal - Modernized */}
+      {/* Modal */}
       {selectedEvent && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm" onClick={closeModal}>
           <div className="bg-white rounded-3xl shadow-2xl w-full max-w-xl overflow-hidden animate-fadeIn" onClick={e => e.stopPropagation()}>
