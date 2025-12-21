@@ -2,21 +2,19 @@
 
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { FaCheck, FaTimes, FaCalendarAlt, FaUser, FaBuilding, FaSignOutAlt, FaEye, FaPhone, FaEnvelope, FaSearch, FaFileExcel, FaClock } from 'react-icons/fa';
+// GEREKSİZ İKONLAR SİLİNDİ
+import { FaCalendarAlt, FaSignOutAlt, FaSearch, FaFileExcel, FaClock, FaTimes } from 'react-icons/fa';
 import { useRouter } from 'next/navigation';
 import DashboardStats from '../components/DashboardStats';
 import * as XLSX from 'xlsx';
 import { toast } from 'react-toastify';
-// API_URL EKLENDİ (Eğer admin panelinde utils/api.js yoksa, frontend'deki gibi oluşturmalısın veya buraya direkt linki yazmalısın)
+// Dosya yolu düzeltildi (utils bir üst klasörde)
 import API_URL from '../utils/api';
 
 export default function AdminDashboard() {
   const router = useRouter();
   const [events, setEvents] = useState([]);
-  const [filteredEvents, setFilteredComments] = useState([]); // setFilteredEvents ismini düzeltelim, aşağıda setFilteredEvents kullanmışsın ama state adı farklı kalmış olabilir. 
-  // Düzeltme: State adını filteredEvents yapıyorum.
-  const [filteredEventsState, setFilteredEvents] = useState([]); // Çakışmayı önlemek için adını değiştirdim
-
+  const [filteredEvents, setFilteredEvents] = useState([]); 
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState(''); 
   const [selectedEvent, setSelectedEvent] = useState(null);
@@ -25,7 +23,7 @@ export default function AdminDashboard() {
     const token = localStorage.getItem('adminToken');
     if (!token) router.push('/login');
     else fetchEvents();
-  }, []);
+  }, []); // router bağımlılığı kaldırıldı (loop olmasın diye)
 
   useEffect(() => {
     if (!searchTerm) {
@@ -38,7 +36,6 @@ export default function AdminDashboard() {
 
   const fetchEvents = async () => {
     try {
-      // DÜZELTİLDİ: API_URL kullanıldı
       const response = await axios.get(`${API_URL}/events?admin=true`);
       setEvents(response.data);
       setFilteredEvents(response.data);
@@ -49,7 +46,7 @@ export default function AdminDashboard() {
   const handleLogout = () => { localStorage.removeItem('adminToken'); router.push('/login'); };
 
   const exportToExcel = () => {
-    const data = filteredEventsState.map(e => ({ 'Başlık': e.title, 'Salon': e.hall, 'Başlangıç': new Date(e.startDate).toLocaleString('tr-TR'), 'Düzenleyen': e.organizer, 'Durum': e.isApproved ? 'Onaylı' : 'Bekliyor' }));
+    const data = filteredEvents.map(e => ({ 'Başlık': e.title, 'Salon': e.hall, 'Başlangıç': new Date(e.startDate).toLocaleString('tr-TR'), 'Düzenleyen': e.organizer, 'Durum': e.isApproved ? 'Onaylı' : 'Bekliyor' }));
     const ws = XLSX.utils.json_to_sheet(data);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Rapor");
@@ -58,7 +55,6 @@ export default function AdminDashboard() {
 
   const handleApprove = async (id) => {
     try { 
-        // DÜZELTİLDİ: API_URL kullanıldı
         await axios.put(`${API_URL}/events/${id}/approve`); 
         closeModal(); 
         fetchEvents(); 
@@ -68,10 +64,9 @@ export default function AdminDashboard() {
   };
 
   const handleDelete = async (e, id) => { 
-    if (e && e.stopPropagation) e.stopPropagation(); // Tıklama olayını durdur
+    if (e && e.stopPropagation) e.stopPropagation(); 
     if(!confirm('Silmek istediğine emin misin?')) return;
     try { 
-        // DÜZELTİLDİ: API_URL kullanıldı
         await axios.delete(`${API_URL}/events/${id}`); 
         closeModal(); 
         fetchEvents(); 
@@ -83,12 +78,11 @@ export default function AdminDashboard() {
   const openModal = (e) => { setSelectedEvent(e); document.body.style.overflow = 'hidden'; };
   const closeModal = () => { setSelectedEvent(null); document.body.style.overflow = 'unset'; };
 
-  const pendingEvents = filteredEventsState.filter(e => !e.isApproved);
-  const approvedEvents = filteredEventsState.filter(e => e.isApproved);
+  const pendingEvents = filteredEvents.filter(e => !e.isApproved);
+  const approvedEvents = filteredEvents.filter(e => e.isApproved);
 
   return (
     <div className="min-h-screen bg-gray-50 font-sans">
-      {/* Header */}
       <header className="bg-white border-b border-gray-200 sticky top-0 z-40 px-6 py-4 flex justify-between items-center shadow-sm">
         <h1 className="text-xl font-extrabold text-gray-800 tracking-tight flex items-center gap-2">
             <span className="w-8 h-8 bg-omu-red text-white rounded-lg flex items-center justify-center">O</span>
@@ -104,7 +98,6 @@ export default function AdminDashboard() {
       <div className="container mx-auto p-8 max-w-7xl">
         {!loading && <DashboardStats events={events} />}
 
-        {/* Toolbar */}
         <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-10 bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
             <div className="relative w-full md:w-1/2">
                 <FaSearch className="absolute left-4 top-3.5 text-gray-400" />
@@ -113,7 +106,6 @@ export default function AdminDashboard() {
             <button onClick={exportToExcel} className="bg-green-600 text-white px-6 py-3 rounded-xl font-bold flex items-center gap-2 hover:bg-green-700 transition shadow-lg shadow-green-200"><FaFileExcel /> Rapor İndir</button>
         </div>
 
-        {/* Onay Bekleyenler */}
         <div className="mb-12">
           <h2 className="text-xl font-bold text-gray-800 mb-6 flex items-center gap-3">
             <div className="w-3 h-3 bg-yellow-400 rounded-full animate-pulse"></div> Onay Bekleyen Talepler
@@ -140,7 +132,6 @@ export default function AdminDashboard() {
           )}
         </div>
 
-        {/* Onaylananlar Tablosu */}
         <div>
           <h2 className="text-xl font-bold text-gray-800 mb-6 flex items-center gap-3">
             <div className="w-3 h-3 bg-green-500 rounded-full"></div> Onaylanmış Etkinlikler
@@ -177,7 +168,6 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      {/* Modal */}
       {selectedEvent && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm" onClick={closeModal}>
           <div className="bg-white rounded-3xl shadow-2xl w-full max-w-xl overflow-hidden animate-fadeIn" onClick={e => e.stopPropagation()}>
@@ -189,11 +179,6 @@ export default function AdminDashboard() {
                 <button onClick={closeModal} className="bg-gray-100 p-2 rounded-full hover:bg-gray-200 transition"><FaTimes /></button>
             </div>
             <div className="p-8 space-y-6">
-                <div className="grid grid-cols-2 gap-4">
-                    <div className="p-4 bg-gray-50 rounded-2xl border border-gray-100"><p className="text-xs font-bold text-gray-400 uppercase mb-1">Salon</p><p className="font-bold text-gray-800 uppercase">{selectedEvent.hall}</p></div>
-                    <div className="p-4 bg-gray-50 rounded-2xl border border-gray-100"><p className="text-xs font-bold text-gray-400 uppercase mb-1">Bölüm</p><p className="font-bold text-gray-800">{selectedEvent.department}</p></div>
-                </div>
-                <div><p className="text-xs font-bold text-gray-400 uppercase mb-2">İletişim</p><div className="flex gap-4 text-sm font-medium text-gray-700"><span className="flex items-center gap-2"><FaUser className="text-gray-400"/> {selectedEvent.organizer}</span><span className="flex items-center gap-2"><FaPhone className="text-gray-400"/> {selectedEvent.phone}</span></div></div>
                 <div><p className="text-xs font-bold text-gray-400 uppercase mb-2">Açıklama</p><p className="text-gray-600 leading-relaxed bg-gray-50 p-4 rounded-2xl border border-gray-100 text-sm">{selectedEvent.description}</p></div>
                 <div className="grid grid-cols-2 gap-4 pt-4">
                     <button onClick={() => handleDelete(null, selectedEvent.id)} className="w-full py-3 bg-red-50 text-red-600 font-bold rounded-xl hover:bg-red-100 transition">Sil / Reddet</button>
