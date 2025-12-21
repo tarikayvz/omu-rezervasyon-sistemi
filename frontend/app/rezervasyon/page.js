@@ -1,14 +1,15 @@
 'use client';
 
 import API_URL from '../../utils/api';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react'; // Suspense eklendi
 import axios from 'axios';
 import { useSearchParams } from 'next/navigation';
 import Header from '../../components/Header';
 import { FaUser, FaBuilding, FaPhone, FaEnvelope } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 
-export default function RezervasyonPage() {
+// --- 1. ASIL İÇERİĞİ BURAYA TAŞIDIK ---
+function RezervasyonContent() {
   const searchParams = useSearchParams();
 
   const [formData, setFormData] = useState({
@@ -17,7 +18,6 @@ export default function RezervasyonPage() {
   });
   const [status, setStatus] = useState(null);
 
-  // --- URL PARAMETRELERİNİ OKUMA ---
   useEffect(() => {
     const urlStartDate = searchParams.get('startDate');
     const urlStartTime = searchParams.get('startTime');
@@ -25,14 +25,13 @@ export default function RezervasyonPage() {
     const urlEndTime = searchParams.get('endTime');
     const urlHall = searchParams.get('hall');
 
-    // Sadece URL'den geçerli veri geldiyse ve form henüz dolmamışsa işlem yap
     if (urlStartDate && urlStartTime && urlHall) {
         setFormData(prev => ({
             ...prev,
             startDate: urlStartDate,
             endDate: urlEndDate || urlStartDate,
             startTime: urlStartTime,
-            endTime: urlEndTime || '17:00', // Varsayılan bitiş saati
+            endTime: urlEndTime || '17:00',
             hall: urlHall
         }));
         
@@ -44,7 +43,6 @@ export default function RezervasyonPage() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]); 
-  // -----------------------------------
 
   const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
@@ -82,14 +80,10 @@ export default function RezervasyonPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 font-sans">
-      <Header />
-      
-      <div className="container mx-auto px-4 py-12">
+    <div className="container mx-auto px-4 py-12">
         <div className="max-w-4xl mx-auto bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100">
           
           <div className="bg-gray-900 text-white p-10 text-center relative overflow-hidden">
-            {/* Arka plan efekti */}
             <div className="absolute top-0 left-0 w-full h-full bg-red-600/10"></div>
             <h2 className="text-3xl font-extrabold mb-2 relative z-10">Salon Rezervasyon Formu</h2>
             <p className="text-gray-400 relative z-10">Lütfen bilgileri eksiksiz doldurunuz.</p>
@@ -97,8 +91,7 @@ export default function RezervasyonPage() {
 
           <div className="p-8 md:p-12">
             <form onSubmit={handleSubmit} className="space-y-8">
-              
-              {/* Bölüm 1: Kişisel Bilgiler */}
+              {/* Form içeriği aynen kaldı */}
               <div>
                 <h3 className="text-lg font-bold text-gray-800 mb-6 flex items-center gap-2 border-b pb-2">
                     <span className="bg-blue-100 text-blue-600 w-8 h-8 rounded-full flex items-center justify-center text-sm">1</span> 
@@ -124,7 +117,6 @@ export default function RezervasyonPage() {
                 </div>
               </div>
 
-              {/* Bölüm 2: Etkinlik Detayları */}
               <div>
                 <h3 className="text-lg font-bold text-gray-800 mb-6 flex items-center gap-2 border-b pb-2">
                     <span className="bg-orange-100 text-orange-600 w-8 h-8 rounded-full flex items-center justify-center text-sm">2</span> 
@@ -177,6 +169,18 @@ export default function RezervasyonPage() {
           </div>
         </div>
       </div>
+  );
+}
+
+// --- 2. ANA SAYFAYI "SUSPENSE" İLE SARMALADIK ---
+export default function RezervasyonPage() {
+  return (
+    <div className="min-h-screen bg-gray-50 font-sans">
+      <Header />
+      {/* URL parametrelerini beklerken burası gösterilecek */}
+      <Suspense fallback={<div className="text-center py-20 font-bold text-gray-500">Yükleniyor...</div>}>
+        <RezervasyonContent />
+      </Suspense>
     </div>
   );
 }
