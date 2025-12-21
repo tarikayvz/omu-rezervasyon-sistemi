@@ -6,7 +6,7 @@ import Header from '../../components/Header';
 import API_URL from '../../utils/api';
 import { startOfWeek, addDays, format, addWeeks, subWeeks, isSameDay, parseISO, setHours, setMinutes, isBefore, isAfter } from 'date-fns';
 import { tr } from 'date-fns/locale';
-import { FaChevronLeft, FaChevronRight, FaCircle, FaCheck, FaTimes, FaCalendarCheck, FaClock, FaUser, FaBuilding, FaEnvelope, FaPhone, FaMapMarkerAlt, FaInfoCircle, FaCalendarAlt } from 'react-icons/fa';
+import { FaChevronLeft, FaChevronRight, FaCircle, FaCheck, FaTimes, FaCalendarCheck, FaClock, FaUser, FaBuilding, FaEnvelope, FaPhone, FaMapMarkerAlt, FaInfoCircle } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 
 export default function MusaitlikPage() {
@@ -17,12 +17,9 @@ export default function MusaitlikPage() {
   
   const [selection, setSelection] = useState(null); 
   
-  // REZERVASYON YAPMA MODALI
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalData, setModalData] = useState(null);
-  
-  // ETKİNLİK GÖRÜNTÜLEME MODALI (YENİ)
-  const [viewEvent, setViewEvent] = useState(null);
+  const [viewEvent, setViewEvent] = useState(null); 
 
   const [formLoading, setFormLoading] = useState(false);
   
@@ -43,10 +40,8 @@ export default function MusaitlikPage() {
     setLoading(true);
     try {
       const res = await axios.get(`${API_URL}/events`);
-      const filtered = res.data.filter(e => 
-        e.isApproved && 
-        e.hall.toLowerCase() === selectedHall.toLowerCase()
-      );
+      // Tüm etkinlikleri çekiyoruz (Onaylı/Onaysız hepsi)
+      const filtered = res.data.filter(e => e.hall.toLowerCase() === selectedHall.toLowerCase());
       setEvents(filtered);
     } catch (error) { console.error(error); } 
     finally { setLoading(false); }
@@ -56,30 +51,34 @@ export default function MusaitlikPage() {
     const slotStart = setHours(setMinutes(day, 0), hour);
     const slotEnd = setHours(setMinutes(day, 0), hour + 1);
 
-    const event = events.find(e => {
+    // SADECE ONAYLI OLANLARI 'FULL' OLARAK İŞARETLE
+    const approvedEvent = events.find(e => {
+      // Eğer onaylanmamışsa görmezden gel (yani boş say)
+      if (!e.isApproved) return false;
+
       const eStart = parseISO(e.startDate);
       const eEnd = parseISO(e.endDate);
       return (eStart < slotEnd && eEnd > slotStart);
     });
 
-    if (event) return { status: 'full', event };
+    if (approvedEvent) return { status: 'full', event: approvedEvent };
+    
     if (slotStart < new Date()) return { status: 'past', event: null };
+    
+    // Onay bekleyenler de 'empty' (seçilebilir) döner
     return { status: 'empty', event: null };
   };
 
-  // --- TIKLAMA MANTIĞI (GÜNCELLENDİ) ---
   const handleSlotClick = (day, hour, status, event) => {
     
-    // 1. Durum: Dolu bir kutuya tıklandıysa -> DETAY GÖSTER
+    // Sadece ONAYLI (Kırmızı) olanlara tıklayınca detay göster
     if (status === 'full' && event) {
         setViewEvent(event);
         return;
     }
 
-    // Geçmiş zamana tıklanmaz
     if (status === 'past') return;
 
-    // 2. Durum: Boş kutuya tıklandı -> SEÇİM MANTIĞI
     if (!selection) {
         setSelection({ day, hour });
         toast.info('Şimdi bitiş saatini seçiniz 👇', { autoClose: 2000, theme: "dark" });
@@ -94,14 +93,17 @@ export default function MusaitlikPage() {
        endDateTime = setHours(setMinutes(selection.day, 0), selection.hour + 1); 
     }
 
+    // ÇAKIŞMA KONTROLÜ: Sadece ONAYLI etkinliklerle çakışıyor mu?
     const hasConflict = events.some(e => {
+        if (!e.isApproved) return false; // Onaysızları atla
+
         const eStart = parseISO(e.startDate);
         const eEnd = parseISO(e.endDate);
         return (isBefore(eStart, endDateTime) && isAfter(eEnd, startDateTime));
     });
 
     if (hasConflict) {
-        toast.error('Seçilen aralıkta dolu saatler var!');
+        toast.error('Seçilen aralıkta ONAYLI bir etkinlik var!');
         setSelection(null);
         return;
     }
@@ -123,7 +125,7 @@ export default function MusaitlikPage() {
         endDate: modalData.end
       });
       
-      toast.success('Rezervasyon talebiniz başarıyla alındı! 🎉');
+      toast.success('Rezervasyon talebiniz alındı! Yönetici onayı bekleniyor.');
       setIsModalOpen(false);
       setFormData({ title: '', department: '', organizer: '', email: '', phone: '', description: '' });
       fetchEvents(); 
@@ -154,7 +156,7 @@ export default function MusaitlikPage() {
             <div className="relative z-10">
                 <div className="text-center mb-8">
                     <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">Rezervasyon Takvimi</h1>
-                    <p className="text-gray-500 mt-2">Zaman aralığı seçin veya dolu etkinlikleri inceleyin.</p>
+                    <p className="text-gray-500 mt-2">Müsait saatleri seçip talep oluşturabilirsiniz.</p>
                 </div>
 
                 <div className="flex flex-wrap justify-center gap-4 mb-8">
@@ -183,6 +185,12 @@ export default function MusaitlikPage() {
                         </span>
                     </div>
                     <button onClick={() => setCurrentDate(addWeeks(currentDate, 1))} className="p-4 bg-white rounded-xl shadow-sm text-gray-600 hover:text-omu-red hover:bg-red-50 transition"><FaChevronRight /></button>
+                </div>
+                
+                {/* Renk Açıklamaları (SADELEŞTİRİLDİ) */}
+                <div className="flex justify-center gap-4 mt-6 text-xs font-bold uppercase tracking-wider text-gray-500">
+                    <div className="flex items-center gap-2"><FaCircle className="text-green-500"/> Müsait (Talep Edilebilir)</div>
+                    <div className="flex items-center gap-2"><FaCircle className="text-red-500"/> Dolu (Onaylanmış)</div>
                 </div>
             </div>
         </div>
@@ -223,9 +231,7 @@ export default function MusaitlikPage() {
                                 return (
                                     <button
                                         key={i}
-                                        // Dolu kutuya da tıklayınca event bilgisini gönderiyoruz
                                         onClick={() => handleSlotClick(day, hour, status, event)}
-                                        // disabled kaldırıldı (geçmiş hariç)
                                         disabled={status === 'past'}
                                         className={`relative h-14 rounded-xl flex items-center justify-center font-bold text-sm transition-all duration-200 border-2
                                             ${
@@ -234,13 +240,12 @@ export default function MusaitlikPage() {
                                                 : status === 'empty' 
                                                     ? 'bg-white border-green-100 text-green-600 hover:border-green-400 hover:bg-green-50 hover:shadow-md hover:scale-105 active:scale-95' 
                                                     : status === 'full'
-                                                        ? 'bg-red-50 border-red-200 text-red-400 hover:bg-red-100 hover:text-red-600 hover:scale-105 cursor-pointer' // Dolu ve Tıklanabilir
+                                                        ? 'bg-red-50 border-red-200 text-red-400 hover:bg-red-100 hover:scale-105 cursor-pointer' // Dolu
                                                         : 'bg-gray-100 border-gray-100 text-gray-300 cursor-not-allowed opacity-60' 
                                             }`}
                                     >
                                         {isSelectionStart ? <FaCheck className="animate-bounce" /> : 
                                          status === 'empty' ? <span className="opacity-0 hover:opacity-100 text-xs">Seç</span> : 
-                                         // Dolu ise Bilgi İkonu
                                          status === 'full' ? <FaInfoCircle size={14} /> : 
                                          <FaCircle size={6} />}
                                     </button>
@@ -252,7 +257,7 @@ export default function MusaitlikPage() {
             </div>
         </div>
 
-        {/* --- 1. REZERVASYON YAPMA MODALI --- */}
+        {/* --- 1. REZERVASYON MODALI --- */}
         {isModalOpen && modalData && (
             <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/80 backdrop-blur-sm" onClick={() => setIsModalOpen(false)}>
                 <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto animate-fadeIn" onClick={e => e.stopPropagation()}>
@@ -317,18 +322,18 @@ export default function MusaitlikPage() {
             </div>
         )}
 
-        {/* --- 2. ETKİNLİK DETAY MODALI (YENİ) --- */}
+        {/* --- 2. DETAY MODALI --- */}
         {viewEvent && (
             <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/80 backdrop-blur-sm" onClick={() => setViewEvent(null)}>
                 <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden animate-fadeIn relative" onClick={e => e.stopPropagation()}>
                     
-                    {/* Kapat Butonu */}
                     <button onClick={() => setViewEvent(null)} className="absolute top-4 right-4 bg-gray-100 p-2 rounded-full hover:bg-gray-200 transition z-10 text-gray-600"><FaTimes /></button>
 
                     <div className="p-8 pb-4">
                         <div className="inline-flex items-center gap-2 bg-red-50 text-red-600 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider mb-4 border border-red-100">
                             <FaCircle size={8} /> Dolu / Rezerve
                         </div>
+                        
                         <h2 className="text-2xl font-extrabold text-gray-900 mb-2 leading-tight">{viewEvent.title}</h2>
                         <p className="text-gray-500 text-sm font-medium">{viewEvent.department}</p>
                     </div>
