@@ -3,7 +3,7 @@ const { Op } = require('sequelize');
 const sendEmail = require('../utils/emailService');
 const { format } = require('date-fns');
 
-// 1. Sadece ONAYLI etkinlikleri getir (Takvim Sayfası İçin)
+// 1. Get All Events (For Calendar Page)
 exports.getAllEvents = async (req, res) => {
   try {
     const isAdmin = req.query.admin === 'true';
@@ -19,20 +19,24 @@ exports.getAllEvents = async (req, res) => {
   }
 };
 
-// 2. Yeni Etkinlik Oluştur (Çakışma Kontrolü + Geçmiş Tarih Engeli)
+// 2. Create New Event (Conflict Check + Past Date Check)
+// 2. Yeni Etkinlik Oluştur (DÜZELTİLMİŞ)
 exports.createEvent = async (req, res) => {
   try {
     const { title, hall, description, startDate, endDate, organizer, department, email, phone } = req.body;
 
-    // --- 1. GEÇMİŞ TARİH KONTROLÜ (YENİ EKLENDİ) ---
+    // --- 1. GEÇMİŞ TARİH KONTROLÜ ---
     if (new Date(startDate) < new Date()) {
         return res.status(400).json({ message: 'Geçmiş bir tarihe rezervasyon oluşturulamaz.' });
     }
 
-    // --- 2. ÇAKIŞMA KONTROLÜ ---
+    // --- 2. ÇAKIŞMA KONTROLÜ (KRİTİK DÜZELTME BURADA) ---
+    // isApproved: true ekledik. Artık sadece ONAYLANMIŞ etkinlik varsa hata verecek.
+    // Onay bekleyen varsa, yeni kayıt oluşturmaya izin verecek.
     const conflict = await Event.findOne({
       where: {
         hall: hall,
+        isApproved: true, // <--- BURASI ÇOK ÖNEMLİ! Sadece onaylıysa dolu say.
         [Op.or]: [
           { startDate: { [Op.between]: [startDate, endDate] } },
           { endDate: { [Op.between]: [startDate, endDate] } },
@@ -42,13 +46,14 @@ exports.createEvent = async (req, res) => {
     });
 
     if (conflict) {
-      return res.status(409).json({ message: 'Seçilen tarih ve saat aralığında bu salon dolu.' });
+      // Eğer 409 dönerse, demek ki bu saatte ONAYLI bir etkinlik var.
+      return res.status(409).json({ message: 'Bu saatte ONAYLANMIŞ bir etkinlik var! Başka bir saat seçiniz.' });
     }
 
     // --- 3. KAYIT OLUŞTURMA ---
     const newEvent = await Event.create({ 
       title, hall, description, startDate, endDate, organizer, department, email, phone,
-      isApproved: false 
+      isApproved: false // Varsayılan olarak onaysız başlar
     });
 
     console.log(`📨 Başvuru maili gönderiliyor: ${email}`);
@@ -62,19 +67,21 @@ exports.createEvent = async (req, res) => {
       <p><strong>Tarih:</strong> ${new Date(startDate).toLocaleString('tr-TR')}</p>
       <br/>
       <p>Talebiniz yönetici tarafından incelendikten sonra onay durumu hakkında bilgilendirileceksiniz.</p>
+      <p>Aynı saat için başka talepler de olabilir, sistem öncelik tanımaz; yönetici onayı esastır.</p>
       <p><em>OMÜ Mühendislik Fakültesi Rezervasyon Sistemi</em></p>
     `;
 
     sendEmail(email, mailSubject, mailContent).catch(err => console.error("Mail gönderme hatası:", err));
     
     res.status(201).json(newEvent);
+
   } catch (error) {
     console.error("Create Event Hatası:", error);
     res.status(500).json({ error: error.message });
   }
 };
 
-// 3. Etkinlik Sil
+// 3. Delete Event
 exports.deleteEvent = async (req, res) => {
   try {
     const { id } = req.params;
@@ -85,25 +92,47 @@ exports.deleteEvent = async (req, res) => {
   }
 };
 
-// 4. Etkinliği Onayla (Admin Paneli İçin)
+// 4. Approve Event (For Admin Panel)
 exports.approveEvent = async (req, res) => {
   try {
     const { id } = req.params;
     
-    // 1. Etkinliği bul
+    // 1. Find the event
     const event = await Event.findByPk(id);
     if (!event) {
       return res.status(404).json({ message: 'Etkinlik bulunamadı' });
     }
 
-    // 2. Onay durumunu güncelle
+    // --- CONFLICT CHECK BEFORE APPROVAL (NEW) ---
+    // Before approving, check if another APPROVED event already exists in this slot.
+    // This prevents approving two overlapping requests by mistake.
+    const conflict = await Event.findOne({
+        where: {
+            hall: event.hall,
+            isApproved: true,
+            id: { [Op.ne]: event.id }, // Exclude current event
+            [Op.or]: [
+                { startDate: { [Op.between]: [event.startDate, event.endDate] } },
+                { endDate: { [Op.between]: [event.startDate, event.endDate] } },
+                { [Op.and]: [ { startDate: { [Op.lte]: event.startDate } }, { endDate: { [Op.gte]: event.endDate } } ] }
+            ]
+        }
+    });
+
+    if (conflict) {
+        return res.status(409).json({ message: 'Bu saatte zaten onaylanmış başka bir etkinlik var! Önce onu iptal etmelisiniz.' });
+    }
+
+    // 2. Update approval status
     event.isApproved = true;
     await event.save();
     
     console.log(`📨 Onay maili gönderiliyor: ${event.email}`);
 
-    // 3. ONAY MAİLİ GÖNDER (DİJİTAL BİLET LİNKİ EKLENDİ)
-    const ticketLink = `http://localhost:3000/bilet/${event.id}`;
+    // 3. SEND APPROVAL EMAIL (WITH TICKET LINK)
+    // IMPORTANT: Change localhost to your actual Render URL for production
+    const baseUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+    const ticketLink = `${baseUrl}/bilet/${event.id}`;
 
     const mailSubject = 'Rezervasyonunuz Onaylandı! 🎫';
     const mailContent = `
@@ -119,7 +148,7 @@ exports.approveEvent = async (req, res) => {
       <p>Etkinlik günü giriş yapabilmek için aşağıdaki butona tıklayarak Dijital Biletinizi oluşturunuz:</p>
       
       <a href="${ticketLink}" style="display: inline-block; background-color: #E30613; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold; margin-top: 10px;">
-         🎫 Biletimi Görüntüle
+          🎫 Biletimi Görüntüle
       </a>
 
       <p style="margin-top:20px; font-size: 12px; color: #666;">Eğer butona tıklayamazsanız: ${ticketLink}</p>
@@ -134,4 +163,4 @@ exports.approveEvent = async (req, res) => {
     console.error("Approve Event Hatası:", error);
     res.status(500).json({ error: error.message });
   }
-};
+}
