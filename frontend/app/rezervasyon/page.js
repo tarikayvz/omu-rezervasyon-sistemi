@@ -4,8 +4,9 @@ import API_URL from '../utils/api';
 import React, { useState } from 'react';
 import axios from 'axios';
 import Header from '../../components/Header';
-import { FaUser, FaBuilding, FaPhone, FaEnvelope, FaCalendarAlt, FaClock, FaCheckCircle, FaExclamationCircle } from 'react-icons/fa';
-import { toast } from 'react-toastify'; // Toastify ekledik
+// GEREKSİZ İKONLAR SİLİNDİ
+import { FaUser, FaBuilding, FaPhone, FaEnvelope } from 'react-icons/fa';
+import { toast } from 'react-toastify';
 
 
 export default function RezervasyonPage() {
@@ -25,11 +26,10 @@ export default function RezervasyonPage() {
     const endDateTime = new Date(`${formData.endDate}T${formData.endTime}`);
     const now = new Date(); // Şu anki zaman
 
-    // --- YENİ EKLENEN KONTROL: GEÇMİŞ TARİH ENGELİ ---
+    // GEÇMİŞ TARİH ENGELİ
     if (startDateTime < now) {
         return toast.warning('Geçmiş bir zamana rezervasyon yapamazsınız! ⏳');
     }
-    // -------------------------------------------------
 
     // Bitiş tarihi kontrolü
     if (endDateTime <= startDateTime) {
@@ -49,7 +49,7 @@ export default function RezervasyonPage() {
     } catch (error) {
       console.error(error);
       if (error.response?.status === 409) toast.warning('Seçilen tarih ve saatte salon dolu! ⚠️');
-      else if (error.response?.status === 400) toast.error(error.response.data.message); // Backend hatasını göster
+      else if (error.response?.status === 400) toast.error(error.response.data.message); 
       else toast.error('Bir hata oluştu.');
       setStatus('idle');
     }
@@ -155,7 +155,6 @@ export default function RezervasyonPage() {
   );
 }
 
-// Yardımcı Input Bileşeni (Kod Tekrarını Önlemek İçin)
 function InputField({ label, icon, ...props }) {
     return (
         <div className="space-y-2">

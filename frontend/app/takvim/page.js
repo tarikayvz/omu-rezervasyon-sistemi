@@ -1,15 +1,16 @@
 'use client';
 
+// DİKKAT: API_URL buradan geliyor
+import API_URL from '../utils/api';
 import React, { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import axios from 'axios';
 import Header from '../../components/Header';
 import { format, isPast, isFuture, isToday } from 'date-fns';
 import { tr } from 'date-fns/locale';
-import { FaClock, FaHistory, FaTimes, FaStar, FaCommentDots, FaPaperPlane, FaChevronDown, FaChevronUp, FaUser, FaReply, FaReplyAll } from 'react-icons/fa';
+// GEREKSİZ İKONLAR SİLİNDİ
+import { FaClock, FaHistory, FaTimes, FaStar, FaCommentDots, FaChevronUp, FaUser, FaReplyAll } from 'react-icons/fa';
 import { toast } from 'react-toastify';
-// DİKKAT: API_URL eklendi
-import API_URL from '../utils/api';
 
 // --- ÖZEL YILDIZ BİLEŞENİ ---
 const StarRating = ({ rating, setRating, hoverRating, setHoverRating }) => {
@@ -61,7 +62,6 @@ function TakvimContent() {
 
   const fetchEvents = async () => {
     try {
-      // DÜZELTİLDİ
       const response = await axios.get(`${API_URL}/events`);
       setEvents(response.data);
       setLoading(false);
@@ -70,7 +70,6 @@ function TakvimContent() {
 
   const fetchComments = async (eventId) => {
     try {
-      // DÜZELTİLDİ
       const res = await axios.get(`${API_URL}/comments/${eventId}`);
       setComments(res.data);
     } catch (error) { console.error(error); }
@@ -84,12 +83,10 @@ function TakvimContent() {
     
     setCommentLoading(true);
     try {
-      // --- DÜZELTİLDİ: localhost yerine API_URL ---
       await axios.post(`${API_URL}/comments`, {
         ...newComment,
         eventId: selectedEvent.id
       });
-      // ---------------------------------------------
       
       fetchComments(selectedEvent.id);
       setNewComment({ username: '', text: '', rating: 0 });
@@ -144,7 +141,6 @@ function TakvimContent() {
       {selectedEvent && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-60 backdrop-blur-sm" onClick={closeModal}>
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden relative max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-             {/* Modal Header */}
              <div className="bg-gray-900 text-white p-6 flex justify-between items-center sticky top-0 z-10">
                 <div>
                     <h2 className="text-xl font-bold leading-tight">{selectedEvent.title}</h2>
@@ -154,7 +150,6 @@ function TakvimContent() {
              </div>
              
              <div className="p-6 md:p-8">
-                {/* Etkinlik Detayları */}
                 <div className="mb-8">
                     <h3 className="text-sm font-bold text-gray-400 uppercase mb-2 ls-wider">Etkinlik Detayı</h3>
                     <p className="text-gray-700 text-lg leading-relaxed">{selectedEvent.description}</p>
@@ -179,7 +174,6 @@ function TakvimContent() {
                     </div>
                 </div>
 
-                {/* --- DEĞERLENDİRME BÖLÜMÜ --- */}
                 {isPast(new Date(selectedEvent.endDate)) && (
                     <div className="border-t border-gray-100 pt-8">
                         
@@ -197,15 +191,12 @@ function TakvimContent() {
                             </button>
                         </div>
                         
-                        {/* Yorum Formu */}
                         {showCommentForm && (
                             <form onSubmit={submitComment} className="bg-gray-50 p-6 rounded-2xl border border-gray-200 mb-8 animate-fadeIn shadow-sm">
                                 <h4 className="font-bold text-gray-700 mb-4 text-sm uppercase tracking-wider text-center">Puanınız</h4>
-                                
                                 <div className="mb-6 flex justify-center">
                                     <StarRating rating={newComment.rating} setRating={(val) => setNewComment({...newComment, rating: val})} hoverRating={hoverRating} setHoverRating={setHoverRating}/>
                                 </div>
-
                                 <div className="space-y-4">
                                     <input type="text" placeholder="Adınız Soyadınız" className="w-full p-3 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-omu-red/20 focus:border-omu-red outline-none transition" value={newComment.username} onChange={e => setNewComment({...newComment, username: e.target.value})}/>
                                     <textarea placeholder="Bu etkinlik nasıldı?" className="w-full p-3 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-omu-red/20 focus:border-omu-red outline-none transition resize-none" rows="3" value={newComment.text} onChange={e => setNewComment({...newComment, text: e.target.value})}></textarea>
@@ -214,7 +205,6 @@ function TakvimContent() {
                             </form>
                         )}
 
-                        {/* --- YORUM LİSTESİ --- */}
                         <div className="space-y-6 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
                             {comments.length === 0 ? (
                                 <div className="text-center py-10 bg-gray-50 rounded-2xl border border-dashed border-gray-300">
@@ -223,46 +213,32 @@ function TakvimContent() {
                                     <p className="text-sm text-gray-400">İlk yorumu siz yapın!</p>
                                 </div>
                             ) : comments.map(comment => (
-                                // ANA YORUM KARTI
                                 <div key={comment.id} className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 transition hover:shadow-md">
-                                    
-                                    {/* Üst Kısım: Avatar, İsim, Tarih, Puan */}
                                     <div className="flex justify-between items-start mb-4">
                                         <div className="flex items-center gap-4">
-                                            {/* Profesyonel Avatar */}
                                             <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center text-gray-500 border border-gray-200 shadow-sm">
                                                 <FaUser size={16} />
                                             </div>
                                             <div>
-                                                {/* Daha belirgin isim ve silik tarih */}
                                                 <h4 className="font-bold text-gray-900 leading-tight">{comment.username}</h4>
                                                 <span className="text-xs font-medium text-gray-500">
                                                     {format(new Date(comment.createdAt), 'd MMMM yyyy', { locale: tr })}
                                                 </span>
                                             </div>
                                         </div>
-                                        {/* Yıldızlar */}
                                         <div className="flex text-yellow-400 bg-yellow-50 px-2 py-1 rounded-full border border-yellow-100">
                                             {[...Array(5)].map((_, i) => <FaStar key={i} size={14} color={i < comment.rating ? "#f59e0b" : "#e5e7eb"} />)}
                                         </div>
                                     </div>
-
-                                    {/* Yorum Metni */}
                                     <div className="pl-14">
                                         <p className="text-gray-700 leading-relaxed">{comment.text}</p>
                                     </div>
-
-                                    {/* --- YÖNETİCİ CEVABI --- */}
                                     {comment.reply && (
                                         <div className="mt-4 pl-14">
                                             <div className="bg-red-50/50 p-4 rounded-xl border border-red-100 relative">
-                                                {/* Cevap ikonu */}
                                                 <FaReplyAll className="absolute top-4 left-[-12px] text-omu-red bg-white rounded-full p-1 shadow-sm border border-red-100 text-xl" />
-                                                
                                                 <h5 className="text-xs font-bold text-omu-red uppercase tracking-wider mb-2">Yönetici Yanıtı</h5>
-                                                <p className="text-gray-800 italic text-sm leading-relaxed">
-                                                    "{comment.reply}"
-                                                </p>
+                                                <p className="text-gray-800 italic text-sm leading-relaxed">"{comment.reply}"</p>
                                             </div>
                                         </div>
                                     )}
