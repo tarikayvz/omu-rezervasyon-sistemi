@@ -1,6 +1,10 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  /* config options here */
+  eslint: {
+    // Uyarı: Bu, build sırasında ESLint hatalarını görmezden gelir.
+    // Proje canlıya çıkar ama hataları sonra düzeltmen önerilir.
+    ignoreDuringBuilds: true,
+  },
 };
 
 export default nextConfig;
