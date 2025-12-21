@@ -1,14 +1,13 @@
 'use client';
 
-// DİKKAT: API_URL buradan geliyor
-import API_URL from '../utils/api';
+// DÜZELTME: Bir nokta daha eklendi (../../)
+import API_URL from '../../utils/api';
 import React, { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import axios from 'axios';
 import Header from '../../components/Header';
 import { format, isPast, isFuture, isToday } from 'date-fns';
 import { tr } from 'date-fns/locale';
-// GEREKSİZ İKONLAR SİLİNDİ
 import { FaClock, FaHistory, FaTimes, FaStar, FaCommentDots, FaChevronUp, FaUser, FaReplyAll } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 

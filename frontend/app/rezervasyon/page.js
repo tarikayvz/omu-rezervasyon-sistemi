@@ -1,10 +1,10 @@
 'use client';
 
-import API_URL from '../utils/api';
+// DÜZELTME: Bir nokta daha eklendi (../../)
+import API_URL from '../../utils/api';
 import React, { useState } from 'react';
 import axios from 'axios';
 import Header from '../../components/Header';
-// GEREKSİZ İKONLAR SİLİNDİ
 import { FaUser, FaBuilding, FaPhone, FaEnvelope } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 
