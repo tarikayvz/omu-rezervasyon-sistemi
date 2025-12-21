@@ -2,38 +2,53 @@
 
 const Sequelize = require('sequelize');
 const process = require('process');
+// Ortam değişkenini al (production veya development)
 const env = process.env.NODE_ENV || 'development';
-const config = require(__dirname + '/../config/config.js')[env]; // config.js kullanıyoruz
+// Config dosyasını yükle
+const config = require(__dirname + '/../config/config.js')[env];
 const db = {};
 
 let sequelize;
-if (config.use_env_variable) {
+
+// --- DÜZELTİLEN KISIM ---
+// Eğer Render'daysak (DATABASE_URL varsa) direkt onu kullan
+if (process.env.DATABASE_URL) {
+  sequelize = new Sequelize(process.env.DATABASE_URL, {
+    dialect: 'postgres',
+    protocol: 'postgres',
+    dialectOptions: {
+      ssl: {
+        require: true,
+        rejectUnauthorized: false
+      }
+    }
+  });
+} 
+// Değilse Config dosyasından oku (Yerel çalışma)
+else if (config.use_env_variable) {
   sequelize = new Sequelize(process.env[config.use_env_variable], config);
 } else {
   sequelize = new Sequelize(config.database, config.username, config.password, config);
 }
+// ------------------------
 
-// --- DEĞİŞİKLİK BURADA: MODELLERİ ELLE ÇAĞIRIYORUZ ---
-// Bu sayede "dosyayı bulamadım, okuyamadım" derdi bitiyor.
+// Modelleri Elle Tanımlıyoruz (Daha önce yapmıştık)
 const modelDefiners = [
-    require('./event'),       // event.js dosyanın adı
-    require('./comment'),     // comment.js dosyanın adı
-    require('./announcement') // announcement.js dosyanın adı
+    require('./event'),
+    require('./comment'),
+    require('./announcement')
 ];
 
-// Modelleri başlat
 for (const modelDefiner of modelDefiners) {
     const model = modelDefiner(sequelize, Sequelize.DataTypes);
     db[model.name] = model;
 }
 
-// İlişkileri kur (Associate)
 Object.keys(db).forEach(modelName => {
   if (db[modelName].associate) {
     db[modelName].associate(db);
   }
 });
-// -----------------------------------------------------
 
 db.sequelize = sequelize;
 db.Sequelize = Sequelize;
