@@ -17,34 +17,33 @@ export default function RezervasyonPage() {
   });
   const [status, setStatus] = useState(null);
 
-  // --- ÇOKLU GÜN İÇİN GÜNCELLENDİ ---
+  // --- URL PARAMETRELERİNİ OKUMA ---
   useEffect(() => {
-    // URL'den gelen parametreleri oku
     const urlStartDate = searchParams.get('startDate');
     const urlStartTime = searchParams.get('startTime');
     const urlEndDate = searchParams.get('endDate');
     const urlEndTime = searchParams.get('endTime');
     const urlHall = searchParams.get('hall');
 
-    // Eğer URL'den veri geldiyse formu doldur
+    // Sadece URL'den geçerli veri geldiyse ve form henüz dolmamışsa işlem yap
     if (urlStartDate && urlStartTime && urlHall) {
         setFormData(prev => ({
             ...prev,
-            // Eğer endDate gelmediyse (eski linkler için), startDate ile aynı yap
             startDate: urlStartDate,
-            endDate: urlEndDate || urlStartDate, 
+            endDate: urlEndDate || urlStartDate,
             startTime: urlStartTime,
-            endTime: urlEndTime || '17:00', // Varsayılan bitiş yoksa
+            endTime: urlEndTime || '17:00', // Varsayılan bitiş saati
             hall: urlHall
         }));
         
         if(urlEndDate && urlStartDate !== urlEndDate) {
-            toast.info(`Çoklu gün seçildi: ${urlStartDate} -> ${urlEndDate}`, { position: "top-center" });
+            toast.info(`Çoklu gün seçildi: ${urlStartDate} -> ${urlEndDate}`, { position: "top-center", toastId: 'multi-day-info' });
         } else {
-            toast.info(`Tarih ve Salon seçildi: ${urlHall.toUpperCase()}`, { position: "top-center" });
+            toast.info(`Tarih ve Salon seçildi: ${urlHall.toUpperCase()}`, { position: "top-center", toastId: 'hall-info' });
         }
     }
-  }, [searchParams]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]); 
   // -----------------------------------
 
   const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -90,7 +89,8 @@ export default function RezervasyonPage() {
         <div className="max-w-4xl mx-auto bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100">
           
           <div className="bg-gray-900 text-white p-10 text-center relative overflow-hidden">
-            <div className="absolute top-0 left-0 w-full h-full bg-omu-red/10"></div>
+            {/* Arka plan efekti */}
+            <div className="absolute top-0 left-0 w-full h-full bg-red-600/10"></div>
             <h2 className="text-3xl font-extrabold mb-2 relative z-10">Salon Rezervasyon Formu</h2>
             <p className="text-gray-400 relative z-10">Lütfen bilgileri eksiksiz doldurunuz.</p>
           </div>
@@ -110,7 +110,7 @@ export default function RezervasyonPage() {
                         <label className="text-sm font-bold text-gray-700 ml-1">Bölüm</label>
                         <div className="relative">
                             <FaBuilding className="absolute left-4 top-4 text-gray-400" />
-                            <select required name="department" value={formData.department} onChange={handleChange} className="w-full pl-12 p-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-omu-red/50 focus:border-omu-red outline-none transition appearance-none">
+                            <select required name="department" value={formData.department} onChange={handleChange} className="w-full pl-12 p-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500/50 focus:border-red-500 outline-none transition appearance-none">
                                 <option value="">Seçiniz</option>
                                 <option value="Bilgisayar Müh.">Bilgisayar Mühendisliği</option>
                                 <option value="Elektrik-Elektronik Müh.">Elektrik-Elektronik Müh.</option>
@@ -136,7 +136,7 @@ export default function RezervasyonPage() {
                     <div className="grid grid-cols-3 gap-4">
                         {['mavi', 'pembe', 'konferans'].map((hall) => (
                             <label key={hall} className={`cursor-pointer p-4 rounded-xl border-2 text-center transition flex flex-col items-center gap-2 font-bold capitalize
-                                ${formData.hall === hall ? 'border-omu-red bg-red-50 text-omu-red' : 'border-gray-100 bg-white text-gray-600 hover:border-gray-300'}`}>
+                                ${formData.hall === hall ? 'border-red-500 bg-red-50 text-red-600' : 'border-gray-100 bg-white text-gray-600 hover:border-gray-300'}`}>
                                 <input type="radio" name="hall" value={hall} checked={formData.hall === hall} onChange={handleChange} className="hidden" />
                                 {hall} Salon
                             </label>
@@ -150,26 +150,26 @@ export default function RezervasyonPage() {
                     <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
                         <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Başlangıç</label>
                         <div className="flex gap-2">
-                            <input required name="startDate" value={formData.startDate} onChange={handleChange} type="date" className="w-full p-2 rounded-lg border border-gray-300 focus:border-omu-red outline-none" />
-                            <input required name="startTime" value={formData.startTime} onChange={handleChange} type="time" className="w-full p-2 rounded-lg border border-gray-300 focus:border-omu-red outline-none" />
+                            <input required name="startDate" value={formData.startDate} onChange={handleChange} type="date" className="w-full p-2 rounded-lg border border-gray-300 focus:border-red-500 outline-none" />
+                            <input required name="startTime" value={formData.startTime} onChange={handleChange} type="time" className="w-full p-2 rounded-lg border border-gray-300 focus:border-red-500 outline-none" />
                         </div>
                     </div>
                     <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
                         <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Bitiş</label>
                         <div className="flex gap-2">
-                            <input required name="endDate" value={formData.endDate} onChange={handleChange} type="date" className="w-full p-2 rounded-lg border border-gray-300 focus:border-omu-red outline-none" />
-                            <input required name="endTime" value={formData.endTime} onChange={handleChange} type="time" className="w-full p-2 rounded-lg border border-gray-300 focus:border-omu-red outline-none" />
+                            <input required name="endDate" value={formData.endDate} onChange={handleChange} type="date" className="w-full p-2 rounded-lg border border-gray-300 focus:border-red-500 outline-none" />
+                            <input required name="endTime" value={formData.endTime} onChange={handleChange} type="time" className="w-full p-2 rounded-lg border border-gray-300 focus:border-red-500 outline-none" />
                         </div>
                     </div>
                 </div>
 
                 <div className="mt-6 space-y-2">
                     <label className="text-sm font-bold text-gray-700 ml-1">Açıklama</label>
-                    <textarea name="description" value={formData.description} onChange={handleChange} rows="4" className="w-full p-4 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-omu-red/50 focus:border-omu-red outline-none transition" placeholder="Etkinlik hakkında detaylı bilgi..."></textarea>
+                    <textarea name="description" value={formData.description} onChange={handleChange} rows="4" className="w-full p-4 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500/50 focus:border-red-500 outline-none transition" placeholder="Etkinlik hakkında detaylı bilgi..."></textarea>
                 </div>
               </div>
 
-              <button type="submit" disabled={status === 'loading'} className="w-full bg-omu-red text-white font-bold py-4 rounded-xl hover:bg-red-700 transition duration-300 shadow-lg disabled:opacity-70 disabled:cursor-not-allowed transform hover:-translate-y-1">
+              <button type="submit" disabled={status === 'loading'} className="w-full bg-red-600 text-white font-bold py-4 rounded-xl hover:bg-red-700 transition duration-300 shadow-lg disabled:opacity-70 disabled:cursor-not-allowed transform hover:-translate-y-1">
                 {status === 'loading' ? 'İşleniyor...' : 'Rezervasyon Talebi Oluştur'}
               </button>
 
@@ -187,7 +187,7 @@ function InputField({ label, icon, ...props }) {
             <label className="text-sm font-bold text-gray-700 ml-1">{label}</label>
             <div className="relative">
                 {icon && <div className="absolute left-4 top-4 text-gray-400">{icon}</div>}
-                <input required {...props} className={`w-full ${icon ? 'pl-12' : 'pl-4'} p-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-omu-red/50 focus:border-omu-red outline-none transition`} />
+                <input required {...props} className={`w-full ${icon ? 'pl-12' : 'pl-4'} p-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500/50 focus:border-red-500 outline-none transition`} />
             </div>
         </div>
     );
