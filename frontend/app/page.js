@@ -18,10 +18,10 @@ import 'swiper/css/effect-fade';
 const BASE_URL = API_URL.replace('/api', '');
 const getImageUrl = (img) => (img ? (img.startsWith('http') ? img : `${BASE_URL}${img}`) : '');
 
-// --- 1. MANŞET SLIDER (SABİT KUTU - OYNAMA YAPMAZ) ---
+// --- 1. MANŞET SLIDER (Tam Oturan Kutu) ---
 function MainNewsSlider({ announcements }) {
   return (
-    // Mobilde 280px, PC'de 480px SABİT yükseklik.
+    // Mobilde 280px sabit yükseklik, taşma gizli.
     <div className="group relative w-full h-[280px] md:h-[480px] rounded-2xl overflow-hidden shadow-lg bg-gray-900 border border-gray-800 z-0">
        {announcements.length > 0 ? (
          <Swiper
@@ -38,16 +38,13 @@ function MainNewsSlider({ announcements }) {
             {announcements.map((ann) => (
                 <SwiperSlide key={ann.id} className="relative w-full h-full bg-gray-900">
                     <Link href={`/duyuru/${ann.id}`} className="block w-full h-full relative">
-                        {/* RESİM: object-cover ile kutuyu tam doldurur */}
                         <img 
                             src={getImageUrl(ann.images[0])} 
                             alt={ann.title} 
                             className="w-full h-full object-cover" 
                         />
-                        {/* KARARTMA: Yazı okunsun diye */}
                         <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent"></div>
                         
-                        {/* YAZI ALANI */}
                         <div className="absolute bottom-0 left-0 w-full p-6 z-20">
                             <div className="inline-flex items-center gap-2 bg-omu-red text-white text-[10px] md:text-xs font-bold px-3 py-1 rounded-full mb-3 shadow-sm border border-red-500/50">
                                 <FaCalendarAlt /> {new Date(ann.date).toLocaleDateString('tr-TR')}
@@ -101,7 +98,7 @@ export default function Home() {
         
         <div className="grid lg:grid-cols-12 gap-8 mb-16">
             
-            {/* --- SOL TARAFFER (MANŞET + DİĞER DUYURULAR) --- */}
+            {/* --- SOL TARAFFER --- */}
             <div className="lg:col-span-8 space-y-10">
                 
                 {/* 1. Manşet Bölümü */}
@@ -112,14 +109,15 @@ export default function Home() {
                     <MainNewsSlider announcements={announcements} />
                 </section>
 
-                {/* 2. Diğer Duyurular (KARTLI SWIPER GERİ GELDİ) */}
+                {/* 2. Diğer Duyurular (DÜZELTİLDİ: TEK SÜTUN, TAŞMA YOK) */}
                 {announcements.length > 0 && (
                 <section>
                     <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4">Tüm Duyurular Listesi</h3>
                     <Swiper
-                        modules={[Navigation, Pagination]}
+                        modules={[Pagination]}
                         spaceBetween={20}
-                        slidesPerView={1.2} // Mobilde hafif yandaki görünür
+                        // BURASI DEĞİŞTİ: Mobilde "1" yaptık. Artık tam oturacak, yan taraf gözükmeyecek.
+                        slidesPerView={1} 
                         breakpoints={{
                             640: { slidesPerView: 2 }, // Tablette 2 tane
                             1024: { slidesPerView: 2.5 }, // PC'de 2.5 tane
@@ -130,7 +128,7 @@ export default function Home() {
                     >
                         {announcements.map((ann) => (
                             <SwiperSlide key={ann.id}>
-                                <Link href={`/duyuru/${ann.id}`} className="flex bg-white p-4 rounded-2xl shadow-sm hover:shadow-md transition gap-4 border border-gray-100 group items-center h-36">
+                                <Link href={`/duyuru/${ann.id}`} className="flex bg-white p-4 rounded-2xl shadow-sm hover:shadow-md transition gap-4 border border-gray-100 group items-center h-36 w-full">
                                     <div className="w-28 h-28 bg-gray-100 rounded-xl overflow-hidden flex-shrink-0 relative border border-gray-100">
                                         {ann.images && ann.images[0] ? (
                                             <img 
@@ -161,7 +159,7 @@ export default function Home() {
                 )}
             </div>
 
-            {/* --- SAĞ TARAFFER (YAN MENÜ / AJANDA) --- */}
+            {/* --- SAĞ TARAFFER (YAN MENÜ) --- */}
             <div className="lg:col-span-4 space-y-8">
                 <div className="bg-white rounded-3xl shadow-lg border border-gray-100 p-6 h-full flex flex-col relative overflow-hidden">
                     <div className="absolute top-0 right-0 w-32 h-32 bg-blue-50 rounded-bl-full -z-0"></div>
@@ -203,7 +201,7 @@ export default function Home() {
             </div>
         </div>
 
-        {/* --- SALONLAR (BÜYÜK KARTLAR GERİ GELDİ) --- */}
+        {/* --- SALONLAR --- */}
         <section>
           <div className="text-center mb-10">
             <span className="text-omu-red font-bold text-sm tracking-widest uppercase mb-2 block">Rezervasyon</span>
