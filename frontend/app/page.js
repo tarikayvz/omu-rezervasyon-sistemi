@@ -20,16 +20,14 @@ const BASE_URL = API_URL.replace('/api', '');
 
 const getImageUrl = (img) => {
     if (!img) return '';
-    // Eğer resim http ile başlıyorsa (Cloudinary vb.) direkt kullan
-    // Değilse BASE_URL ekle (Localhost hatasını önlemek için API_URL kontrol edilmeli)
     return img.startsWith('http') ? img : `${BASE_URL}${img}`;
 };
 
-// --- YENİ MANŞET SLIDER (Mobil İçin 'Cover' Modu) ---
+// --- YENİ MANŞET SLIDER (Google Tarzı - Tam Oturan) ---
 function MainNewsSlider({ announcements }) {
   return (
-    // Mobilde yükseklik 300px, PC'de 450px
-    <div className="group relative h-[300px] md:h-[450px] w-full overflow-hidden rounded-3xl shadow-lg bg-gray-900 border border-gray-800 transition-all duration-300">
+    // DEĞİŞİKLİK 1: Yükseklik mobilde ekranın yarısı (50vh), PC'de 500px sabit.
+    <div className="group relative w-full h-[50vh] md:h-[500px] overflow-hidden rounded-3xl shadow-2xl bg-gray-900 border border-gray-800">
        
        {announcements.length > 0 ? (
          <Swiper
@@ -39,8 +37,9 @@ function MainNewsSlider({ announcements }) {
            effect={'fade'} 
            fadeEffect={{ crossFade: true }}
            loop={true}
+           speed={600} // Geçiş hızı (Daha yumuşak)
            autoplay={{
-             delay: 5000, 
+             delay: 6000, 
              disableOnInteraction: false,
            }}
            pagination={{ 
@@ -54,40 +53,35 @@ function MainNewsSlider({ announcements }) {
                 <SwiperSlide key={ann.id} className="relative w-full h-full bg-gray-900">
                     <Link href={`/duyuru/${ann.id}`} className="block w-full h-full relative">
                         
-                        {/* 1. KATMAN: Arka Plan (Bulanık Efekt - Sadece PC'de görünsün, mobilde karışıklık yaratmasın) */}
-                        <div 
-                            className="hidden md:block absolute inset-0 bg-cover bg-center blur-xl opacity-60 scale-110 transition-transform duration-700" 
-                            style={{ 
-                                backgroundImage: `url(${ann.images && ann.images.length > 0 ? getImageUrl(ann.images[0]) : ''})` 
-                            }}
-                        ></div>
-                        
-                        {/* 2. KATMAN: Ana Resim (Mobilde Tam Kaplasın, PC'de Sığdırsın) */}
-                        <div className="absolute inset-0 flex items-center justify-center z-10 md:p-4">
+                        {/* 1. KATMAN: Ana Resim (ARTIK SİYAH BOŞLUK YOK) */}
+                        <div className="absolute inset-0">
                             {ann.images && ann.images.length > 0 ? (
                                 <img 
                                     src={getImageUrl(ann.images[0])} 
                                     alt={ann.title} 
-                                    // MOBİLDE: object-cover (Boşluk bırakmadan doldur)
-                                    // PC'DE: object-contain (Resmi kesmeden göster)
-                                    className="relative w-full h-full object-cover md:object-contain drop-shadow-2xl md:rounded-lg" 
+                                    // KRİTİK DEĞİŞİKLİK: object-cover yaptık. Resmi kutuya zorla sığdırır.
+                                    className="w-full h-full object-cover" 
                                 />
                             ) : (
-                                <div className="text-white font-bold text-4xl opacity-20">OMÜ</div>
+                                <div className="w-full h-full flex items-center justify-center bg-gray-800">
+                                    <span className="text-white font-bold text-4xl opacity-20">OMÜ</span>
+                                </div>
                             )}
+                            {/* Resmin üzerine hafif karartma atalım ki yazılar okunsun */}
+                            <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors duration-500"></div>
                         </div>
 
-                        {/* 3. KATMAN: Karartma ve Yazı (Okunabilirlik İçin) */}
-                        <div className="absolute bottom-0 left-0 w-full h-1/2 bg-gradient-to-t from-black via-black/70 to-transparent z-20 flex flex-col justify-end p-5 md:p-8">
-                            <div className="inline-flex items-center gap-2 bg-omu-red text-white text-[10px] md:text-xs font-bold px-2 py-1 md:px-3 md:py-1 rounded-full mb-2 w-max shadow-lg border border-red-500/50">
+                        {/* 2. KATMAN: Yazı ve Bilgiler (Alt Tarafta) */}
+                        <div className="absolute bottom-0 left-0 w-full bg-gradient-to-t from-black via-black/80 to-transparent pt-20 pb-8 px-6 md:px-10 z-20">
+                            <div className="inline-flex items-center gap-2 bg-omu-red text-white text-xs font-bold px-3 py-1 rounded-full mb-3 shadow-lg border border-red-500/50">
                                 <FaCalendarAlt /> {new Date(ann.date).toLocaleDateString('tr-TR')}
                             </div>
-                            <h3 className="text-lg md:text-3xl font-bold text-white leading-tight mb-1 md:mb-2 drop-shadow-md line-clamp-2 hover:text-gray-200 transition">
+                            <h3 className="text-xl md:text-4xl font-extrabold text-white leading-tight mb-2 drop-shadow-lg line-clamp-2">
                                 {ann.title}
                             </h3>
-                            <span className="text-gray-300 text-xs md:text-sm font-bold flex items-center gap-2 hover:text-white transition w-max">
-                                Detayları İncele <FaArrowRight className="transform hover:translate-x-1 transition"/>
-                            </span>
+                            <div className="flex items-center gap-2 text-white/90 text-sm font-semibold mt-2 group-hover:translate-x-2 transition-transform duration-300">
+                                Detayları İncele <FaArrowRight className="text-omu-red"/>
+                            </div>
                         </div>
                     </Link>
                 </SwiperSlide>
@@ -98,9 +92,9 @@ function MainNewsSlider({ announcements }) {
        )}
        
        <style jsx global>{`
-         .swiper-pagination-bullet { background: rgba(255,255,255,0.5); opacity: 1; }
-         .swiper-pagination-bullet-active { background: #E30613 !important; width: 24px; border-radius: 4px; transition: all 0.3s; }
-         /* Mobilde okları gizle, temiz görünsün */
+         .swiper-pagination-bullet { background: rgba(255,255,255,0.7); width: 8px; height: 8px; opacity: 1; transition: all 0.3s; }
+         .swiper-pagination-bullet-active { background: #E30613 !important; width: 24px; border-radius: 4px; }
+         /* Mobilde okları gizle, tam ekran deneyimi olsun */
          @media (max-width: 768px) {
             .swiper-button-next, .swiper-button-prev { display: none !important; }
          }
@@ -149,36 +143,37 @@ export default function Home() {
 
                 {announcements.length > 0 ? (
                     <>
-                        {/* 1. ÜST KISIM: SLIDER */}
+                        {/* 1. ÜST KISIM: GOOGLE TARZI SLIDER */}
                         <MainNewsSlider announcements={announcements} />
                         
-                        {/* 2. ALT KISIM: KÜÇÜK KARTLAR (Mobilde yatay kaydırma) */}
+                        {/* 2. ALT KISIM: KÜÇÜK KARTLAR (Kaydırmalı) */}
                         <div className="mt-8">
-                            <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4">Tüm Duyurular Listesi</h3>
+                            <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4">Tüm Duyurular</h3>
                             <Swiper
                                 modules={[Navigation, Pagination]}
                                 spaceBetween={15}
-                                slidesPerView={1.2} // Mobilde yandaki kartın ucu görünsün (İpucu verir)
+                                slidesPerView={1.2} // Mobilde yandaki kartın ucu görünür
                                 breakpoints={{
                                     640: { slidesPerView: 2, spaceBetween: 20 },
                                 }}
                                 navigation
                                 pagination={{ clickable: true }}
-                                className="pb-10"
+                                className="pb-12" // Alt noktalar için boşluk
                             >
                                 {announcements.map((ann) => (
                                     <SwiperSlide key={ann.id}>
                                         <Link href={`/duyuru/${ann.id}`} className="flex bg-white p-3 md:p-4 rounded-2xl shadow-sm hover:shadow-md transition gap-3 md:gap-4 border border-gray-100 group items-center h-28 md:h-32">
-                                            <div className="w-20 h-20 md:w-24 md:h-24 bg-gray-100 rounded-xl overflow-hidden flex-shrink-0 relative border border-gray-100">
+                                            <div className="w-24 h-full bg-gray-100 rounded-xl overflow-hidden flex-shrink-0 relative border border-gray-100">
                                                 {ann.images && ann.images[0] ? (
                                                     <img 
                                                         src={getImageUrl(ann.images[0])} 
+                                                        // Küçük kartlarda da object-cover yapıyoruz ki bozulmasın
                                                         className="w-full h-full object-cover group-hover:scale-110 transition duration-500"
                                                         alt={ann.title}
                                                     />
                                                 ) : <div className="w-full h-full flex items-center justify-center text-gray-300 font-bold">OMÜ</div>}
                                             </div>
-                                            <div className="flex flex-col justify-center min-w-0 h-full">
+                                            <div className="flex flex-col justify-center min-w-0 h-full py-1">
                                                 <span className="text-[10px] md:text-xs font-bold text-gray-400 mb-1">{new Date(ann.date).toLocaleDateString('tr-TR')}</span>
                                                 <h3 className="font-bold text-gray-800 text-sm leading-snug line-clamp-2 group-hover:text-omu-red transition">{ann.title}</h3>
                                                 <span className="text-xs text-blue-600 font-bold mt-auto flex items-center gap-1 opacity-0 group-hover:opacity-100 transition transform translate-y-2 group-hover:translate-y-0">Oku <FaArrowRight size={10}/></span>
@@ -203,7 +198,6 @@ export default function Home() {
 
             {/* SAĞ TARAF (%33): YAKLAŞAN ETKİNLİKLER */}
             <div className="lg:col-span-4">
-                {/* Mobilde yükseklik otomatik, PC'de dolu */}
                 <div className="bg-white rounded-3xl shadow-lg border border-gray-100 p-6 h-auto lg:h-full flex flex-col relative overflow-hidden">
                     <div className="absolute top-0 right-0 w-32 h-32 bg-blue-50 rounded-bl-full -z-0"></div>
                     
