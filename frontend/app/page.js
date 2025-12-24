@@ -23,11 +23,11 @@ const getImageUrl = (img) => {
     return img.startsWith('http') ? img : `${BASE_URL}${img}`;
 };
 
-// --- YENİ MANŞET SLIDER (Google Tarzı - Tam Oturan) ---
+// --- YENİ MANŞET SLIDER (Standart Web Sitesi Görünümü) ---
 function MainNewsSlider({ announcements }) {
   return (
-    // DEĞİŞİKLİK 1: Yükseklik mobilde ekranın yarısı (50vh), PC'de 500px sabit.
-    <div className="group relative w-full h-[50vh] md:h-[500px] overflow-hidden rounded-3xl shadow-2xl bg-gray-900 border border-gray-800">
+    // DÜZELTME: Mobilde h-[280px] SABİT (Asla küçülüp büyümez). PC'de h-[500px].
+    <div className="group relative w-full h-[280px] md:h-[500px] overflow-hidden rounded-2xl md:rounded-3xl shadow-lg bg-gray-900 border border-gray-800">
        
        {announcements.length > 0 ? (
          <Swiper
@@ -37,9 +37,9 @@ function MainNewsSlider({ announcements }) {
            effect={'fade'} 
            fadeEffect={{ crossFade: true }}
            loop={true}
-           speed={600} // Geçiş hızı (Daha yumuşak)
+           speed={800}
            autoplay={{
-             delay: 6000, 
+             delay: 5000, 
              disableOnInteraction: false,
            }}
            pagination={{ 
@@ -53,13 +53,12 @@ function MainNewsSlider({ announcements }) {
                 <SwiperSlide key={ann.id} className="relative w-full h-full bg-gray-900">
                     <Link href={`/duyuru/${ann.id}`} className="block w-full h-full relative">
                         
-                        {/* 1. KATMAN: Ana Resim (ARTIK SİYAH BOŞLUK YOK) */}
+                        {/* 1. KATMAN: Resim (Object Cover ile tam doldurur) */}
                         <div className="absolute inset-0">
                             {ann.images && ann.images.length > 0 ? (
                                 <img 
                                     src={getImageUrl(ann.images[0])} 
                                     alt={ann.title} 
-                                    // KRİTİK DEĞİŞİKLİK: object-cover yaptık. Resmi kutuya zorla sığdırır.
                                     className="w-full h-full object-cover" 
                                 />
                             ) : (
@@ -67,19 +66,22 @@ function MainNewsSlider({ announcements }) {
                                     <span className="text-white font-bold text-4xl opacity-20">OMÜ</span>
                                 </div>
                             )}
-                            {/* Resmin üzerine hafif karartma atalım ki yazılar okunsun */}
-                            <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors duration-500"></div>
+                            {/* Hafif Karartma (Yazı okunsun diye) */}
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent"></div>
                         </div>
 
-                        {/* 2. KATMAN: Yazı ve Bilgiler (Alt Tarafta) */}
-                        <div className="absolute bottom-0 left-0 w-full bg-gradient-to-t from-black via-black/80 to-transparent pt-20 pb-8 px-6 md:px-10 z-20">
-                            <div className="inline-flex items-center gap-2 bg-omu-red text-white text-xs font-bold px-3 py-1 rounded-full mb-3 shadow-lg border border-red-500/50">
+                        {/* 2. KATMAN: Yazı ve Bilgiler (Alt Tarafta Sabit) */}
+                        <div className="absolute bottom-0 left-0 w-full p-5 md:p-8 z-20">
+                            <div className="inline-flex items-center gap-2 bg-omu-red text-white text-[10px] md:text-xs font-bold px-2 py-1 md:px-3 md:py-1 rounded-full mb-2 shadow-sm">
                                 <FaCalendarAlt /> {new Date(ann.date).toLocaleDateString('tr-TR')}
                             </div>
-                            <h3 className="text-xl md:text-4xl font-extrabold text-white leading-tight mb-2 drop-shadow-lg line-clamp-2">
+                            
+                            {/* Başlık: Mobilde 2 satırla sınırla, PC'de daha büyük */}
+                            <h3 className="text-lg md:text-4xl font-extrabold text-white leading-tight mb-2 drop-shadow-md line-clamp-2">
                                 {ann.title}
                             </h3>
-                            <div className="flex items-center gap-2 text-white/90 text-sm font-semibold mt-2 group-hover:translate-x-2 transition-transform duration-300">
+                            
+                            <div className="flex items-center gap-2 text-gray-300 text-xs md:text-sm font-bold group-hover:text-white transition">
                                 Detayları İncele <FaArrowRight className="text-omu-red"/>
                             </div>
                         </div>
@@ -92,9 +94,9 @@ function MainNewsSlider({ announcements }) {
        )}
        
        <style jsx global>{`
-         .swiper-pagination-bullet { background: rgba(255,255,255,0.7); width: 8px; height: 8px; opacity: 1; transition: all 0.3s; }
-         .swiper-pagination-bullet-active { background: #E30613 !important; width: 24px; border-radius: 4px; }
-         /* Mobilde okları gizle, tam ekran deneyimi olsun */
+         .swiper-pagination-bullet { background: rgba(255,255,255,0.7); width: 6px; height: 6px; opacity: 1; transition: all 0.3s; }
+         .swiper-pagination-bullet-active { background: #E30613 !important; width: 20px; border-radius: 4px; }
+         /* Mobilde oklar gizli, PC'de görünür */
          @media (max-width: 768px) {
             .swiper-button-next, .swiper-button-prev { display: none !important; }
          }
@@ -126,14 +128,17 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gray-50 font-sans">
+    // min-h-screen ve flex yapısı ile sayfa akışını standart hale getirdik
+    <div className="min-h-screen bg-gray-50 font-sans flex flex-col">
+      
+      {/* Header sayfa akışının en tepesinde. Kaydırınca yukarıda kalır (Sticky değil) */}
       <Header />
       
-      <main className="container mx-auto px-4 py-6 md:py-10">
+      <main className="container mx-auto px-4 py-6 md:py-10 flex-grow">
         
         <div className="grid lg:grid-cols-12 gap-8 mb-16">
             
-            {/* SOL TARAF (%66): MANŞET DUYURULAR */}
+            {/* SOL TARAF: MANŞET DUYURULAR */}
             <div className="lg:col-span-8">
                 <div className="flex items-center justify-between mb-4 md:mb-6">
                     <h2 className="text-xl md:text-2xl font-extrabold text-gray-900 flex items-center gap-2 border-l-4 border-omu-red pl-3">
@@ -143,7 +148,7 @@ export default function Home() {
 
                 {announcements.length > 0 ? (
                     <>
-                        {/* 1. ÜST KISIM: GOOGLE TARZI SLIDER */}
+                        {/* 1. ÜST KISIM: SLIDER (Sabit Yükseklik) */}
                         <MainNewsSlider announcements={announcements} />
                         
                         {/* 2. ALT KISIM: KÜÇÜK KARTLAR (Kaydırmalı) */}
@@ -152,13 +157,13 @@ export default function Home() {
                             <Swiper
                                 modules={[Navigation, Pagination]}
                                 spaceBetween={15}
-                                slidesPerView={1.2} // Mobilde yandaki kartın ucu görünür
+                                slidesPerView={1.2} 
                                 breakpoints={{
                                     640: { slidesPerView: 2, spaceBetween: 20 },
                                 }}
                                 navigation
                                 pagination={{ clickable: true }}
-                                className="pb-12" // Alt noktalar için boşluk
+                                className="pb-12"
                             >
                                 {announcements.map((ann) => (
                                     <SwiperSlide key={ann.id}>
@@ -167,7 +172,6 @@ export default function Home() {
                                                 {ann.images && ann.images[0] ? (
                                                     <img 
                                                         src={getImageUrl(ann.images[0])} 
-                                                        // Küçük kartlarda da object-cover yapıyoruz ki bozulmasın
                                                         className="w-full h-full object-cover group-hover:scale-110 transition duration-500"
                                                         alt={ann.title}
                                                     />
@@ -196,7 +200,7 @@ export default function Home() {
                 )}
             </div>
 
-            {/* SAĞ TARAF (%33): YAKLAŞAN ETKİNLİKLER */}
+            {/* SAĞ TARAF: YAKLAŞAN ETKİNLİKLER */}
             <div className="lg:col-span-4">
                 <div className="bg-white rounded-3xl shadow-lg border border-gray-100 p-6 h-auto lg:h-full flex flex-col relative overflow-hidden">
                     <div className="absolute top-0 right-0 w-32 h-32 bg-blue-50 rounded-bl-full -z-0"></div>
