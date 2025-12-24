@@ -18,69 +18,68 @@ import 'swiper/css/effect-fade';
 const BASE_URL = API_URL.replace('/api', '');
 const getImageUrl = (img) => (img ? (img.startsWith('http') ? img : `${BASE_URL}${img}`) : '');
 
-// --- 1. MANŞET SLIDER (SİYAH DEV KART) ---
+// --- 1. MANŞET SLIDER (SİYAH KUTU - ZORUNLU BOŞLUKLU) ---
 function MainNewsSlider({ announcements }) {
   return (
-    // h-[500px]: Mobilde ekranı iyice kaplasın diye yüksekliği artırdım.
-    // rounded-[30px]: Köşeler referanstaki gibi yuvarlak.
-    <div className="w-full h-[500px] md:h-[600px] rounded-[30px] overflow-hidden shadow-2xl bg-black border border-gray-800 relative z-0">
+    // Dışarıdaki div: Container görevi görür.
+    <div className="w-full relative z-0">
        {announcements.length > 0 ? (
          <Swiper
            modules={[Navigation, Pagination, Autoplay, EffectFade]}
-           slidesPerView={1}
+           slidesPerView={1} // SADECE 1 KART. ASLA YAN TARAFI GÖSTERMEZ.
            effect={'fade'} 
            fadeEffect={{ crossFade: true }}
            loop={true}
            autoplay={{ delay: 5000, disableOnInteraction: false }}
            pagination={{ clickable: true, dynamicBullets: true }}
            navigation={true} 
-           className="h-full w-full"
+           // BURASI ÖNEMLİ: rounded-3xl ve overflow-hidden burada.
+           className="h-[350px] md:h-[500px] w-full rounded-[30px] shadow-2xl bg-black border border-gray-800"
          >
             {announcements.map((ann) => (
                 <SwiperSlide key={ann.id} className="relative w-full h-full bg-black">
                     <Link href={`/duyuru/${ann.id}`} className="block w-full h-full relative">
                         
-                        {/* RESİM: Siyah kutu hissi için opacity düşürüldü */}
+                        {/* RESİM */}
                         <img 
                             src={getImageUrl(ann.images[0])} 
                             alt={ann.title} 
                             className="w-full h-full object-cover opacity-60" 
                         />
                         
-                        {/* ALT ALAN: Referanstaki Siyah/Kırmızı Tasarım */}
+                        {/* İÇERİK (SİYAH KART TARZI) */}
                         <div className="absolute bottom-0 left-0 w-full p-8 z-20">
-                            
-                            {/* Kırmızı Tarih Kapsülü */}
-                            <div className="inline-flex items-center gap-2 bg-[#E30613] text-white text-sm font-bold px-4 py-2 rounded-full mb-4 shadow-lg">
+                            {/* Kırmızı Tarih */}
+                            <div className="inline-flex items-center gap-2 bg-[#E30613] text-white text-xs font-bold px-4 py-1.5 rounded-full mb-4 shadow-md">
                                 <FaCalendarAlt /> {new Date(ann.date).toLocaleDateString('tr-TR')}
                             </div>
                             
                             {/* Başlık */}
-                            <h3 className="text-3xl md:text-5xl font-extrabold text-white leading-tight mb-4 line-clamp-2">
+                            <h3 className="text-2xl md:text-4xl font-extrabold text-white leading-tight mb-3 line-clamp-2">
                                 {ann.title}
                             </h3>
                             
                             {/* Link */}
-                            <div className="flex items-center gap-2 text-white text-base font-bold">
+                            <div className="flex items-center gap-2 text-white text-sm font-bold mt-2">
                                 Detayları İncele <FaArrowRight className="text-[#E30613]"/>
                             </div>
                         </div>
 
-                        {/* Karartma Gradyanı */}
+                        {/* Gradyan */}
                         <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent"></div>
                     </Link>
                 </SwiperSlide>
             ))}
          </Swiper>
        ) : (
-         <div className="w-full h-full flex items-center justify-center bg-black">
-             <span className="text-5xl font-black text-gray-800 tracking-tighter">OMÜ</span>
+         <div className="w-full h-[350px] flex items-center justify-center bg-black rounded-[30px]">
+             <span className="text-4xl font-black text-gray-800 tracking-tighter">OMÜ</span>
          </div>
        )}
        
        <style jsx global>{`
          .swiper-pagination-bullet { background: rgba(255,255,255,0.4); opacity: 1; }
-         .swiper-pagination-bullet-active { background: #E30613 !important; width: 30px; border-radius: 4px; transition: all 0.3s; }
+         .swiper-pagination-bullet-active { background: #E30613 !important; width: 24px; border-radius: 4px; transition: all 0.3s; }
          @media (max-width: 768px) { .swiper-button-next, .swiper-button-prev { display: none !important; } }
        `}</style>
     </div>
@@ -106,19 +105,21 @@ export default function Home() {
   }, []);
 
   return (
-    // overflow-x-hidden: Yanal taşmayı engeller.
     <div className="min-h-screen bg-gray-50 font-sans flex flex-col overflow-x-hidden">
       <Header />
       
-      {/* px-4: Kenarlardan hafif boşluk bırakır, kutu ekrana yapışmaz */}
-      <main className="container mx-auto max-w-7xl px-4 py-6 flex-grow">
+      {/* !!! KRİTİK NOKTA !!!
+          px-6: Bu padding sayesinde içerideki her şey ekranın kenarından 24px içeride başlar.
+          Kutu ASLA kenara yapışamaz.
+      */}
+      <main className="container mx-auto max-w-7xl px-6 py-6 flex-grow">
         
-        <div className="grid lg:grid-cols-12 gap-10 mb-16">
+        <div className="grid lg:grid-cols-12 gap-8 md:gap-10 mb-16">
             
             {/* SOL TARAF */}
-            <div className="lg:col-span-8 space-y-12">
+            <div className="lg:col-span-8 space-y-10">
                 
-                {/* 1. MANŞET (DEV SİYAH KUTU) */}
+                {/* 1. MANŞET (SİYAH KUTU) */}
                 <section>
                     <div className="flex items-center gap-3 mb-4 pl-1">
                         <span className="w-1.5 h-8 bg-[#E30613] rounded-full"></span>
@@ -127,26 +128,25 @@ export default function Home() {
                     <MainNewsSlider announcements={announcements} />
                 </section>
 
-                {/* 2. DİĞER DUYURULAR (Sıralı Liste) */}
+                {/* 2. DİĞER DUYURULAR (SADE LİSTE - TEK KART) */}
                 {announcements.length > 0 && (
                 <section>
                     <h3 className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-4 pl-1">Tüm Duyurular Listesi</h3>
                     
-                    {/* slidesPerView={1}: Sadece 1 tane gösterir, taşma yapmaz. */}
                     <Swiper
                         modules={[Pagination]}
                         spaceBetween={20}
-                        slidesPerView={1} 
+                        slidesPerView={1} // SADECE 1 KART GÖRÜNÜR
                         breakpoints={{
                             640: { slidesPerView: 2 },
                             1024: { slidesPerView: 2.5 },
                         }}
                         pagination={{ clickable: true }}
-                        className="pb-12"
+                        className="pb-10"
                     >
                         {announcements.map((ann) => (
                             <SwiperSlide key={ann.id}>
-                                <Link href={`/duyuru/${ann.id}`} className="flex bg-white p-4 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition gap-4 items-center h-32">
+                                <Link href={`/duyuru/${ann.id}`} className="flex bg-white p-3 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition gap-4 items-center h-28">
                                     <div className="w-24 h-24 bg-gray-100 rounded-xl overflow-hidden flex-shrink-0 relative border border-gray-200">
                                         {ann.images && ann.images[0] ? (
                                             <img 
