@@ -23,7 +23,7 @@ const getImageUrl = (img) => {
     return img.startsWith('http') ? img : `${BASE_URL}${img}`;
 };
 
-// --- YENİ MANŞET SLIDER (TÜM DUYURULARI DÖNER) ---
+// --- YENİ MANŞET SLIDER (DÜZELTİLDİ) ---
 function MainNewsSlider({ announcements }) {
   return (
     <div className="group relative h-[450px] w-full overflow-hidden rounded-3xl shadow-lg bg-gray-900 border border-gray-800">
@@ -33,39 +33,42 @@ function MainNewsSlider({ announcements }) {
            modules={[Navigation, Pagination, Autoplay, EffectFade]}
            spaceBetween={0}
            slidesPerView={1}
-           effect={'fade'} // Yumuşak geçiş
+           effect={'fade'} 
+           // DÜZELTME BURADA: crossFade: true ekledik. 
+           // Bu sayede eski resim kaybolurken yeni resim gelir, üst üste binmez.
+           fadeEffect={{ crossFade: true }} 
            loop={true}
            autoplay={{
-             delay: 5000, // 5 saniyede bir değişir
+             delay: 5000, 
              disableOnInteraction: false,
            }}
            pagination={{ 
              clickable: true,
              dynamicBullets: true 
            }}
-           navigation={true} // Ok tuşları
+           navigation={true} 
            className="h-full w-full"
          >
             {announcements.map((ann) => (
-                <SwiperSlide key={ann.id} className="relative w-full h-full cursor-grab active:cursor-grabbing">
-                    {/* Resmin üzerine tıklayınca detay sayfasına git */}
-                    <Link href={`/duyuru/${ann.id}`} className="block w-full h-full">
+                // DÜZELTME: bg-gray-900 ekledik ki geçişte arkası şeffaf kalmasın
+                <SwiperSlide key={ann.id} className="relative w-full h-full cursor-grab active:cursor-grabbing bg-gray-900">
+                    <Link href={`/duyuru/${ann.id}`} className="block w-full h-full relative">
                         
                         {/* 1. KATMAN: Arka Plan (Bulanık) */}
                         <div 
-                            className="absolute inset-0 bg-cover bg-center blur-xl opacity-60 scale-110" 
+                            className="absolute inset-0 bg-cover bg-center blur-xl opacity-60 scale-110 transition-transform duration-700" 
                             style={{ 
                                 backgroundImage: `url(${ann.images && ann.images.length > 0 ? getImageUrl(ann.images[0]) : ''})` 
                             }}
                         ></div>
                         
                         {/* 2. KATMAN: Ön Plan (Net Resim) */}
-                        <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="absolute inset-0 flex items-center justify-center z-10">
                             {ann.images && ann.images.length > 0 ? (
                                 <img 
                                     src={getImageUrl(ann.images[0])} 
                                     alt={ann.title} 
-                                    className="relative max-w-full max-h-full object-contain z-10 drop-shadow-2xl" 
+                                    className="relative max-w-full max-h-full object-contain drop-shadow-2xl" 
                                 />
                             ) : (
                                 <div className="text-white font-bold text-4xl opacity-20">OMÜ</div>
@@ -73,7 +76,7 @@ function MainNewsSlider({ announcements }) {
                         </div>
 
                         {/* 3. KATMAN: Yazı ve Bilgiler (En Üstte) */}
-                        <div className="absolute bottom-0 left-0 p-8 w-full bg-gradient-to-t from-black via-black/70 to-transparent z-20">
+                        <div className="absolute bottom-0 left-0 p-8 w-full bg-gradient-to-t from-black via-black/80 to-transparent z-20">
                             <div className="inline-flex items-center gap-2 bg-omu-red text-white text-xs font-bold px-3 py-1 rounded-full mb-3 shadow-lg border border-red-500/50">
                                 <FaCalendarAlt /> {new Date(ann.date).toLocaleDateString('tr-TR')}
                             </div>
@@ -142,7 +145,7 @@ export default function Home() {
 
                 {announcements.length > 0 ? (
                     <>
-                        {/* 1. ÜST KISIM: TÜM DUYURULAR SLIDER (Linkli) */}
+                        {/* 1. ÜST KISIM: TÜM DUYURULAR SLIDER */}
                         <MainNewsSlider announcements={announcements} />
                         
                         {/* 2. ALT KISIM: KÜÇÜK KARTLAR (Hepsi Dahil) */}
@@ -159,7 +162,6 @@ export default function Home() {
                                 pagination={{ clickable: true }}
                                 className="pb-10"
                             >
-                                {/* slice(1) kaldırıldı: Artık hepsi görünecek */}
                                 {announcements.map((ann) => (
                                     <SwiperSlide key={ann.id}>
                                         <Link href={`/duyuru/${ann.id}`} className="flex bg-white p-4 rounded-2xl shadow-sm hover:shadow-md transition gap-4 border border-gray-100 group items-center h-32">
