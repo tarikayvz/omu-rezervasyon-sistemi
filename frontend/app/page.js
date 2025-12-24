@@ -18,10 +18,10 @@ import 'swiper/css/effect-fade';
 const BASE_URL = API_URL.replace('/api', '');
 const getImageUrl = (img) => (img ? (img.startsWith('http') ? img : `${BASE_URL}${img}`) : '');
 
-// --- 1. MANŞET SLIDER (Tam Oturan Kutu) ---
+// --- 1. MANŞET SLIDER ---
 function MainNewsSlider({ announcements }) {
   return (
-    // Mobilde 280px sabit yükseklik, taşma gizli.
+    // Mobilde 280px, PC'de 480px. w-full diyerek container'a tam oturtuyoruz.
     <div className="group relative w-full h-[280px] md:h-[480px] rounded-2xl overflow-hidden shadow-lg bg-gray-900 border border-gray-800 z-0">
        {announcements.length > 0 ? (
          <Swiper
@@ -94,6 +94,7 @@ export default function Home() {
     <div className="min-h-screen bg-gray-50 font-sans overflow-x-hidden flex flex-col">
       <Header />
       
+      {/* px-4: Mobilde sağdan ve soldan eşit boşluk bırakır. İçerik buraya tam oturur. */}
       <main className="container mx-auto max-w-7xl px-4 py-8 flex-grow">
         
         <div className="grid lg:grid-cols-12 gap-8 mb-16">
@@ -109,14 +110,14 @@ export default function Home() {
                     <MainNewsSlider announcements={announcements} />
                 </section>
 
-                {/* 2. Diğer Duyurular (DÜZELTİLDİ: TEK SÜTUN, TAŞMA YOK) */}
+                {/* 2. Diğer Duyurular (DÜZELTİLDİ: slidesPerView=1) */}
                 {announcements.length > 0 && (
                 <section>
                     <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4">Tüm Duyurular Listesi</h3>
                     <Swiper
                         modules={[Pagination]}
                         spaceBetween={20}
-                        // BURASI DEĞİŞTİ: Mobilde "1" yaptık. Artık tam oturacak, yan taraf gözükmeyecek.
+                        // BURASI ÇOK ÖNEMLİ: 1 yaptık. Artık yandaki kartın ucu gözükmez. Tam sığar.
                         slidesPerView={1} 
                         breakpoints={{
                             640: { slidesPerView: 2 }, // Tablette 2 tane
@@ -223,7 +224,6 @@ export default function Home() {
                         <p className="text-gray-500 text-sm mb-6">{salon.desc}</p>
                         <span className="mt-auto text-sm font-bold text-gray-400 group-hover:text-gray-900 transition flex items-center gap-1">Takvimi Gör <FaChevronRight size={10}/></span>
                     </div>
-                    {/* Hover Efekti */}
                     <div className={`absolute inset-0 ${salon.color} opacity-0 group-hover:opacity-10 transition duration-300`}></div>
                 </Link>
             ))}
