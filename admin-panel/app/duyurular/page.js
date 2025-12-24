@@ -5,19 +5,24 @@ import axios from 'axios';
 import { useRouter } from 'next/navigation';
 import { FaTrash, FaArrowLeft, FaUpload, FaImages, FaPlus, FaEdit, FaSave } from 'react-icons/fa';
 import { toast } from 'react-toastify';
-// API_URL EKLENDİ (Admin panelinde utils/api.js oluşturduğunu varsayıyoruz)
-// Eğer yoksa, oluşturup içine Render linkini koymalısın.
 import API_URL from '../../utils/api';
 
-// Resimler için Ana Sunucu Adresi (Sonundaki /api silinir)
+// --- RESİM URL DÜZELTME MANTIĞI ---
+// API_URL "..../api" ile bittiği için, yerel resimlerde kullanmak üzere "/api" kısmını siliyoruz.
 const BASE_URL = API_URL.replace('/api', '');
+
+// Bu fonksiyon resim Cloudinary linki mi yoksa yerel sunucu linki mi kontrol eder
+const getImageUrl = (img) => {
+    if (!img) return '';
+    return img.startsWith('http') ? img : `${BASE_URL}${img}`;
+};
 
 export default function DuyurularPage() {
   const router = useRouter();
   const [announcements, setAnnouncements] = useState([]);
   
   // Form State'leri
-  const [editingId, setEditingId] = useState(null); // Düzenleme Modu için
+  const [editingId, setEditingId] = useState(null); 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [images, setImages] = useState([]); 
@@ -32,7 +37,6 @@ export default function DuyurularPage() {
 
   const fetchAnnouncements = async () => {
     try {
-      // DÜZELTİLDİ: API_URL kullanıldı
       const res = await axios.get(`${API_URL}/announcements`);
       setAnnouncements(res.data);
     } catch (error) { console.error(error); }
@@ -49,8 +53,10 @@ export default function DuyurularPage() {
     setEditingId(ann.id);
     setTitle(ann.title);
     setDescription(ann.description);
-    // Mevcut resimleri göster (BASE_URL ile)
-    setPreviews(ann.images ? ann.images.map(img => `${BASE_URL}${img}`) : []);
+    
+    // Mevcut resimleri göster (Cloudinary veya Yerel kontrolü ile)
+    setPreviews(ann.images ? ann.images.map(img => getImageUrl(img)) : []);
+    
     setImages([]); 
     window.scrollTo({ top: 0, behavior: 'smooth' }); 
   };
@@ -71,15 +77,16 @@ export default function DuyurularPage() {
     const formData = new FormData();
     formData.append('title', title);
     formData.append('description', description);
+    // Yeni seçilen resimleri ekle
     images.forEach((img) => formData.append('images', img));
 
     try {
       if (editingId) {
-        // GÜNCELLEME İŞLEMİ (PUT) - API_URL
+        // GÜNCELLEME İŞLEMİ (PUT)
         await axios.put(`${API_URL}/announcements/${editingId}`, formData, { headers: { 'Content-Type': 'multipart/form-data' } });
         toast.success('Duyuru güncellendi! ✅');
       } else {
-        // YENİ EKLEME İŞLEMİ (POST) - API_URL
+        // YENİ EKLEME İŞLEMİ (POST)
         await axios.post(`${API_URL}/announcements`, formData, { headers: { 'Content-Type': 'multipart/form-data' } });
         toast.success('Duyuru yayınlandı! 🎉');
       }
@@ -93,7 +100,6 @@ export default function DuyurularPage() {
     e.stopPropagation();
     if(!confirm('Silmek istediğine emin misin?')) return;
     try { 
-        // DÜZELTİLDİ: API_URL kullanıldı
         await axios.delete(`${API_URL}/announcements/${id}`); 
         fetchAnnouncements(); 
         toast.info('Silindi.'); 
@@ -166,8 +172,8 @@ export default function DuyurularPage() {
                 >
                     <div className="w-32 h-32 flex-shrink-0 bg-gray-100 rounded-xl overflow-hidden relative">
                         {ann.images && ann.images.length > 0 ? (
-                            // DÜZELTİLDİ: BASE_URL kullanıldı
-                            <img src={`${BASE_URL}${ann.images[0]}`} className="w-full h-full object-cover group-hover:scale-110 transition duration-500" />
+                            // DÜZELTİLDİ: getImageUrl kullanıldı
+                            <img src={getImageUrl(ann.images[0])} className="w-full h-full object-cover group-hover:scale-110 transition duration-500" />
                         ) : <div className="w-full h-full flex items-center justify-center text-xs text-gray-400">Resim Yok</div>}
                     </div>
                     <div className="flex-grow flex flex-col">

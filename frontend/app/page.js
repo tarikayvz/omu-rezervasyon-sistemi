@@ -5,12 +5,17 @@ import axios from 'axios';
 import Header from '../components/Header';
 import Link from 'next/link';
 import { FaChevronRight, FaCalendarAlt, FaMapMarkerAlt, FaArrowRight, FaClock, FaCalendarCheck } from 'react-icons/fa';
-// API_URL EKLENDİ
 import API_URL from '../utils/api';
 
-// Resimler için "http://localhost:5000" yerine Canlı Sunucu Adresini ayarla
-// API_URL "..../api" ile bittiği için, resimlerde kullanmak üzere "/api" kısmını siliyoruz.
+// --- RESİM URL DÜZELTME MANTIĞI ---
+// API_URL "..../api" ile bittiği için, yerel resimlerde kullanmak üzere "/api" kısmını siliyoruz.
 const BASE_URL = API_URL.replace('/api', '');
+
+// Bu fonksiyon resim Cloudinary linki mi yoksa yerel sunucu linki mi kontrol eder
+const getImageUrl = (img) => {
+    if (!img) return '';
+    return img.startsWith('http') ? img : `${BASE_URL}${img}`;
+};
 
 // --- NETFLIX STİLİ SLIDER ---
 function AnnouncementSlider({ images, title, link, date }) {
@@ -30,15 +35,15 @@ function AnnouncementSlider({ images, title, link, date }) {
           {images.length > 0 ? (
             images.map((img, index) => (
                 <div key={index} className={`absolute inset-0 transition-opacity duration-1000 ease-in-out flex items-center justify-center ${index === currentIndex ? 'opacity-100' : 'opacity-0'}`}>
-                    {/* 1. KATMAN: Arka Plan (Bulanık) - BASE_URL KULLANILDI */}
+                    {/* 1. KATMAN: Arka Plan (Bulanık) */}
                     <div 
                         className="absolute inset-0 bg-cover bg-center blur-xl opacity-60 scale-110" 
-                        style={{ backgroundImage: `url(${BASE_URL}${img})` }}
+                        style={{ backgroundImage: `url(${getImageUrl(img)})` }}
                     ></div>
                     
-                    {/* 2. KATMAN: Ön Plan (Net) - BASE_URL KULLANILDI */}
+                    {/* 2. KATMAN: Ön Plan (Net) */}
                     <img 
-                        src={`${BASE_URL}${img}`} 
+                        src={getImageUrl(img)} 
                         alt={title} 
                         className="relative w-full h-full object-contain z-10 drop-shadow-2xl" 
                     />
@@ -49,13 +54,13 @@ function AnnouncementSlider({ images, title, link, date }) {
           )}
           
           <div className="absolute bottom-0 left-0 p-8 w-full bg-gradient-to-t from-black via-black/60 to-transparent z-20">
-             <div className="inline-flex items-center gap-2 bg-omu-red text-white text-xs font-bold px-3 py-1 rounded-full mb-3 shadow-lg border border-red-500/50">
-                <FaCalendarAlt /> {new Date(date).toLocaleDateString('tr-TR')}
-             </div>
-             <h3 className="text-2xl md:text-3xl font-bold text-white leading-tight mb-2 drop-shadow-md line-clamp-2">{title}</h3>
-             <span className="text-gray-300 text-sm font-bold flex items-center gap-2 group-hover:text-white transition">
+              <div className="inline-flex items-center gap-2 bg-omu-red text-white text-xs font-bold px-3 py-1 rounded-full mb-3 shadow-lg border border-red-500/50">
+                 <FaCalendarAlt /> {new Date(date).toLocaleDateString('tr-TR')}
+              </div>
+              <h3 className="text-2xl md:text-3xl font-bold text-white leading-tight mb-2 drop-shadow-md line-clamp-2">{title}</h3>
+              <span className="text-gray-300 text-sm font-bold flex items-center gap-2 group-hover:text-white transition">
                 Detayları İncele <FaArrowRight className="transform group-hover:translate-x-1 transition"/>
-             </span>
+              </span>
           </div>
        </Link>
 
@@ -77,11 +82,11 @@ export default function Home() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // 1. Duyuruları Çek - API_URL KULLANILDI
+        // 1. Duyuruları Çek
         const resAnn = await axios.get(`${API_URL}/announcements`);
         setAnnouncements(resAnn.data);
         
-        // 2. Etkinlikleri Çek - API_URL KULLANILDI
+        // 2. Etkinlikleri Çek
         const resEvt = await axios.get(`${API_URL}/events`);
         
         const futureEvents = resEvt.data
@@ -127,9 +132,13 @@ export default function Home() {
                                 {announcements.slice(1, 3).map((ann) => (
                                     <Link key={ann.id} href={`/duyuru/${ann.id}`} className="flex bg-white p-4 rounded-2xl shadow-sm hover:shadow-md transition gap-4 border border-gray-100 group items-center">
                                         <div className="w-24 h-24 bg-gray-100 rounded-xl overflow-hidden flex-shrink-0 relative border border-gray-100">
-                                            {/* KÜÇÜK RESİM - BASE_URL KULLANILDI */}
+                                            {/* KÜÇÜK RESİM KONTROLÜ */}
                                             {ann.images && ann.images[0] ? (
-                                                <img src={`${BASE_URL}${ann.images[0]}`} className="w-full h-full object-cover group-hover:scale-110 transition duration-500"/>
+                                                <img 
+                                                    src={getImageUrl(ann.images[0])} 
+                                                    className="w-full h-full object-cover group-hover:scale-110 transition duration-500"
+                                                    alt={ann.title}
+                                                />
                                             ) : <div className="w-full h-full flex items-center justify-center text-gray-300 font-bold">OMÜ</div>}
                                         </div>
                                         <div className="flex flex-col justify-center min-w-0">

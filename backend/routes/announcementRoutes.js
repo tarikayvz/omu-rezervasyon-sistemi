@@ -1,21 +1,8 @@
 const express = require('express');
 const router = express.Router();
-const multer = require('multer');
-const path = require('path');
 const { Announcement } = require('../models');
-
-// --- MULTER AYARLARI ---
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, 'uploads/');
-  },
-  filename: (req, file, cb) => {
-    // Benzersiz isim
-    cb(null, Date.now() + '-' + Math.round(Math.random() * 1E9) + path.extname(file.originalname));
-  }
-});
-
-const upload = multer({ storage: storage });
+// DÜZELTME 1: Artık multer ayarlarını buradan yapmıyoruz, middleware'den çağırıyoruz.
+const upload = require('../middleware/upload'); 
 
 // --- ROTALAR ---
 
@@ -24,19 +11,21 @@ router.post('/', upload.array('images', 10), async (req, res) => {
   try {
     const { title, description } = req.body;
     
-    // Yüklenen dosyaların yollarını listeye çevir
-    const imagePaths = req.files ? req.files.map(file => `/uploads/${file.filename}`) : [];
+    // DÜZELTME 2: Cloudinary bize direkt tam linki (file.path) verir.
+    // Artık başına '/uploads/' koymamıza gerek yok.
+    const imagePaths = req.files ? req.files.map(file => file.path) : [];
 
     const newAnnouncement = await Announcement.create({
       title,
       description,
-      // Veritabanına JSON string olarak kaydediyoruz (SQLite array desteklemez, biz string yapıp saklarız)
+      // Veritabanına Cloudinary linklerini JSON array string olarak kaydediyoruz
       image: JSON.stringify(imagePaths), 
       date: new Date()
     });
 
     res.status(201).json(newAnnouncement);
   } catch (error) {
+    console.error(error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -48,17 +37,16 @@ router.get('/', async (req, res) => {
       order: [['date', 'DESC']]
     });
     
-    // Veritabanından gelen string veriyi tekrar listeye (array) çevirip gönderelim
     const parsedAnnouncements = announcements.map(ann => {
         let images = [];
         try {
-            // Eğer eski veri varsa (tek string) onu da array yap, yeniyse parse et
+            // Eski format veya yeni format kontrolü
             images = ann.image.startsWith('[') ? JSON.parse(ann.image) : [ann.image];
         } catch (e) { images = []; }
         
         return {
             ...ann.dataValues,
-            images: images // Artık frontend'e 'images' dizisi gidecek
+            images: images
         };
     });
 
@@ -97,29 +85,25 @@ router.delete('/:id', async (req, res) => {
   }
 });
 
-// 5. Duyuru Güncelle (Başlık, Açıklama ve Yeni Resim Ekleme)
+// 5. Duyuru Güncelle
 router.put('/:id', upload.array('images', 10), async (req, res) => {
   try {
     const { id } = req.params;
     const { title, description } = req.body;
 
-    // Önce mevcut duyuruyu bul
     const announcement = await Announcement.findByPk(id);
     if (!announcement) return res.status(404).json({ message: 'Duyuru bulunamadı' });
 
-    // Eski resim listesini al
     let currentImages = [];
     try {
       currentImages = announcement.image ? JSON.parse(announcement.image) : [];
-      // Eğer eski formatta tek string kaldıysa onu diziye çevir
       if (!Array.isArray(currentImages)) currentImages = [announcement.image];
     } catch (e) { currentImages = []; }
 
-    // Yeni yüklenen resimler varsa listeye ekle
-    const newImagePaths = req.files ? req.files.map(file => `/uploads/${file.filename}`) : [];
+    // DÜZELTME 3: Yeni yüklenenler de Cloudinary linki (file.path) olarak gelir
+    const newImagePaths = req.files ? req.files.map(file => file.path) : [];
     const updatedImages = [...currentImages, ...newImagePaths];
 
-    // Güncelle
     announcement.title = title;
     announcement.description = description;
     announcement.image = JSON.stringify(updatedImages);
