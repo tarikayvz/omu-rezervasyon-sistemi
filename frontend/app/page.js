@@ -18,12 +18,12 @@ import 'swiper/css/effect-fade';
 const BASE_URL = API_URL.replace('/api', '');
 const getImageUrl = (img) => (img ? (img.startsWith('http') ? img : `${BASE_URL}${img}`) : '');
 
-// --- 1. MANŞET SLIDER (MOBİLDE DEV EKRAN) ---
+// --- 1. MANŞET SLIDER (REFERANS GÖRSEL GİBİ) ---
 function MainNewsSlider({ announcements }) {
   return (
-    // DÜZELTME: h-[65vh] -> Mobilde ekranın %65'ini kaplar (Büyük durur).
-    // md:h-[480px] -> Bilgisayarda standart kutu olarak kalır.
-    <div className="w-full h-[65vh] md:h-[480px] rounded-3xl overflow-hidden shadow-2xl bg-gray-900 border border-gray-800 relative z-0">
+    // h-[340px]: Mobilde görseldeki gibi biraz yüksek, karemsi kutu.
+    // rounded-[2rem]: Köşeler iyice yuvarlak (görseldeki gibi).
+    <div className="w-full h-[340px] md:h-[480px] rounded-[2rem] overflow-hidden shadow-2xl bg-gray-900 border border-gray-800 relative z-0">
        {announcements.length > 0 ? (
          <Swiper
            modules={[Navigation, Pagination, Autoplay, EffectFade]}
@@ -42,19 +42,20 @@ function MainNewsSlider({ announcements }) {
                         <img 
                             src={getImageUrl(ann.images[0])} 
                             alt={ann.title} 
-                            className="w-full h-full object-cover opacity-85" 
+                            className="w-full h-full object-cover opacity-90" 
                         />
-                        {/* Alt kısma daha koyu gölge atalım ki yazı net okunsun */}
+                        {/* Karartma */}
                         <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent"></div>
                         
-                        <div className="absolute bottom-0 left-0 w-full p-6 md:p-10 z-20 pb-12 md:pb-10">
+                        {/* Yazı Alanı */}
+                        <div className="absolute bottom-0 left-0 w-full p-8 z-20">
                             <div className="inline-flex items-center gap-2 bg-red-600 text-white text-xs font-bold px-3 py-1 rounded-full mb-3 shadow-md">
                                 <FaCalendarAlt /> {new Date(ann.date).toLocaleDateString('tr-TR')}
                             </div>
-                            <h3 className="text-2xl md:text-4xl font-extrabold text-white leading-tight mb-3 line-clamp-3 drop-shadow-lg">
+                            <h3 className="text-2xl md:text-4xl font-extrabold text-white leading-tight mb-3 line-clamp-2 drop-shadow-xl">
                                 {ann.title}
                             </h3>
-                            <div className="flex items-center gap-2 text-white/90 text-sm font-bold bg-white/10 w-max px-4 py-2 rounded-xl backdrop-blur-sm hover:bg-white hover:text-red-600 transition border border-white/20">
+                            <div className="flex items-center gap-2 text-white/90 text-sm font-bold bg-white/20 w-max px-4 py-2 rounded-xl backdrop-blur-md hover:bg-white hover:text-red-600 transition border border-white/10">
                                 Detayları İncele <FaArrowRight/>
                             </div>
                         </div>
@@ -63,7 +64,10 @@ function MainNewsSlider({ announcements }) {
             ))}
          </Swiper>
        ) : (
-         <div className="w-full h-full flex items-center justify-center bg-gray-900"><span className="text-4xl font-bold text-gray-700">OMÜ</span></div>
+         // VERİ YOKSA GÖZÜKECEK OLAN (Görseldeki "OMÜ" yazan gri ekran)
+         <div className="w-full h-full flex items-center justify-center bg-gray-800 text-gray-600">
+             <span className="text-5xl font-black tracking-tighter opacity-20">OMÜ</span>
+         </div>
        )}
        
        <style jsx global>{`
@@ -97,31 +101,37 @@ export default function Home() {
     <div className="min-h-screen bg-gray-50 font-sans flex flex-col overflow-x-hidden">
       <Header />
       
-      <main className="container mx-auto max-w-7xl px-4 md:px-6 py-6 flex-grow">
+      {/* !!! İŞTE ÇÖZÜM BURADA !!!
+         px-6: Sağdan ve soldan yaklaşık 24px boşluk bırakır.
+         Bu sayede içerideki kutu asla kenara yapışmaz, ortada "yüzen kart" gibi durur.
+         Attığın referans görseldeki boşluğu bu sağlıyor.
+      */}
+      <main className="container mx-auto max-w-7xl px-6 py-6 flex-grow">
         
         <div className="grid lg:grid-cols-12 gap-8 md:gap-10 mb-16">
             
             {/* SOL TARAF */}
             <div className="lg:col-span-8 space-y-10">
                 
-                {/* 1. MANŞET (BÜYÜK KUTU) */}
+                {/* 1. MANŞET (REFERANS GÖRSELDEKİ GİBİ ORTALI) */}
                 <section>
-                    <div className="flex items-center gap-3 mb-4 pl-2">
+                    <div className="flex items-center gap-3 mb-4 pl-1">
                         <span className="w-1.5 h-8 bg-red-600 rounded-full"></span>
                         <h2 className="text-2xl font-extrabold text-gray-900">Duyurular & Haberler</h2>
                     </div>
                     <MainNewsSlider announcements={announcements} />
                 </section>
 
-                {/* 2. DİĞER DUYURULAR (ESKİ KÜÇÜK LİSTE HALİNE DÖNDÜ) */}
+                {/* 2. DİĞER DUYURULAR LİSTESİ */}
                 {announcements.length > 0 && (
                 <section>
-                    <h3 className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-4 pl-2">Tüm Duyurular Listesi</h3>
+                    <h3 className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-4 pl-1">Tüm Duyurular Listesi</h3>
                     
                     <Swiper
                         modules={[Pagination]}
                         spaceBetween={15}
-                        // ESKİ HALİ: Mobilde 1.2 yaparak yandakinin ucunu gösteriyoruz (Liste hissi verir)
+                        // slidesPerView={1.2}: Yandakinin ucu hafif görünsün (Modern mobil hissi)
+                        // İstemezsen burayı 1 yapabilirsin.
                         slidesPerView={1.2} 
                         breakpoints={{
                             640: { slidesPerView: 2 },
@@ -132,8 +142,7 @@ export default function Home() {
                     >
                         {announcements.map((ann) => (
                             <SwiperSlide key={ann.id}>
-                                {/* KART TASARIMI: Küçük, yatay ve kibar (Eski hali) */}
-                                <Link href={`/duyuru/${ann.id}`} className="group flex bg-white p-3 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition h-28 items-center gap-4">
+                                <Link href={`/duyuru/${ann.id}`} className="flex bg-white p-3 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition gap-4 items-center h-28">
                                     <div className="w-24 h-24 bg-gray-100 rounded-xl overflow-hidden flex-shrink-0 relative border border-gray-200">
                                         {ann.images && ann.images[0] ? (
                                             <img 
@@ -145,10 +154,10 @@ export default function Home() {
                                     </div>
                                     <div className="flex flex-col justify-center h-full py-1 min-w-0">
                                         <span className="text-[10px] font-bold text-gray-400 mb-1">{new Date(ann.date).toLocaleDateString('tr-TR')}</span>
-                                        <h4 className="font-bold text-gray-800 text-sm leading-snug line-clamp-2 group-hover:text-red-600 transition">
+                                        <h4 className="font-bold text-gray-800 text-sm leading-snug line-clamp-2">
                                             {ann.title}
                                         </h4>
-                                        <span className="text-xs text-blue-600 font-bold mt-auto flex items-center gap-1 opacity-0 group-hover:opacity-100 transition transform translate-y-2 group-hover:translate-y-0">
+                                        <span className="text-xs text-blue-600 font-bold mt-auto flex items-center gap-1">
                                             Oku <FaArrowRight size={10}/>
                                         </span>
                                     </div>
@@ -164,8 +173,8 @@ export default function Home() {
             <div className="lg:col-span-4 space-y-8">
                 
                 {/* YAKLAŞAN ETKİNLİKLER */}
-                <div className="bg-white rounded-3xl shadow-xl border border-gray-100 p-6 relative overflow-hidden">
-                    <div className="absolute top-0 right-0 w-40 h-40 bg-blue-50 rounded-bl-full -z-0 opacity-50"></div>
+                <div className="bg-white rounded-[2rem] shadow-xl border border-gray-100 p-6 relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-blue-50 rounded-bl-full -z-0 opacity-50"></div>
                     
                     <h2 className="text-xl font-extrabold text-gray-900 mb-6 flex items-center gap-3 relative z-10">
                         <span className="bg-blue-100 text-blue-600 p-2 rounded-lg"><FaCalendarCheck/></span>
@@ -199,7 +208,7 @@ export default function Home() {
             </div>
         </div>
 
-        {/* --- SALONLAR (BÜYÜK KARTLAR) --- */}
+        {/* --- SALONLAR (KARTLAR) --- */}
         <section className="mb-8">
           <div className="text-center mb-10">
             <span className="text-red-600 font-bold text-sm tracking-widest uppercase mb-2 block">Rezervasyon</span>
@@ -224,7 +233,6 @@ export default function Home() {
                             Takvimi Gör <FaChevronRight size={10}/>
                         </span>
                     </div>
-                    <div className={`absolute inset-0 ${salon.color} opacity-0 group-hover:opacity-10 transition duration-500`}></div>
                 </Link>
             ))}
           </div>
@@ -234,7 +242,6 @@ export default function Home() {
       
       <footer className="bg-white border-t border-gray-200 py-10 text-center">
         <p className="font-bold text-gray-800">&copy; 2025 Ondokuz Mayıs Üniversitesi</p>
-        <p className="text-gray-500 text-sm mt-1">Mühendislik Fakültesi</p>
       </footer>
     </div>
   );
