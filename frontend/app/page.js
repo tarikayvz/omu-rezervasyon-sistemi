@@ -18,10 +18,11 @@ import 'swiper/css/effect-fade';
 const BASE_URL = API_URL.replace('/api', '');
 const getImageUrl = (img) => (img ? (img.startsWith('http') ? img : `${BASE_URL}${img}`) : '');
 
-// --- 1. MANŞET SLIDER ---
+// --- 1. MANŞET SLIDER (Referans Görseldeki Kutu Gibi) ---
 function MainNewsSlider({ announcements }) {
   return (
-    // Mobilde 280px, PC'de 480px. w-full diyerek container'a tam oturtuyoruz.
+    // Mobilde 280px, PC'de 480px SABİT yükseklik. 
+    // "rounded-2xl" ve "bg-gray-900" ile attığın görseldeki o koyu kutunun aynısıdır.
     <div className="group relative w-full h-[280px] md:h-[480px] rounded-2xl overflow-hidden shadow-lg bg-gray-900 border border-gray-800 z-0">
        {announcements.length > 0 ? (
          <Swiper
@@ -38,13 +39,16 @@ function MainNewsSlider({ announcements }) {
             {announcements.map((ann) => (
                 <SwiperSlide key={ann.id} className="relative w-full h-full bg-gray-900">
                     <Link href={`/duyuru/${ann.id}`} className="block w-full h-full relative">
+                        {/* RESİM: object-cover ile kutuyu tam doldurur, boşluk kalmaz */}
                         <img 
                             src={getImageUrl(ann.images[0])} 
                             alt={ann.title} 
                             className="w-full h-full object-cover" 
                         />
+                        {/* KARARTMA */}
                         <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent"></div>
                         
+                        {/* YAZI ALANI */}
                         <div className="absolute bottom-0 left-0 w-full p-6 z-20">
                             <div className="inline-flex items-center gap-2 bg-omu-red text-white text-[10px] md:text-xs font-bold px-3 py-1 rounded-full mb-3 shadow-sm border border-red-500/50">
                                 <FaCalendarAlt /> {new Date(ann.date).toLocaleDateString('tr-TR')}
@@ -61,6 +65,7 @@ function MainNewsSlider({ announcements }) {
             ))}
          </Swiper>
        ) : (
+         // Duyuru yoksa gösterilecek "OMÜ" kutusu (Referans görselin aynısı)
          <div className="w-full h-full flex items-center justify-center bg-gray-800"><span className="text-4xl font-bold text-gray-600">OMÜ</span></div>
        )}
        <style jsx global>{`
@@ -94,7 +99,10 @@ export default function Home() {
     <div className="min-h-screen bg-gray-50 font-sans overflow-x-hidden flex flex-col">
       <Header />
       
-      {/* px-4: Mobilde sağdan ve soldan eşit boşluk bırakır. İçerik buraya tam oturur. */}
+      {/* BU KISIM ÇOK ÖNEMLİ: "px-4" (padding-x-4) sayesinde 
+         içerik ekranın kenarlarına yapışmaz, ortada derli toplu durur.
+         Attığın "OMÜ" kutusu görselindeki gibi sağdan soldan boşluk kalır.
+      */}
       <main className="container mx-auto max-w-7xl px-4 py-8 flex-grow">
         
         <div className="grid lg:grid-cols-12 gap-8 mb-16">
@@ -102,7 +110,7 @@ export default function Home() {
             {/* --- SOL TARAFFER --- */}
             <div className="lg:col-span-8 space-y-10">
                 
-                {/* 1. Manşet Bölümü */}
+                {/* 1. Manşet Bölümü (O KUTU BURADA) */}
                 <section>
                     <div className="flex items-center justify-between mb-4 border-l-4 border-omu-red pl-4">
                         <h2 className="text-2xl font-extrabold text-gray-900">Duyurular & Haberler</h2>
@@ -110,18 +118,17 @@ export default function Home() {
                     <MainNewsSlider announcements={announcements} />
                 </section>
 
-                {/* 2. Diğer Duyurular (DÜZELTİLDİ: slidesPerView=1) */}
+                {/* 2. Diğer Duyurular (Tekli, Taşmayan Liste) */}
                 {announcements.length > 0 && (
                 <section>
                     <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4">Tüm Duyurular Listesi</h3>
                     <Swiper
                         modules={[Pagination]}
                         spaceBetween={20}
-                        // BURASI ÇOK ÖNEMLİ: 1 yaptık. Artık yandaki kartın ucu gözükmez. Tam sığar.
-                        slidesPerView={1} 
+                        slidesPerView={1} // Sadece 1 kart görünür, yanlardan taşmaz.
                         breakpoints={{
-                            640: { slidesPerView: 2 }, // Tablette 2 tane
-                            1024: { slidesPerView: 2.5 }, // PC'de 2.5 tane
+                            640: { slidesPerView: 2 }, 
+                            1024: { slidesPerView: 2.5 }, 
                         }}
                         navigation
                         pagination={{ clickable: true }}
