@@ -1,6 +1,5 @@
 import { Inter } from "next/font/google";
 import "./globals.css";
-// Toastify CSS (Bildirimler için)
 import 'react-toastify/dist/ReactToastify.css'; 
 import { ToastContainer } from 'react-toastify';
 
@@ -11,13 +10,12 @@ export const metadata = {
   description: "OMÜ Mühendislik Fakültesi Rezervasyon Sistemi",
 };
 
-// İŞTE SENİN İSTEDİĞİN AYAR BURASI! 
-// Bu ayar mobilde elle büyütmeyi/küçültmeyi (zoom) ENGELLER.
+// STANDART VIEWPORT AYARI (Yaylanma efektinin çalışması için bu lazım)
 export const viewport = {
   width: 'device-width',
   initialScale: 1,
-  maximumScale: 1,
-  userScalable: false, // "Kullanıcı ölçekleyemesin" komutu
+  // maximumScale ve userScalable satırlarını kaldırdık.
+  // Artık tarayıcının doğal davranışı (o yaylanma hissi) geri gelecek.
 };
 
 export default function RootLayout({ children }) {
@@ -25,7 +23,6 @@ export default function RootLayout({ children }) {
     <html lang="tr">
       <body className={inter.className}>
         {children}
-        {/* Toast Bildirim Kutusu */}
         <ToastContainer position="top-right" autoClose={3000} />
       </body>
     </html>
