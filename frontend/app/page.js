@@ -18,12 +18,12 @@ import 'swiper/css/effect-fade';
 const BASE_URL = API_URL.replace('/api', '');
 const getImageUrl = (img) => (img ? (img.startsWith('http') ? img : `${BASE_URL}${img}`) : '');
 
-// --- 1. MANŞET SLIDER (SİYAH KUTU - KENARLARDAN KOPUK) ---
+// --- 1. MANŞET SLIDER (KÜÇÜLTÜLMÜŞ SİYAH KUTU) ---
 function MainNewsSlider({ announcements }) {
   return (
-    // shadow-xl ve rounded-[30px] ile o istediğin "Kart" görüntüsü.
-    // w-full dedik ama dışarıdaki container onu sıkıştıracak.
-    <div className="w-full h-[350px] md:h-[500px] rounded-[30px] overflow-hidden shadow-2xl bg-black border border-gray-800 relative z-0">
+    // DÜZELTME BURADA: h-[320px] yaptık. Artık mobilde devasa durmayacak.
+    // md:h-[480px] -> Bilgisayarda yine büyük kalabilir.
+    <div className="w-full h-[320px] md:h-[480px] rounded-[24px] overflow-hidden shadow-2xl bg-black border border-gray-800 relative z-0">
        {announcements.length > 0 ? (
          <Swiper
            modules={[Navigation, Pagination, Autoplay, EffectFade]}
@@ -39,24 +39,29 @@ function MainNewsSlider({ announcements }) {
             {announcements.map((ann) => (
                 <SwiperSlide key={ann.id} className="relative w-full h-full bg-black">
                     <Link href={`/duyuru/${ann.id}`} className="block w-full h-full relative">
-                        {/* RESİM (Opaklık düşük, siyah tema) */}
+                        {/* RESİM */}
                         <img 
                             src={getImageUrl(ann.images[0])} 
                             alt={ann.title} 
                             className="w-full h-full object-cover opacity-60" 
                         />
-                        {/* İçerik Alanı (Sol Alt) */}
-                        <div className="absolute bottom-0 left-0 w-full p-8 z-20">
-                            <div className="inline-flex items-center gap-2 bg-[#E30613] text-white text-xs font-bold px-4 py-1.5 rounded-full mb-4 shadow-lg">
+                        
+                        {/* İÇERİK: Padding'i biraz azalttık (p-6) ki taşmasın */}
+                        <div className="absolute bottom-0 left-0 w-full p-6 z-20">
+                            <div className="inline-flex items-center gap-2 bg-[#E30613] text-white text-[10px] font-bold px-3 py-1 rounded-full mb-2 shadow-lg">
                                 <FaCalendarAlt /> {new Date(ann.date).toLocaleDateString('tr-TR')}
                             </div>
-                            <h3 className="text-2xl md:text-4xl font-extrabold text-white leading-tight mb-3 line-clamp-2">
+                            
+                            {/* Yazı boyutunu mobilde biraz küçülttük (text-xl) */}
+                            <h3 className="text-xl md:text-4xl font-extrabold text-white leading-tight mb-2 line-clamp-2">
                                 {ann.title}
                             </h3>
-                            <div className="flex items-center gap-2 text-white text-sm font-bold mt-2">
+                            
+                            <div className="flex items-center gap-2 text-white text-xs font-bold mt-1">
                                 Detayları İncele <FaArrowRight className="text-[#E30613]"/>
                             </div>
                         </div>
+                        
                         {/* Gradyan */}
                         <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent"></div>
                     </Link>
@@ -65,13 +70,13 @@ function MainNewsSlider({ announcements }) {
          </Swiper>
        ) : (
          <div className="w-full h-full flex items-center justify-center bg-black">
-             <span className="text-5xl font-black text-gray-800 tracking-tighter">OMÜ</span>
+             <span className="text-4xl font-black text-gray-800 tracking-tighter">OMÜ</span>
          </div>
        )}
        
        <style jsx global>{`
          .swiper-pagination-bullet { background: rgba(255,255,255,0.4); opacity: 1; }
-         .swiper-pagination-bullet-active { background: #E30613 !important; width: 24px; border-radius: 4px; transition: all 0.3s; }
+         .swiper-pagination-bullet-active { background: #E30613 !important; width: 20px; border-radius: 4px; transition: all 0.3s; }
          @media (max-width: 768px) { .swiper-button-next, .swiper-button-prev { display: none !important; } }
        `}</style>
     </div>
@@ -100,64 +105,58 @@ export default function Home() {
     <div className="min-h-screen bg-gray-50 font-sans flex flex-col overflow-x-hidden">
       <Header />
       
-      {/* !!! KRİTİK DÜZELTME BURADA !!!
-          px-6 (veya px-8): Bu, sayfanın hem sağına hem soluna 24px-32px boşluk koyar.
-          İçerideki "w-full" elemanlar bu boşluğun dışına ASLA çıkamaz.
-          Böylece sağda da solda da eşit boşluk olur, "sonsuza uzama" görüntüsü biter.
-      */}
-      <main className="container mx-auto max-w-7xl px-6 py-8 flex-grow">
+      {/* px-5: Mobilde sağdan soldan ideal boşluk bırakır. */}
+      <main className="container mx-auto max-w-7xl px-5 py-6 flex-grow">
         
-        <div className="grid lg:grid-cols-12 gap-10 mb-16">
+        <div className="grid lg:grid-cols-12 gap-8 md:gap-10 mb-16">
             
             {/* SOL TARAF */}
-            <div className="lg:col-span-8 space-y-10">
+            <div className="lg:col-span-8 space-y-8">
                 
-                {/* 1. MANŞET (SİYAH KUTU) */}
+                {/* 1. MANŞET (KÜÇÜK SİYAH KUTU) */}
                 <section>
-                    <div className="flex items-center gap-3 mb-4 pl-1">
-                        <span className="w-1.5 h-8 bg-[#E30613] rounded-full"></span>
-                        <h2 className="text-2xl font-extrabold text-gray-900">Duyurular & Haberler</h2>
+                    <div className="flex items-center gap-2 mb-3 pl-1">
+                        <span className="w-1.5 h-6 bg-[#E30613] rounded-full"></span>
+                        <h2 className="text-xl font-extrabold text-gray-900">Duyurular</h2>
                     </div>
-                    {/* Bu component artık px-6 sayesinde kenarlara değmeyecek */}
                     <MainNewsSlider announcements={announcements} />
                 </section>
 
-                {/* 2. DİĞER DUYURULAR (LİSTE) */}
+                {/* 2. DİĞER DUYURULAR (TEK SÜTUN LİSTE) */}
                 {announcements.length > 0 && (
                 <section>
-                    <h3 className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-4 pl-1">Tüm Duyurular Listesi</h3>
+                    <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3 pl-1">Tüm Duyurular</h3>
                     
                     <Swiper
                         modules={[Pagination]}
-                        spaceBetween={20}
-                        // SADECE 1 TANE GÖSTERİYORUZ Kİ YANLARDAN TAŞMASIN
-                        slidesPerView={1} 
+                        spaceBetween={15}
+                        slidesPerView={1} // Tam sığsın diye 1 yaptık
                         breakpoints={{
                             640: { slidesPerView: 2 },
                             1024: { slidesPerView: 2.5 },
                         }}
                         pagination={{ clickable: true }}
-                        className="pb-10"
+                        className="pb-8"
                     >
                         {announcements.map((ann) => (
                             <SwiperSlide key={ann.id}>
-                                <Link href={`/duyuru/${ann.id}`} className="flex bg-white p-4 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition gap-4 items-center h-32">
-                                    <div className="w-24 h-24 bg-gray-100 rounded-xl overflow-hidden flex-shrink-0 relative border border-gray-200">
+                                <Link href={`/duyuru/${ann.id}`} className="flex bg-white p-3 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition gap-3 items-center h-24">
+                                    <div className="w-20 h-20 bg-gray-100 rounded-xl overflow-hidden flex-shrink-0 relative border border-gray-200">
                                         {ann.images && ann.images[0] ? (
                                             <img 
                                                 src={getImageUrl(ann.images[0])} 
-                                                className="w-full h-full object-cover group-hover:scale-110 transition duration-500"
+                                                className="w-full h-full object-cover"
                                                 alt={ann.title}
                                             />
                                         ) : <div className="w-full h-full flex items-center justify-center text-gray-300 font-bold">OMÜ</div>}
                                     </div>
                                     <div className="flex flex-col justify-center h-full py-1 min-w-0">
-                                        <span className="text-[10px] font-bold text-gray-400 mb-1">{new Date(ann.date).toLocaleDateString('tr-TR')}</span>
-                                        <h4 className="font-bold text-gray-800 text-sm leading-snug line-clamp-2 group-hover:text-[#E30613] transition">
+                                        <span className="text-[10px] font-bold text-gray-400 mb-0.5">{new Date(ann.date).toLocaleDateString('tr-TR')}</span>
+                                        <h4 className="font-bold text-gray-800 text-sm leading-tight line-clamp-2">
                                             {ann.title}
                                         </h4>
-                                        <span className="text-xs text-blue-600 font-bold mt-auto flex items-center gap-1">
-                                            Oku <FaArrowRight size={10}/>
+                                        <span className="text-[10px] text-blue-600 font-bold mt-auto flex items-center gap-1">
+                                            Oku <FaArrowRight size={8}/>
                                         </span>
                                     </div>
                                 </Link>
@@ -169,28 +168,28 @@ export default function Home() {
             </div>
 
             {/* SAĞ TARAF (YAN MENÜ) */}
-            <div className="lg:col-span-4 space-y-8">
+            <div className="lg:col-span-4 space-y-6">
                 
                 {/* YAKLAŞAN ETKİNLİKLER */}
-                <div className="bg-white rounded-[30px] shadow-xl border border-gray-100 p-6 relative overflow-hidden">
-                    <h2 className="text-xl font-extrabold text-gray-900 mb-6 flex items-center gap-3 relative z-10">
-                        <span className="bg-blue-100 text-blue-600 p-2 rounded-lg"><FaCalendarCheck/></span>
-                        Yaklaşan Etkinlikler
+                <div className="bg-white rounded-[24px] shadow-lg border border-gray-100 p-5 relative overflow-hidden">
+                    <h2 className="text-lg font-extrabold text-gray-900 mb-4 flex items-center gap-2 relative z-10">
+                        <span className="bg-blue-100 text-blue-600 p-1.5 rounded-lg"><FaCalendarCheck size={14}/></span>
+                        Etkinlikler
                     </h2>
 
-                    <div className="space-y-3 max-h-[400px] overflow-y-auto custom-scrollbar relative z-10">
-                        {upcomingEvents.length === 0 ? <p className="text-gray-400 text-center py-6">Henüz planlanmış etkinlik yok.</p> : 
+                    <div className="space-y-3 max-h-[350px] overflow-y-auto custom-scrollbar relative z-10">
+                        {upcomingEvents.length === 0 ? <p className="text-gray-400 text-center py-4 text-sm">Etkinlik yok.</p> : 
                             upcomingEvents.map((evt) => (
-                                <div key={evt.id} className="flex gap-4 items-center p-3 bg-gray-50 rounded-2xl border border-gray-100">
-                                    <div className="bg-white text-blue-700 rounded-xl p-2 text-center min-w-[55px] shadow-sm border border-gray-100">
-                                        <span className="block text-lg font-black leading-none">{new Date(evt.startDate).getDate()}</span>
-                                        <span className="text-[10px] font-bold uppercase tracking-wide">{new Date(evt.startDate).toLocaleString('tr-TR', { month: 'short' })}</span>
+                                <div key={evt.id} className="flex gap-3 items-center p-2.5 bg-gray-50 rounded-xl border border-gray-100">
+                                    <div className="bg-white text-blue-700 rounded-lg p-1.5 text-center min-w-[50px] shadow-sm border border-gray-100">
+                                        <span className="block text-base font-black leading-none">{new Date(evt.startDate).getDate()}</span>
+                                        <span className="text-[9px] font-bold uppercase tracking-wide">{new Date(evt.startDate).toLocaleString('tr-TR', { month: 'short' })}</span>
                                     </div>
                                     <div className="flex-grow">
-                                        <h4 className="font-bold text-gray-900 text-sm line-clamp-1 mb-1">{evt.title}</h4>
-                                        <div className="flex items-center gap-3 text-xs text-gray-500 font-medium">
+                                        <h4 className="font-bold text-gray-900 text-xs line-clamp-1 mb-0.5">{evt.title}</h4>
+                                        <div className="flex items-center gap-2 text-[10px] text-gray-500 font-medium">
                                             <span className="flex items-center gap-1"><FaClock className="text-blue-400"/> {new Date(evt.startDate).toLocaleTimeString([],{hour:'2-digit', minute:'2-digit'})}</span>
-                                            <span className="flex items-center gap-1 bg-white px-2 py-0.5 rounded shadow-sm border"><FaMapMarkerAlt className="text-red-400"/> {evt.hall}</span>
+                                            <span className="flex items-center gap-1 bg-white px-1.5 py-0.5 rounded shadow-sm border"><FaMapMarkerAlt className="text-red-400"/> {evt.hall}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -198,7 +197,7 @@ export default function Home() {
                         }
                     </div>
 
-                    <Link href="/takvim" className="mt-6 block w-full py-4 rounded-2xl bg-gray-900 text-white text-center text-sm font-bold shadow-lg hover:bg-[#E30613] transition duration-300 relative z-10">
+                    <Link href="/takvim" className="mt-4 block w-full py-3 rounded-xl bg-gray-900 text-white text-center text-xs font-bold shadow-md hover:bg-[#E30613] transition duration-300 relative z-10">
                         Tüm Takvimi Görüntüle
                     </Link>
                 </div>
@@ -207,26 +206,26 @@ export default function Home() {
 
         {/* --- SALONLAR --- */}
         <section className="mb-8">
-          <div className="text-center mb-10">
-            <span className="text-[#E30613] font-bold text-sm tracking-widest uppercase mb-2 block">Rezervasyon</span>
-            <h2 className="text-3xl md:text-4xl font-extrabold text-gray-900">Etkinlik Salonlarımız</h2>
+          <div className="text-center mb-6">
+            <span className="text-[#E30613] font-bold text-xs tracking-widest uppercase mb-1 block">Rezervasyon</span>
+            <h2 className="text-2xl font-extrabold text-gray-900">Etkinlik Salonlarımız</h2>
           </div>
           
-          <div className="grid md:grid-cols-3 gap-6">
+          <div className="grid md:grid-cols-3 gap-4">
             {[
                 { id: 'mavi', name: 'Mavi Salon', color: 'bg-gradient-to-br from-blue-600 to-blue-800', icon: 'M', desc: 'Geniş katılımlı konferanslar.' },
                 { id: 'pembe', name: 'Pembe Salon', color: 'bg-gradient-to-br from-pink-500 to-pink-700', icon: 'P', desc: 'Seminerler ve kulüp etkinlikleri.' },
                 { id: 'konferans', name: 'Konferans Salonu', color: 'bg-gradient-to-br from-orange-500 to-orange-700', icon: 'K', desc: 'Akademik sunumlar ve toplantılar.' }
             ].map((salon) => (
-                <Link key={salon.id} href={`/takvim?salon=${salon.id}`} className="group relative bg-white rounded-[2rem] p-1 overflow-hidden shadow-lg hover:shadow-2xl transition duration-500 hover:-translate-y-2">
-                    <div className="bg-white rounded-[1.8rem] p-8 h-full flex flex-col items-center text-center relative z-10">
-                        <div className={`w-16 h-16 rounded-3xl ${salon.color} text-white flex items-center justify-center text-3xl font-bold mb-4 shadow-lg transform group-hover:rotate-12 transition duration-500`}>
+                <Link key={salon.id} href={`/takvim?salon=${salon.id}`} className="group relative bg-white rounded-[20px] p-1 overflow-hidden shadow-md hover:shadow-xl transition duration-500 hover:-translate-y-1">
+                    <div className="bg-white rounded-[16px] p-6 h-full flex flex-col items-center text-center relative z-10">
+                        <div className={`w-12 h-12 rounded-2xl ${salon.color} text-white flex items-center justify-center text-xl font-bold mb-3 shadow-lg transform group-hover:rotate-6 transition duration-500`}>
                             {salon.icon}
                         </div>
-                        <h3 className="text-xl font-bold text-gray-800 mb-2 group-hover:text-[#E30613] transition">{salon.name}</h3>
-                        <p className="text-gray-500 text-sm mb-6 leading-relaxed">{salon.desc}</p>
+                        <h3 className="text-lg font-bold text-gray-800 mb-1 group-hover:text-[#E30613] transition">{salon.name}</h3>
+                        <p className="text-gray-500 text-xs mb-4 leading-relaxed">{salon.desc}</p>
                         
-                        <span className="mt-auto text-sm font-bold text-gray-900 bg-gray-100 px-5 py-2.5 rounded-xl group-hover:bg-gray-900 group-hover:text-white transition flex items-center gap-2">
+                        <span className="mt-auto text-xs font-bold text-gray-900 bg-gray-100 px-4 py-2 rounded-lg group-hover:bg-gray-900 group-hover:text-white transition flex items-center gap-2">
                             Takvimi Gör <FaChevronRight size={10}/>
                         </span>
                     </div>
@@ -237,8 +236,8 @@ export default function Home() {
 
       </main>
       
-      <footer className="bg-white border-t border-gray-200 py-10 text-center">
-        <p className="font-bold text-gray-800">&copy; 2025 Ondokuz Mayıs Üniversitesi</p>
+      <footer className="bg-white border-t border-gray-200 py-6 text-center">
+        <p className="font-bold text-gray-800 text-sm">&copy; 2025 Ondokuz Mayıs Üniversitesi</p>
       </footer>
     </div>
   );
