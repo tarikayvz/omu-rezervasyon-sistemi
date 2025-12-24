@@ -1,14 +1,23 @@
 import { Inter } from "next/font/google";
 import "./globals.css";
-// --- YENİ EKLENENLER ---
+// Toastify CSS (Bildirimler için)
+import 'react-toastify/dist/ReactToastify.css'; 
 import { ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css'; // Stil dosyası şart!
 
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata = {
-  title: "OMÜ Rezervasyon",
-  description: "Mühendislik Fakültesi Rezervasyon Sistemi",
+  title: "OMÜ Rezervasyon Sistemi",
+  description: "OMÜ Mühendislik Fakültesi Rezervasyon Sistemi",
+};
+
+// İŞTE SENİN İSTEDİĞİN AYAR BURASI! 
+// Bu ayar mobilde elle büyütmeyi/küçültmeyi (zoom) ENGELLER.
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false, // "Kullanıcı ölçekleyemesin" komutu
 };
 
 export default function RootLayout({ children }) {
@@ -16,8 +25,8 @@ export default function RootLayout({ children }) {
     <html lang="tr">
       <body className={inter.className}>
         {children}
-        {/* Bildirim Kutusu (Her sayfada çalışsın diye buraya koyduk) */}
-        <ToastContainer position="top-right" autoClose={3000} theme="colored" />
+        {/* Toast Bildirim Kutusu */}
+        <ToastContainer position="top-right" autoClose={3000} />
       </body>
     </html>
   );
