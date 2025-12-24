@@ -7,70 +7,91 @@ import Link from 'next/link';
 import { FaChevronRight, FaCalendarAlt, FaMapMarkerAlt, FaArrowRight, FaClock, FaCalendarCheck } from 'react-icons/fa';
 import API_URL from '../utils/api';
 
-// --- RESİM URL DÜZELTME MANTIĞI ---
-// API_URL "..../api" ile bittiği için, yerel resimlerde kullanmak üzere "/api" kısmını siliyoruz.
+// --- SWIPER İMPORTLARI ---
+import { Swiper, SwiperSlide } from 'swiper/react';
+import { Navigation, Pagination, Autoplay, EffectFade } from 'swiper/modules';
+import 'swiper/css';
+import 'swiper/css/navigation';
+import 'swiper/css/pagination';
+import 'swiper/css/effect-fade';
+
+// --- URL AYARLARI ---
 const BASE_URL = API_URL.replace('/api', '');
 
-// Bu fonksiyon resim Cloudinary linki mi yoksa yerel sunucu linki mi kontrol eder
 const getImageUrl = (img) => {
     if (!img) return '';
     return img.startsWith('http') ? img : `${BASE_URL}${img}`;
 };
 
-// --- NETFLIX STİLİ SLIDER ---
+// --- NETFLIX STİLİ SLIDER (SWIPER İLE GÜNCELLENDİ) ---
 function AnnouncementSlider({ images, title, link, date }) {
-  const [currentIndex, setCurrentIndex] = useState(0);
-
-  useEffect(() => {
-    if (images.length <= 1) return;
-    const interval = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % images.length);
-    }, 6000); 
-    return () => clearInterval(interval);
-  }, [images]);
-
   return (
-    <div className="group relative h-[450px] w-full overflow-hidden rounded-3xl shadow-lg cursor-pointer bg-gray-900 border border-gray-800">
-       <Link href={link} className="block w-full h-full relative">
-          {images.length > 0 ? (
-            images.map((img, index) => (
-                <div key={index} className={`absolute inset-0 transition-opacity duration-1000 ease-in-out flex items-center justify-center ${index === currentIndex ? 'opacity-100' : 'opacity-0'}`}>
-                    {/* 1. KATMAN: Arka Plan (Bulanık) */}
-                    <div 
-                        className="absolute inset-0 bg-cover bg-center blur-xl opacity-60 scale-110" 
-                        style={{ backgroundImage: `url(${getImageUrl(img)})` }}
-                    ></div>
-                    
-                    {/* 2. KATMAN: Ön Plan (Net) */}
-                    <img 
-                        src={getImageUrl(img)} 
-                        alt={title} 
-                        className="relative w-full h-full object-contain z-10 drop-shadow-2xl" 
-                    />
-                </div>
-            ))
-          ) : (
-            <div className="w-full h-full bg-gray-800 flex items-center justify-center"><span className="text-4xl font-bold text-gray-700">OMÜ</span></div>
-          )}
-          
-          <div className="absolute bottom-0 left-0 p-8 w-full bg-gradient-to-t from-black via-black/60 to-transparent z-20">
-              <div className="inline-flex items-center gap-2 bg-omu-red text-white text-xs font-bold px-3 py-1 rounded-full mb-3 shadow-lg border border-red-500/50">
-                 <FaCalendarAlt /> {new Date(date).toLocaleDateString('tr-TR')}
-              </div>
-              <h3 className="text-2xl md:text-3xl font-bold text-white leading-tight mb-2 drop-shadow-md line-clamp-2">{title}</h3>
-              <span className="text-gray-300 text-sm font-bold flex items-center gap-2 group-hover:text-white transition">
-                Detayları İncele <FaArrowRight className="transform group-hover:translate-x-1 transition"/>
-              </span>
-          </div>
-       </Link>
-
-       {images.length > 1 && (
-         <div className="absolute bottom-8 right-8 flex gap-2 z-30">
-            {images.map((_, idx) => (
-                <div key={idx} className={`h-1.5 rounded-full transition-all duration-500 ${idx === currentIndex ? 'w-8 bg-omu-red' : 'w-2 bg-white/40'}`}></div>
+    <div className="group relative h-[450px] w-full overflow-hidden rounded-3xl shadow-lg bg-gray-900 border border-gray-800">
+       
+       {images.length > 0 ? (
+         <Swiper
+           modules={[Navigation, Pagination, Autoplay, EffectFade]}
+           spaceBetween={0}
+           slidesPerView={1}
+           effect={'fade'} // Resimler yumuşakça birbirine dönüşsün
+           loop={true} // Sürekli döngü
+           autoplay={{
+             delay: 6000,
+             disableOnInteraction: false, // Elle kaydırınca otomatik oynatma durmasın
+           }}
+           pagination={{ 
+             clickable: true,
+             dynamicBullets: true 
+           }}
+           navigation={true} // Ok tuşlarını ekler
+           className="h-full w-full"
+         >
+            {images.map((img, index) => (
+                <SwiperSlide key={index} className="relative w-full h-full">
+                    <Link href={link} className="block w-full h-full">
+                        {/* 1. KATMAN: Arka Plan (Bulanık) */}
+                        <div 
+                            className="absolute inset-0 bg-cover bg-center blur-xl opacity-60 scale-110" 
+                            style={{ backgroundImage: `url(${getImageUrl(img)})` }}
+                        ></div>
+                        
+                        {/* 2. KATMAN: Ön Plan (Net) */}
+                        <div className="absolute inset-0 flex items-center justify-center">
+                            <img 
+                                src={getImageUrl(img)} 
+                                alt={title} 
+                                className="relative max-w-full max-h-full object-contain z-10 drop-shadow-2xl" 
+                            />
+                        </div>
+                    </Link>
+                </SwiperSlide>
             ))}
-         </div>
+         </Swiper>
+       ) : (
+         <div className="w-full h-full bg-gray-800 flex items-center justify-center"><span className="text-4xl font-bold text-gray-700">OMÜ</span></div>
        )}
+
+       {/* ALT BİLGİ ALANI (Sabit Kalır, Slider'ın Üstündedir) */}
+       {/* pointer-events-none sayesinde tıklamalar alttaki slider'a geçer, buton hariç */}
+       <div className="absolute bottom-0 left-0 p-8 w-full bg-gradient-to-t from-black via-black/60 to-transparent z-20 pointer-events-none">
+          <div className="inline-flex items-center gap-2 bg-omu-red text-white text-xs font-bold px-3 py-1 rounded-full mb-3 shadow-lg border border-red-500/50 pointer-events-auto">
+             <FaCalendarAlt /> {new Date(date).toLocaleDateString('tr-TR')}
+          </div>
+          <Link href={link} className="pointer-events-auto block">
+            <h3 className="text-2xl md:text-3xl font-bold text-white leading-tight mb-2 drop-shadow-md line-clamp-2 hover:text-gray-200 transition">{title}</h3>
+          </Link>
+          <Link href={link} className="pointer-events-auto text-gray-300 text-sm font-bold flex items-center gap-2 hover:text-white transition w-max">
+            Detayları İncele <FaArrowRight className="transform hover:translate-x-1 transition"/>
+          </Link>
+       </div>
+       
+       {/* Pagination (Noktalar) için stil özelleştirmesi */}
+       <style jsx global>{`
+         .swiper-pagination-bullet { background: rgba(255,255,255,0.5); opacity: 1; }
+         .swiper-pagination-bullet-active { background: #E30613 !important; width: 24px; border-radius: 4px; transition: all 0.3s; }
+         .swiper-button-next, .swiper-button-prev { color: white; transform: scale(0.6); font-weight: bold; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
+         .swiper-button-next:hover, .swiper-button-prev:hover { color: #E30613; }
+       `}</style>
     </div>
   );
 }
@@ -108,7 +129,7 @@ export default function Home() {
         
         <div className="grid lg:grid-cols-12 gap-8 mb-16">
             
-            {/* SOL TARAFFER (%66): MANŞET DUYURULAR */}
+            {/* SOL TARAF (%66): MANŞET DUYURULAR */}
             <div className="lg:col-span-8">
                 <div className="flex items-center justify-between mb-6">
                     <h2 className="text-2xl font-extrabold text-gray-900 flex items-center gap-2 border-l-4 border-omu-red pl-3">
@@ -118,7 +139,7 @@ export default function Home() {
 
                 {announcements.length > 0 ? (
                     <>
-                        {/* Büyük Slider */}
+                        {/* Büyük Slider (SWIPER) */}
                         <AnnouncementSlider 
                             images={announcements[0].images || []} 
                             title={announcements[0].title} 
@@ -158,7 +179,7 @@ export default function Home() {
                 )}
             </div>
 
-            {/* SAĞ TARAF (%33): YAKLAŞAN ETKİNLİKLER (AJANDA) */}
+            {/* SAĞ TARAF (%33): YAKLAŞAN ETKİNLİKLER */}
             <div className="lg:col-span-4">
                 <div className="bg-white rounded-3xl shadow-lg border border-gray-100 p-6 h-full flex flex-col relative overflow-hidden">
                     <div className="absolute top-0 right-0 w-32 h-32 bg-blue-50 rounded-bl-full -z-0"></div>
