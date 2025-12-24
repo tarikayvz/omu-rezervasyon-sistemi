@@ -23,45 +23,66 @@ const getImageUrl = (img) => {
     return img.startsWith('http') ? img : `${BASE_URL}${img}`;
 };
 
-// --- BÜYÜK SLIDER (MANŞET) ---
-function AnnouncementSlider({ images, title, link, date }) {
+// --- YENİ MANŞET SLIDER (TÜM DUYURULARI DÖNER) ---
+function MainNewsSlider({ announcements }) {
   return (
     <div className="group relative h-[450px] w-full overflow-hidden rounded-3xl shadow-lg bg-gray-900 border border-gray-800">
        
-       {images.length > 0 ? (
+       {announcements.length > 0 ? (
          <Swiper
            modules={[Navigation, Pagination, Autoplay, EffectFade]}
            spaceBetween={0}
            slidesPerView={1}
-           effect={'fade'}
+           effect={'fade'} // Yumuşak geçiş
            loop={true}
            autoplay={{
-             delay: 6000,
+             delay: 5000, // 5 saniyede bir değişir
              disableOnInteraction: false,
            }}
            pagination={{ 
              clickable: true,
              dynamicBullets: true 
            }}
-           navigation={true}
+           navigation={true} // Ok tuşları
            className="h-full w-full"
          >
-            {images.map((img, index) => (
-                <SwiperSlide key={index} className="relative w-full h-full">
-                    <Link href={link} className="block w-full h-full">
-                        {/* 1. KATMAN: Arka Plan */}
+            {announcements.map((ann) => (
+                <SwiperSlide key={ann.id} className="relative w-full h-full cursor-grab active:cursor-grabbing">
+                    {/* Resmin üzerine tıklayınca detay sayfasına git */}
+                    <Link href={`/duyuru/${ann.id}`} className="block w-full h-full">
+                        
+                        {/* 1. KATMAN: Arka Plan (Bulanık) */}
                         <div 
                             className="absolute inset-0 bg-cover bg-center blur-xl opacity-60 scale-110" 
-                            style={{ backgroundImage: `url(${getImageUrl(img)})` }}
+                            style={{ 
+                                backgroundImage: `url(${ann.images && ann.images.length > 0 ? getImageUrl(ann.images[0]) : ''})` 
+                            }}
                         ></div>
                         
-                        {/* 2. KATMAN: Ön Plan */}
+                        {/* 2. KATMAN: Ön Plan (Net Resim) */}
                         <div className="absolute inset-0 flex items-center justify-center">
-                            <img 
-                                src={getImageUrl(img)} 
-                                alt={title} 
-                                className="relative max-w-full max-h-full object-contain z-10 drop-shadow-2xl" 
-                            />
+                            {ann.images && ann.images.length > 0 ? (
+                                <img 
+                                    src={getImageUrl(ann.images[0])} 
+                                    alt={ann.title} 
+                                    className="relative max-w-full max-h-full object-contain z-10 drop-shadow-2xl" 
+                                />
+                            ) : (
+                                <div className="text-white font-bold text-4xl opacity-20">OMÜ</div>
+                            )}
+                        </div>
+
+                        {/* 3. KATMAN: Yazı ve Bilgiler (En Üstte) */}
+                        <div className="absolute bottom-0 left-0 p-8 w-full bg-gradient-to-t from-black via-black/70 to-transparent z-20">
+                            <div className="inline-flex items-center gap-2 bg-omu-red text-white text-xs font-bold px-3 py-1 rounded-full mb-3 shadow-lg border border-red-500/50">
+                                <FaCalendarAlt /> {new Date(ann.date).toLocaleDateString('tr-TR')}
+                            </div>
+                            <h3 className="text-2xl md:text-3xl font-bold text-white leading-tight mb-2 drop-shadow-md line-clamp-2 hover:text-gray-200 transition">
+                                {ann.title}
+                            </h3>
+                            <span className="text-gray-300 text-sm font-bold flex items-center gap-2 hover:text-white transition w-max">
+                                Detayları İncele <FaArrowRight className="transform hover:translate-x-1 transition"/>
+                            </span>
                         </div>
                     </Link>
                 </SwiperSlide>
@@ -70,18 +91,6 @@ function AnnouncementSlider({ images, title, link, date }) {
        ) : (
          <div className="w-full h-full bg-gray-800 flex items-center justify-center"><span className="text-4xl font-bold text-gray-700">OMÜ</span></div>
        )}
-
-       <div className="absolute bottom-0 left-0 p-8 w-full bg-gradient-to-t from-black via-black/60 to-transparent z-20 pointer-events-none">
-          <div className="inline-flex items-center gap-2 bg-omu-red text-white text-xs font-bold px-3 py-1 rounded-full mb-3 shadow-lg border border-red-500/50 pointer-events-auto">
-             <FaCalendarAlt /> {new Date(date).toLocaleDateString('tr-TR')}
-          </div>
-          <Link href={link} className="pointer-events-auto block">
-            <h3 className="text-2xl md:text-3xl font-bold text-white leading-tight mb-2 drop-shadow-md line-clamp-2 hover:text-gray-200 transition">{title}</h3>
-          </Link>
-          <Link href={link} className="pointer-events-auto text-gray-300 text-sm font-bold flex items-center gap-2 hover:text-white transition w-max">
-            Detayları İncele <FaArrowRight className="transform hover:translate-x-1 transition"/>
-          </Link>
-       </div>
        
        <style jsx global>{`
          .swiper-pagination-bullet { background: rgba(255,255,255,0.5); opacity: 1; }
@@ -133,60 +142,51 @@ export default function Home() {
 
                 {announcements.length > 0 ? (
                     <>
-                        {/* 1. BÜYÜK SLIDER (MANŞET) */}
-                        <AnnouncementSlider 
-                            images={announcements[0].images || []} 
-                            title={announcements[0].title} 
-                            link={`/duyuru/${announcements[0].id}`}
-                            date={announcements[0].date}
-                        />
+                        {/* 1. ÜST KISIM: TÜM DUYURULAR SLIDER (Linkli) */}
+                        <MainNewsSlider announcements={announcements} />
                         
-                        {/* 2. KÜÇÜK KARTLAR SLIDER (Burayı Güncelledik) */}
-                        {announcements.length > 1 && (
-                            <div className="mt-8">
-                                <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4">Diğer Duyurular</h3>
-                                <Swiper
-                                    modules={[Navigation, Pagination]}
-                                    spaceBetween={20} // Kartlar arası boşluk
-                                    slidesPerView={1} // Mobilde 1 tane
-                                    breakpoints={{
-                                        640: { slidesPerView: 2 }, // Tablette/PC'de 2 tane
-                                    }}
-                                    navigation
-                                    pagination={{ clickable: true }}
-                                    className="pb-10" // Alt noktalar için boşluk
-                                >
-                                    {/* 1. eleman manşette olduğu için slice(1) ile geri kalanları alıyoruz */}
-                                    {announcements.slice(1).map((ann) => (
-                                        <SwiperSlide key={ann.id}>
-                                            <Link href={`/duyuru/${ann.id}`} className="flex bg-white p-4 rounded-2xl shadow-sm hover:shadow-md transition gap-4 border border-gray-100 group items-center h-32">
-                                                <div className="w-24 h-24 bg-gray-100 rounded-xl overflow-hidden flex-shrink-0 relative border border-gray-100">
-                                                    {/* KÜÇÜK RESİM KONTROLÜ */}
-                                                    {ann.images && ann.images[0] ? (
-                                                        <img 
-                                                            src={getImageUrl(ann.images[0])} 
-                                                            className="w-full h-full object-cover group-hover:scale-110 transition duration-500"
-                                                            alt={ann.title}
-                                                        />
-                                                    ) : <div className="w-full h-full flex items-center justify-center text-gray-300 font-bold">OMÜ</div>}
-                                                </div>
-                                                <div className="flex flex-col justify-center min-w-0 h-full">
-                                                    <span className="text-xs font-bold text-gray-400 mb-1">{new Date(ann.date).toLocaleDateString('tr-TR')}</span>
-                                                    <h3 className="font-bold text-gray-800 text-sm leading-snug line-clamp-2 group-hover:text-omu-red transition">{ann.title}</h3>
-                                                    <span className="text-xs text-blue-600 font-bold mt-auto flex items-center gap-1 opacity-0 group-hover:opacity-100 transition transform translate-y-2 group-hover:translate-y-0">Oku <FaArrowRight size={10}/></span>
-                                                </div>
-                                            </Link>
-                                        </SwiperSlide>
-                                    ))}
-                                </Swiper>
-                                
-                                {/* Küçük slider ok tuşları için renk ayarı (Global Style içinde zaten var ama garanti olsun) */}
-                                <style jsx global>{`
-                                    .swiper-button-next::after, .swiper-button-prev::after { font-size: 18px !important; color: #9CA3AF; }
-                                    .swiper-button-next:hover::after, .swiper-button-prev:hover::after { color: #E30613; }
-                                `}</style>
-                            </div>
-                        )}
+                        {/* 2. ALT KISIM: KÜÇÜK KARTLAR (Hepsi Dahil) */}
+                        <div className="mt-8">
+                            <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4">Tüm Duyurular Listesi</h3>
+                            <Swiper
+                                modules={[Navigation, Pagination]}
+                                spaceBetween={20}
+                                slidesPerView={1}
+                                breakpoints={{
+                                    640: { slidesPerView: 2 },
+                                }}
+                                navigation
+                                pagination={{ clickable: true }}
+                                className="pb-10"
+                            >
+                                {/* slice(1) kaldırıldı: Artık hepsi görünecek */}
+                                {announcements.map((ann) => (
+                                    <SwiperSlide key={ann.id}>
+                                        <Link href={`/duyuru/${ann.id}`} className="flex bg-white p-4 rounded-2xl shadow-sm hover:shadow-md transition gap-4 border border-gray-100 group items-center h-32">
+                                            <div className="w-24 h-24 bg-gray-100 rounded-xl overflow-hidden flex-shrink-0 relative border border-gray-100">
+                                                {ann.images && ann.images[0] ? (
+                                                    <img 
+                                                        src={getImageUrl(ann.images[0])} 
+                                                        className="w-full h-full object-cover group-hover:scale-110 transition duration-500"
+                                                        alt={ann.title}
+                                                    />
+                                                ) : <div className="w-full h-full flex items-center justify-center text-gray-300 font-bold">OMÜ</div>}
+                                            </div>
+                                            <div className="flex flex-col justify-center min-w-0 h-full">
+                                                <span className="text-xs font-bold text-gray-400 mb-1">{new Date(ann.date).toLocaleDateString('tr-TR')}</span>
+                                                <h3 className="font-bold text-gray-800 text-sm leading-snug line-clamp-2 group-hover:text-omu-red transition">{ann.title}</h3>
+                                                <span className="text-xs text-blue-600 font-bold mt-auto flex items-center gap-1 opacity-0 group-hover:opacity-100 transition transform translate-y-2 group-hover:translate-y-0">Oku <FaArrowRight size={10}/></span>
+                                            </div>
+                                        </Link>
+                                    </SwiperSlide>
+                                ))}
+                            </Swiper>
+                            
+                            <style jsx global>{`
+                                .swiper-button-next::after, .swiper-button-prev::after { font-size: 18px !important; color: #9CA3AF; }
+                                .swiper-button-next:hover::after, .swiper-button-prev:hover::after { color: #E30613; }
+                            `}</style>
+                        </div>
                     </>
                 ) : (
                     <div className="bg-white rounded-3xl h-64 flex items-center justify-center shadow-sm border border-gray-200">
