@@ -18,53 +18,45 @@ import 'swiper/css/effect-fade';
 const BASE_URL = API_URL.replace('/api', '');
 const getImageUrl = (img) => (img ? (img.startsWith('http') ? img : `${BASE_URL}${img}`) : '');
 
-// --- 1. MANŞET SLIDER (SİYAH KUTU - ZORUNLU BOŞLUKLU) ---
+// --- 1. MANŞET SLIDER (SİYAH KUTU - KENARLARDAN KOPUK) ---
 function MainNewsSlider({ announcements }) {
   return (
-    // Dışarıdaki div: Container görevi görür.
-    <div className="w-full relative z-0">
+    // shadow-xl ve rounded-[30px] ile o istediğin "Kart" görüntüsü.
+    // w-full dedik ama dışarıdaki container onu sıkıştıracak.
+    <div className="w-full h-[350px] md:h-[500px] rounded-[30px] overflow-hidden shadow-2xl bg-black border border-gray-800 relative z-0">
        {announcements.length > 0 ? (
          <Swiper
            modules={[Navigation, Pagination, Autoplay, EffectFade]}
-           slidesPerView={1} // SADECE 1 KART. ASLA YAN TARAFI GÖSTERMEZ.
+           slidesPerView={1}
            effect={'fade'} 
            fadeEffect={{ crossFade: true }}
            loop={true}
            autoplay={{ delay: 5000, disableOnInteraction: false }}
            pagination={{ clickable: true, dynamicBullets: true }}
            navigation={true} 
-           // BURASI ÖNEMLİ: rounded-3xl ve overflow-hidden burada.
-           className="h-[350px] md:h-[500px] w-full rounded-[30px] shadow-2xl bg-black border border-gray-800"
+           className="h-full w-full"
          >
             {announcements.map((ann) => (
                 <SwiperSlide key={ann.id} className="relative w-full h-full bg-black">
                     <Link href={`/duyuru/${ann.id}`} className="block w-full h-full relative">
-                        
-                        {/* RESİM */}
+                        {/* RESİM (Opaklık düşük, siyah tema) */}
                         <img 
                             src={getImageUrl(ann.images[0])} 
                             alt={ann.title} 
                             className="w-full h-full object-cover opacity-60" 
                         />
-                        
-                        {/* İÇERİK (SİYAH KART TARZI) */}
+                        {/* İçerik Alanı (Sol Alt) */}
                         <div className="absolute bottom-0 left-0 w-full p-8 z-20">
-                            {/* Kırmızı Tarih */}
-                            <div className="inline-flex items-center gap-2 bg-[#E30613] text-white text-xs font-bold px-4 py-1.5 rounded-full mb-4 shadow-md">
+                            <div className="inline-flex items-center gap-2 bg-[#E30613] text-white text-xs font-bold px-4 py-1.5 rounded-full mb-4 shadow-lg">
                                 <FaCalendarAlt /> {new Date(ann.date).toLocaleDateString('tr-TR')}
                             </div>
-                            
-                            {/* Başlık */}
                             <h3 className="text-2xl md:text-4xl font-extrabold text-white leading-tight mb-3 line-clamp-2">
                                 {ann.title}
                             </h3>
-                            
-                            {/* Link */}
                             <div className="flex items-center gap-2 text-white text-sm font-bold mt-2">
                                 Detayları İncele <FaArrowRight className="text-[#E30613]"/>
                             </div>
                         </div>
-
                         {/* Gradyan */}
                         <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent"></div>
                     </Link>
@@ -72,8 +64,8 @@ function MainNewsSlider({ announcements }) {
             ))}
          </Swiper>
        ) : (
-         <div className="w-full h-[350px] flex items-center justify-center bg-black rounded-[30px]">
-             <span className="text-4xl font-black text-gray-800 tracking-tighter">OMÜ</span>
+         <div className="w-full h-full flex items-center justify-center bg-black">
+             <span className="text-5xl font-black text-gray-800 tracking-tighter">OMÜ</span>
          </div>
        )}
        
@@ -108,13 +100,14 @@ export default function Home() {
     <div className="min-h-screen bg-gray-50 font-sans flex flex-col overflow-x-hidden">
       <Header />
       
-      {/* !!! KRİTİK NOKTA !!!
-          px-6: Bu padding sayesinde içerideki her şey ekranın kenarından 24px içeride başlar.
-          Kutu ASLA kenara yapışamaz.
+      {/* !!! KRİTİK DÜZELTME BURADA !!!
+          px-6 (veya px-8): Bu, sayfanın hem sağına hem soluna 24px-32px boşluk koyar.
+          İçerideki "w-full" elemanlar bu boşluğun dışına ASLA çıkamaz.
+          Böylece sağda da solda da eşit boşluk olur, "sonsuza uzama" görüntüsü biter.
       */}
-      <main className="container mx-auto max-w-7xl px-6 py-6 flex-grow">
+      <main className="container mx-auto max-w-7xl px-6 py-8 flex-grow">
         
-        <div className="grid lg:grid-cols-12 gap-8 md:gap-10 mb-16">
+        <div className="grid lg:grid-cols-12 gap-10 mb-16">
             
             {/* SOL TARAF */}
             <div className="lg:col-span-8 space-y-10">
@@ -125,10 +118,11 @@ export default function Home() {
                         <span className="w-1.5 h-8 bg-[#E30613] rounded-full"></span>
                         <h2 className="text-2xl font-extrabold text-gray-900">Duyurular & Haberler</h2>
                     </div>
+                    {/* Bu component artık px-6 sayesinde kenarlara değmeyecek */}
                     <MainNewsSlider announcements={announcements} />
                 </section>
 
-                {/* 2. DİĞER DUYURULAR (SADE LİSTE - TEK KART) */}
+                {/* 2. DİĞER DUYURULAR (LİSTE) */}
                 {announcements.length > 0 && (
                 <section>
                     <h3 className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-4 pl-1">Tüm Duyurular Listesi</h3>
@@ -136,7 +130,8 @@ export default function Home() {
                     <Swiper
                         modules={[Pagination]}
                         spaceBetween={20}
-                        slidesPerView={1} // SADECE 1 KART GÖRÜNÜR
+                        // SADECE 1 TANE GÖSTERİYORUZ Kİ YANLARDAN TAŞMASIN
+                        slidesPerView={1} 
                         breakpoints={{
                             640: { slidesPerView: 2 },
                             1024: { slidesPerView: 2.5 },
@@ -146,12 +141,12 @@ export default function Home() {
                     >
                         {announcements.map((ann) => (
                             <SwiperSlide key={ann.id}>
-                                <Link href={`/duyuru/${ann.id}`} className="flex bg-white p-3 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition gap-4 items-center h-28">
+                                <Link href={`/duyuru/${ann.id}`} className="flex bg-white p-4 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition gap-4 items-center h-32">
                                     <div className="w-24 h-24 bg-gray-100 rounded-xl overflow-hidden flex-shrink-0 relative border border-gray-200">
                                         {ann.images && ann.images[0] ? (
                                             <img 
                                                 src={getImageUrl(ann.images[0])} 
-                                                className="w-full h-full object-cover"
+                                                className="w-full h-full object-cover group-hover:scale-110 transition duration-500"
                                                 alt={ann.title}
                                             />
                                         ) : <div className="w-full h-full flex items-center justify-center text-gray-300 font-bold">OMÜ</div>}
