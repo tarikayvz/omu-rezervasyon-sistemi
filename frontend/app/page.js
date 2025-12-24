@@ -18,10 +18,10 @@ import 'swiper/css/effect-fade';
 const BASE_URL = API_URL.replace('/api', '');
 const getImageUrl = (img) => (img ? (img.startsWith('http') ? img : `${BASE_URL}${img}`) : '');
 
-// --- 1. ANA MANŞET KUTUSU (Tamamen İzole Kutu) ---
+// --- 1. ANA MANŞET KUTUSU (Tam Kutu Görünümü) ---
 function MainNewsSlider({ announcements }) {
   return (
-    // shadow-2xl ve rounded-3xl ile o istediğin "Kart" görüntüsü
+    // Kenarlardan taşmayı önleyen, gölgeli ve yuvarlak köşeli kutu
     <div className="w-full h-[300px] md:h-[480px] rounded-3xl overflow-hidden shadow-2xl bg-gray-900 border border-gray-800 relative z-0">
        {announcements.length > 0 ? (
          <Swiper
@@ -41,18 +41,18 @@ function MainNewsSlider({ announcements }) {
                         <img 
                             src={getImageUrl(ann.images[0])} 
                             alt={ann.title} 
-                            className="w-full h-full object-cover opacity-80" // Hafif koyu yaptım, yazı okunsun
+                            className="w-full h-full object-cover opacity-80" 
                         />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent"></div>
+                        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent"></div>
                         
-                        <div className="absolute bottom-0 left-0 w-full p-6 z-20">
-                            <div className="inline-flex items-center gap-2 bg-red-600 text-white text-xs font-bold px-3 py-1 rounded-full mb-3">
+                        <div className="absolute bottom-0 left-0 w-full p-6 md:p-10 z-20">
+                            <div className="inline-flex items-center gap-2 bg-red-600 text-white text-xs font-bold px-3 py-1 rounded-full mb-3 shadow-md">
                                 <FaCalendarAlt /> {new Date(ann.date).toLocaleDateString('tr-TR')}
                             </div>
-                            <h3 className="text-xl md:text-3xl font-extrabold text-white leading-tight mb-2 line-clamp-2">
+                            <h3 className="text-xl md:text-4xl font-extrabold text-white leading-tight mb-3 line-clamp-2 drop-shadow-lg">
                                 {ann.title}
                             </h3>
-                            <div className="flex items-center gap-2 text-gray-300 text-xs font-bold">
+                            <div className="flex items-center gap-2 text-white/90 text-sm font-bold bg-white/10 w-max px-4 py-2 rounded-xl backdrop-blur-sm hover:bg-white hover:text-red-600 transition">
                                 Detayları İncele <FaArrowRight/>
                             </div>
                         </div>
@@ -66,7 +66,7 @@ function MainNewsSlider({ announcements }) {
        
        <style jsx global>{`
          .swiper-pagination-bullet { background: rgba(255,255,255,0.5); opacity: 1; }
-         .swiper-pagination-bullet-active { background: #DC2626 !important; width: 20px; border-radius: 4px; }
+         .swiper-pagination-bullet-active { background: #DC2626 !important; width: 24px; border-radius: 4px; transition: all 0.3s; }
          @media (max-width: 768px) { .swiper-button-next, .swiper-button-prev { display: none !important; } }
        `}</style>
     </div>
@@ -95,55 +95,57 @@ export default function Home() {
     <div className="min-h-screen bg-gray-50 font-sans flex flex-col overflow-x-hidden">
       <Header />
       
-      {/* DÜZELTME BURADA: px-6 (Hatta mobilde daha belirgin olsun diye).
-          Bu sayede kutular ekranın kenarına yapışmaz, ortada "Yüzen Kutu" gibi durur.
-      */}
+      {/* px-6 mobilde kenarlardan boşluk bırakır, kutu hissiyatı verir */}
       <main className="container mx-auto max-w-7xl px-6 py-8 flex-grow">
         
-        <div className="grid lg:grid-cols-12 gap-10">
+        <div className="grid lg:grid-cols-12 gap-10 mb-16">
             
             {/* SOL TARAF */}
-            <div className="lg:col-span-8 space-y-10">
+            <div className="lg:col-span-8 space-y-12">
                 
-                {/* 1. MANŞET (KUTU GÖRÜNÜMÜ) */}
+                {/* 1. MANŞET */}
                 <section>
-                    <div className="flex items-center gap-2 mb-4 border-l-4 border-red-600 pl-3">
-                        <h2 className="text-2xl font-extrabold text-gray-900">Duyurular</h2>
+                    <div className="flex items-center gap-3 mb-6 pl-2">
+                        <span className="w-1.5 h-8 bg-red-600 rounded-full"></span>
+                        <h2 className="text-2xl font-extrabold text-gray-900">Duyurular & Haberler</h2>
                     </div>
                     <MainNewsSlider announcements={announcements} />
                 </section>
 
-                {/* 2. DİĞER DUYURULAR (Sırayla Alt Alta veya Yanyana) */}
+                {/* 2. DİĞER DUYURULAR (KUTU SLIDER) */}
                 {announcements.length > 0 && (
                 <section>
-                    <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Tüm Duyurular Listesi</h3>
+                    <h3 className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-6 pl-2">Tüm Duyurular Listesi</h3>
                     
-                    {/* SWIPER AYARI: slidesPerView={1} -> Sadece 1 tane gösterir, yarım yamalak göstermez */}
                     <Swiper
                         modules={[Pagination]}
-                        spaceBetween={20}
-                        slidesPerView={1} 
+                        spaceBetween={24}
+                        slidesPerView={1} // Sadece 1 kart göster, taşma yapmasın
                         breakpoints={{
                             640: { slidesPerView: 2 },
                             1024: { slidesPerView: 2.5 },
                         }}
                         pagination={{ clickable: true }}
-                        className="pb-10"
+                        className="pb-12"
                     >
                         {announcements.map((ann) => (
                             <SwiperSlide key={ann.id}>
-                                <Link href={`/duyuru/${ann.id}`} className="block bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden h-80">
-                                    <div className="h-48 w-full bg-gray-200">
+                                <Link href={`/duyuru/${ann.id}`} className="group block bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 h-full">
+                                    <div className="relative h-48 w-full overflow-hidden">
                                         {ann.images && ann.images[0] ? (
-                                            <img src={getImageUrl(ann.images[0])} className="w-full h-full object-cover" alt={ann.title}/>
-                                        ) : null}
-                                    </div>
-                                    <div className="p-5 flex flex-col h-32 justify-between">
-                                        <div>
-                                            <span className="text-xs font-bold text-gray-400">{new Date(ann.date).toLocaleDateString('tr-TR')}</span>
-                                            <h4 className="font-bold text-gray-800 text-lg leading-tight line-clamp-2 mt-1">{ann.title}</h4>
+                                            <img src={getImageUrl(ann.images[0])} className="w-full h-full object-cover group-hover:scale-110 transition duration-700" alt={ann.title}/>
+                                        ) : <div className="w-full h-full bg-gray-200 flex items-center justify-center text-gray-400 font-bold">OMÜ</div>}
+                                        <div className="absolute top-4 left-4 bg-white/90 backdrop-blur px-3 py-1 rounded-lg text-xs font-bold text-gray-800 shadow-sm">
+                                            {new Date(ann.date).toLocaleDateString('tr-TR')}
                                         </div>
-                                        <span className="text-sm font-bold text-blue-600 flex items-center gap-1">Oku <FaArrowRight size={12}/></span>
+                                    </div>
+                                    <div className="p-6 flex flex-col justify-between h-40">
+                                        <h4 className="font-extrabold text-gray-900 text-lg leading-snug line-clamp-2 group-hover:text-red-600 transition">
+                                            {ann.title}
+                                        </h4>
+                                        <span className="text-sm font-bold text-blue-600 bg-blue-50 px-4 py-2 rounded-xl w-max flex items-center gap-2 group-hover:bg-blue-600 group-hover:text-white transition">
+                                            Haberi Oku <FaArrowRight size={12}/>
+                                        </span>
                                     </div>
                                 </Link>
                             </SwiperSlide>
@@ -154,26 +156,30 @@ export default function Home() {
             </div>
 
             {/* SAĞ TARAF (YAN MENÜ) */}
-            <div className="lg:col-span-4 space-y-8">
+            <div className="lg:col-span-4 space-y-10">
                 
-                {/* YAKLAŞAN ETKİNLİKLER (KUTU GİBİ) */}
-                <div className="bg-white rounded-3xl shadow-xl border border-gray-100 p-6 overflow-hidden relative">
-                    <h2 className="text-xl font-extrabold text-gray-900 mb-6 flex items-center gap-2">
-                        <FaCalendarCheck className="text-blue-600"/> Yaklaşan Etkinlikler
+                {/* YAKLAŞAN ETKİNLİKLER (KUTU TASARIM) */}
+                <div className="bg-white rounded-3xl shadow-xl border border-gray-100 p-8 relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-40 h-40 bg-blue-50 rounded-bl-full -z-0 opacity-50"></div>
+                    
+                    <h2 className="text-xl font-extrabold text-gray-900 mb-8 flex items-center gap-3 relative z-10">
+                        <span className="bg-blue-100 text-blue-600 p-2 rounded-lg"><FaCalendarCheck/></span>
+                        Yaklaşan Etkinlikler
                     </h2>
 
-                    <div className="space-y-4 max-h-[400px] overflow-y-auto custom-scrollbar">
-                        {upcomingEvents.length === 0 ? <p className="text-gray-400 text-center py-4">Etkinlik yok.</p> : 
+                    <div className="space-y-4 max-h-[500px] overflow-y-auto custom-scrollbar relative z-10">
+                        {upcomingEvents.length === 0 ? <p className="text-gray-400 text-center py-6">Henüz planlanmış etkinlik yok.</p> : 
                             upcomingEvents.map((evt) => (
-                                <div key={evt.id} className="flex gap-4 items-center p-3 bg-gray-50 rounded-2xl border border-gray-100">
-                                    <div className="bg-white text-blue-600 rounded-xl p-2 text-center min-w-[50px] shadow-sm border border-gray-100">
-                                        <span className="block text-lg font-extrabold">{new Date(evt.startDate).getDate()}</span>
-                                        <span className="text-[10px] font-bold uppercase">{new Date(evt.startDate).toLocaleString('tr-TR', { month: 'short' })}</span>
+                                <div key={evt.id} className="flex gap-4 items-center p-4 bg-gray-50 rounded-2xl border border-gray-100 hover:border-blue-200 hover:bg-white hover:shadow-md transition duration-300">
+                                    <div className="bg-white text-blue-700 rounded-2xl p-3 text-center min-w-[60px] shadow-sm border border-blue-100">
+                                        <span className="block text-xl font-black leading-none">{new Date(evt.startDate).getDate()}</span>
+                                        <span className="text-[10px] font-bold uppercase tracking-wide">{new Date(evt.startDate).toLocaleString('tr-TR', { month: 'short' })}</span>
                                     </div>
-                                    <div>
-                                        <h4 className="font-bold text-gray-800 text-sm line-clamp-1">{evt.title}</h4>
-                                        <div className="text-xs text-gray-500 mt-1 flex items-center gap-2">
-                                            <FaClock/> {new Date(evt.startDate).toLocaleTimeString([],{hour:'2-digit', minute:'2-digit'})}
+                                    <div className="flex-grow">
+                                        <h4 className="font-bold text-gray-900 text-sm line-clamp-2 leading-tight mb-1">{evt.title}</h4>
+                                        <div className="flex items-center gap-3 text-xs text-gray-500 font-medium">
+                                            <span className="flex items-center gap-1"><FaClock className="text-blue-400"/> {new Date(evt.startDate).toLocaleTimeString([],{hour:'2-digit', minute:'2-digit'})}</span>
+                                            <span className="flex items-center gap-1 bg-white px-2 py-0.5 rounded shadow-sm border"><FaMapMarkerAlt className="text-red-400"/> {evt.hall}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -181,36 +187,49 @@ export default function Home() {
                         }
                     </div>
 
-                    {/* BUTON: Bu da kutu gibi olsun istedin */}
-                    <Link href="/takvim" className="mt-6 block w-full py-4 rounded-2xl bg-gray-900 text-white text-center text-sm font-bold shadow-lg hover:bg-gray-800 transition">
+                    <Link href="/takvim" className="mt-8 block w-full py-4 rounded-2xl bg-gray-900 text-white text-center text-sm font-bold shadow-lg hover:bg-red-600 hover:shadow-red-500/30 transform hover:-translate-y-1 transition duration-300 relative z-10">
                         Tüm Takvimi Görüntüle
                     </Link>
                 </div>
-
-                {/* SALONLAR */}
-                <div>
-                    <h2 className="text-lg font-bold text-gray-800 mb-4 ml-1">Hızlı Erişim</h2>
-                    <div className="grid gap-3">
-                        {[
-                            { id: 'mavi', name: 'Mavi Salon', color: 'bg-blue-600', icon: 'M' },
-                            { id: 'pembe', name: 'Pembe Salon', color: 'bg-pink-600', icon: 'P' },
-                            { id: 'konferans', name: 'Konferans Salonu', color: 'bg-orange-600', icon: 'K' }
-                        ].map((salon) => (
-                            <Link key={salon.id} href={`/takvim?salon=${salon.id}`} className="flex items-center gap-4 bg-white p-4 rounded-2xl border border-gray-200 shadow-sm hover:shadow-md transition">
-                                <div className={`w-10 h-10 rounded-full ${salon.color} text-white flex items-center justify-center font-bold`}>{salon.icon}</div>
-                                <span className="font-bold text-gray-700">{salon.name}</span>
-                                <FaChevronRight className="ml-auto text-gray-300"/>
-                            </Link>
-                        ))}
-                    </div>
-                </div>
-
             </div>
         </div>
+
+        {/* --- SALONLAR (ESKİ BÜYÜK KARTLAR GERİ GELDİ) --- */}
+        <section className="mb-8">
+          <div className="text-center mb-10">
+            <span className="text-red-600 font-bold text-sm tracking-widest uppercase mb-2 block">Rezervasyon</span>
+            <h2 className="text-3xl md:text-4xl font-extrabold text-gray-900">Etkinlik Salonlarımız</h2>
+          </div>
+          
+          <div className="grid md:grid-cols-3 gap-8">
+            {[
+                { id: 'mavi', name: 'Mavi Salon', color: 'bg-gradient-to-br from-blue-600 to-blue-800', icon: 'M', desc: 'Geniş katılımlı konferanslar.' },
+                { id: 'pembe', name: 'Pembe Salon', color: 'bg-gradient-to-br from-pink-500 to-pink-700', icon: 'P', desc: 'Seminerler ve kulüp etkinlikleri.' },
+                { id: 'konferans', name: 'Konferans Salonu', color: 'bg-gradient-to-br from-orange-500 to-orange-700', icon: 'K', desc: 'Akademik sunumlar ve toplantılar.' }
+            ].map((salon) => (
+                <Link key={salon.id} href={`/takvim?salon=${salon.id}`} className="group relative bg-white rounded-[2rem] p-1 overflow-hidden shadow-xl hover:shadow-2xl transition duration-500 hover:-translate-y-2">
+                    <div className="bg-white rounded-[1.8rem] p-8 h-full flex flex-col items-center text-center relative z-10">
+                        <div className={`w-20 h-20 rounded-3xl ${salon.color} text-white flex items-center justify-center text-3xl font-bold mb-6 shadow-lg transform group-hover:rotate-12 transition duration-500`}>
+                            {salon.icon}
+                        </div>
+                        <h3 className="text-2xl font-bold text-gray-800 mb-3 group-hover:text-red-600 transition">{salon.name}</h3>
+                        <p className="text-gray-500 text-sm mb-8 leading-relaxed">{salon.desc}</p>
+                        
+                        <span className="mt-auto text-sm font-bold text-gray-900 bg-gray-100 px-6 py-3 rounded-xl group-hover:bg-gray-900 group-hover:text-white transition flex items-center gap-2">
+                            Takvimi Gör <FaChevronRight size={10}/>
+                        </span>
+                    </div>
+                    <div className={`absolute inset-0 ${salon.color} opacity-0 group-hover:opacity-10 transition duration-500`}></div>
+                </Link>
+            ))}
+          </div>
+        </section>
+
       </main>
       
-      <footer className="bg-white border-t border-gray-200 py-8 text-center text-gray-500 text-sm mt-auto">
-        &copy; 2025 Ondokuz Mayıs Üniversitesi
+      <footer className="bg-white border-t border-gray-200 py-10 text-center">
+        <p className="font-bold text-gray-800">&copy; 2025 Ondokuz Mayıs Üniversitesi</p>
+        <p className="text-gray-500 text-sm mt-1">Mühendislik Fakültesi</p>
       </footer>
     </div>
   );
