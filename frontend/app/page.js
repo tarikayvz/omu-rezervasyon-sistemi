@@ -5,7 +5,21 @@ import axios from "axios"
 import Header from "../components/Header"
 import Link from "next/link"
 import { FaChevronRight, FaCalendarAlt, FaMapMarkerAlt, FaArrowRight, FaClock, FaCalendarCheck } from "react-icons/fa"
-import API_URL from "../utils/api"
+
+// --- AYARLAR ---
+// Eğer Backend 4000 portundaysa burayı 4000 yap! (Terminalde yazar)
+const LOCAL_BACKEND_PORT = "5000"; 
+const RENDER_BACKEND_URL = "https://senin-render-adresin.onrender.com"; // Render linkini buraya yapıştır
+
+// Sistem nerede çalıştığını (Local mi Render mı) otomatik anlar
+const getBaseUrl = () => {
+  if (typeof window !== "undefined" && window.location.hostname === "localhost") {
+    return `http://localhost:${LOCAL_BACKEND_PORT}`; 
+  }
+  return RENDER_BACKEND_URL;
+};
+
+const API_URL = `${getBaseUrl()}/api`;
 
 // --- SWIPER ---
 import { Swiper, SwiperSlide } from "swiper/react"
@@ -15,48 +29,38 @@ import "swiper/css/navigation"
 import "swiper/css/pagination"
 import "swiper/css/effect-fade"
 
-const BASE_URL = API_URL.replace("/api", "")
+// --- AKILLI RESİM ÇÖZÜCÜ ---
+const getImageUrl = (imageData) => {
+  if (!imageData) return "https://placehold.co/600x400?text=Resim+Yok";
 
-// --- AKILLI RESİM ÇÖZÜCÜ (Universal Image Finder) ---
-const getImageUrl = (imageField) => {
-  // 1. Durum: Hiç veri yoksa
-  if (!imageField) return "/placeholder.svg"
+  let url = "";
 
-  let url = ""
-
-  // 2. Durum: Veri direkt bir Array ise (örn: images: [...])
-  if (Array.isArray(imageField)) {
-    if (imageField.length === 0) return "/placeholder.svg"
-    // İlk elemanı alıp tekrar işleme sokuyoruz (Recursive)
-    return getImageUrl(imageField[0])
+  // 1. SENİN VERİ YAPIN: Dizi içinde String ['/uploads/...']
+  if (Array.isArray(imageData) && imageData.length > 0 && typeof imageData[0] === 'string') {
+      url = imageData[0];
+  }
+  // 2. Cloudinary Nesne Yapısı (yeni yüklenenler böyle olabilir)
+  else if (imageData.path) {
+      url = imageData.path;
+  }
+  else if (imageData.url) {
+      url = imageData.url;
+  }
+  // 3. Strapi/Diğer Yapılar
+  else if (Array.isArray(imageData) && imageData.length > 0) {
+      url = imageData[0].url || imageData[0].path;
   }
 
-  // 3. Durum: Veri bir Text (String) ise
-  if (typeof imageField === "string") {
-    url = imageField
-  } 
-  // 4. Durum: Strapi v4 / Cloudinary Nesnesi ise (attributes.url veya data.attributes.url)
-  else if (typeof imageField === "object") {
-    if (imageField.url) {
-      url = imageField.url
-    } else if (imageField.attributes && imageField.attributes.url) {
-      url = imageField.attributes.url
-    } else if (imageField.data && imageField.data.attributes && imageField.data.attributes.url) {
-      url = imageField.data.attributes.url
-    }
+  if (!url) return "https://placehold.co/600x400?text=Bulunamadi";
+
+  // Zaten http ile başlıyorsa (Cloudinary ise) dokunma
+  if (url.startsWith("http") || url.startsWith("https")) {
+      return url;
   }
 
-  // URL hala boşsa
-  if (!url) return "/placeholder.svg"
-
-  // Cloudinary veya Harici Link ise olduğu gibi döndür
-  if (url.startsWith("http") || url.startsWith("//")) {
-    return url
-  }
-
-  // Yerel sunucu ise başına BASE_URL ekle
-  return `${BASE_URL}${url}`
-}
+  // Yerel dosya ise (/uploads) başına sunucu adresini ekle
+  return `${getBaseUrl()}${url}`;
+};
 
 // --- 1. MANŞET SLIDER ---
 function MainNewsSlider({ announcements }) {
@@ -68,16 +72,16 @@ function MainNewsSlider({ announcements }) {
           slidesPerView={1}
           effect={"fade"}
           fadeEffect={{ crossFade: true }}
-          loop={true}
+          loop={announcements.length > 1} // Sadece 1'den fazla resim varsa loop yap
           autoplay={{ delay: 5000, disableOnInteraction: false }}
           pagination={{ clickable: true, dynamicBullets: true }}
           navigation={true}
           className="h-full w-full"
         >
           {announcements.map((ann) => {
-             // Debug için: Resim verisini konsola yazdıralım
-             // console.log("Slider Resmi:", ann.images);
-             const imgUrl = getImageUrl(ann.images);
+             // Veritabanında 'image' veya 'images' olabilir
+             const rawImage = ann.image || ann.images;
+             const imgUrl = getImageUrl(rawImage);
 
              return (
             <SwiperSlide key={ann.id} className="relative w-full h-full bg-black">
@@ -88,7 +92,7 @@ function MainNewsSlider({ announcements }) {
                   className="w-full h-full object-cover opacity-60"
                   onError={(e) => {
                       e.target.onerror = null; 
-                      e.target.src = "/placeholder.svg"; // Kırık link olursa bunu göster
+                      e.target.src = "https://placehold.co/600x400?text=Yuklenemedi";
                   }}
                 />
                 <div className="absolute bottom-0 left-0 w-full p-6 z-20">
@@ -129,13 +133,11 @@ export default function Home() {
     const fetchData = async () => {
       try {
         const [resAnn, resEvt] = await Promise.all([
-          axios.get(`${API_URL}/announcements?populate=*`), // Populate * ekledim, resimlerin gelmesi için şart olabilir
+          axios.get(`${API_URL}/announcements`), 
           axios.get(`${API_URL}/events`),
         ])
         
-        // Konsola veriyi yazdır ki ne geldiğini görelim
-        console.log("GELEN DUYURULAR:", resAnn.data);
-
+        console.log("Duyurular:", resAnn.data);
         setAnnouncements(resAnn.data)
         setUpcomingEvents(
           resEvt.data
@@ -144,7 +146,7 @@ export default function Home() {
             .slice(0, 5),
         )
       } catch (error) {
-        console.error(error)
+        console.error("Veri Çekme Hatası:", error)
       }
     }
     fetchData()
@@ -187,7 +189,9 @@ export default function Home() {
                   style={{ overflow: "hidden" }}
                 >
                   {announcements.map((ann) => {
-                    const imgUrl = getImageUrl(ann.images);
+                    const rawImage = ann.image || ann.images;
+                    const imgUrl = getImageUrl(rawImage);
+                    
                     return (
                     <SwiperSlide key={ann.id} className="!w-full">
                       <Link
@@ -199,7 +203,7 @@ export default function Home() {
                               src={imgUrl}
                               className="w-full h-full object-cover"
                               alt={ann.title}
-                              onError={(e) => { e.target.src = "/placeholder.svg" }}
+                              onError={(e) => { e.target.src = "https://placehold.co/600x400?text=Resim+Yok" }}
                             />
                         </div>
                         <div className="flex flex-col justify-center h-full py-1 min-w-0">
