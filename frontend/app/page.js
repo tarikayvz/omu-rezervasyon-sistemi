@@ -21,8 +21,6 @@ const getImageUrl = (img) => (img ? (img.startsWith('http') ? img : `${BASE_URL}
 // --- 1. MANŞET SLIDER (KÜÇÜLTÜLMÜŞ SİYAH KUTU) ---
 function MainNewsSlider({ announcements }) {
   return (
-    // DÜZELTME BURADA: h-[320px] yaptık. Artık mobilde devasa durmayacak.
-    // md:h-[480px] -> Bilgisayarda yine büyük kalabilir.
     <div className="w-full h-[320px] md:h-[480px] rounded-[24px] overflow-hidden shadow-2xl bg-black border border-gray-800 relative z-0">
        {announcements.length > 0 ? (
          <Swiper
@@ -39,30 +37,22 @@ function MainNewsSlider({ announcements }) {
             {announcements.map((ann) => (
                 <SwiperSlide key={ann.id} className="relative w-full h-full bg-black">
                     <Link href={`/duyuru/${ann.id}`} className="block w-full h-full relative">
-                        {/* RESİM */}
                         <img 
                             src={getImageUrl(ann.images[0])} 
                             alt={ann.title} 
                             className="w-full h-full object-cover opacity-60" 
                         />
-                        
-                        {/* İÇERİK: Padding'i biraz azalttık (p-6) ki taşmasın */}
                         <div className="absolute bottom-0 left-0 w-full p-6 z-20">
                             <div className="inline-flex items-center gap-2 bg-[#E30613] text-white text-[10px] font-bold px-3 py-1 rounded-full mb-2 shadow-lg">
                                 <FaCalendarAlt /> {new Date(ann.date).toLocaleDateString('tr-TR')}
                             </div>
-                            
-                            {/* Yazı boyutunu mobilde biraz küçülttük (text-xl) */}
                             <h3 className="text-xl md:text-4xl font-extrabold text-white leading-tight mb-2 line-clamp-2">
                                 {ann.title}
                             </h3>
-                            
                             <div className="flex items-center gap-2 text-white text-xs font-bold mt-1">
                                 Detayları İncele <FaArrowRight className="text-[#E30613]"/>
                             </div>
                         </div>
-                        
-                        {/* Gradyan */}
                         <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent"></div>
                     </Link>
                 </SwiperSlide>
@@ -73,7 +63,6 @@ function MainNewsSlider({ announcements }) {
              <span className="text-4xl font-black text-gray-800 tracking-tighter">OMÜ</span>
          </div>
        )}
-       
        <style jsx global>{`
          .swiper-pagination-bullet { background: rgba(255,255,255,0.4); opacity: 1; }
          .swiper-pagination-bullet-active { background: #E30613 !important; width: 20px; border-radius: 4px; transition: all 0.3s; }
@@ -105,7 +94,6 @@ export default function Home() {
     <div className="min-h-screen bg-gray-50 font-sans flex flex-col overflow-x-hidden">
       <Header />
       
-      {/* px-5: Mobilde sağdan soldan ideal boşluk bırakır. */}
       <main className="container mx-auto max-w-7xl px-5 py-6 flex-grow">
         
         <div className="grid lg:grid-cols-12 gap-8 md:gap-10 mb-16">
@@ -113,7 +101,7 @@ export default function Home() {
             {/* SOL TARAF */}
             <div className="lg:col-span-8 space-y-8">
                 
-                {/* 1. MANŞET (KÜÇÜK SİYAH KUTU) */}
+                {/* 1. MANŞET */}
                 <section>
                     <div className="flex items-center gap-2 mb-3 pl-1">
                         <span className="w-1.5 h-6 bg-[#E30613] rounded-full"></span>
@@ -122,25 +110,28 @@ export default function Home() {
                     <MainNewsSlider announcements={announcements} />
                 </section>
 
-                {/* 2. DİĞER DUYURULAR (TEK SÜTUN LİSTE) */}
+                {/* 2. DİĞER DUYURULAR (ORTALANMIŞ LİSTE) */}
                 {announcements.length > 0 && (
                 <section>
                     <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3 pl-1">Tüm Duyurular</h3>
                     
+                    {/* DEĞİŞİKLİK BURADA:
+                       centeredSlides={true} -> Aktif slayt tam ortada durur.
+                       slidesPerView={'auto'} -> Slayt genişliği içeriğe göre veya CSS ile ayarlanır.
+                       Slaytların kendisine "w-[95%]" gibi bir genişlik vererek ortada boşluklu durmasını sağlıyoruz.
+                    */}
                     <Swiper
                         modules={[Pagination]}
                         spaceBetween={15}
-                        slidesPerView={1} // Tam sığsın diye 1 yaptık
-                        breakpoints={{
-                            640: { slidesPerView: 2 },
-                            1024: { slidesPerView: 2.5 },
-                        }}
+                        centeredSlides={true} // KİLİT NOKTA: Bu özellik ortalar
+                        slidesPerView={'auto'} // Genişliği biz belirleyeceğiz
                         pagination={{ clickable: true }}
-                        className="pb-8"
+                        className="pb-8 w-full"
                     >
                         {announcements.map((ann) => (
-                            <SwiperSlide key={ann.id}>
-                                <Link href={`/duyuru/${ann.id}`} className="flex bg-white p-3 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition gap-3 items-center h-24">
+                            // w-[95%] sm:w-full -> Mobilde ekranın %95'i kadar genişlikte olur ve ORTADA durur.
+                            <SwiperSlide key={ann.id} className="!w-[95%] sm:!w-full">
+                                <Link href={`/duyuru/${ann.id}`} className="flex bg-white p-3 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition gap-3 items-center h-24 mx-auto">
                                     <div className="w-20 h-20 bg-gray-100 rounded-xl overflow-hidden flex-shrink-0 relative border border-gray-200">
                                         {ann.images && ann.images[0] ? (
                                             <img 
