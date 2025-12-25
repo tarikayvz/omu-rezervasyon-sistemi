@@ -18,13 +18,16 @@ import 'swiper/css/effect-fade';
 const BASE_URL = API_URL.replace('/api', '');
 const getImageUrl = (img) => (img ? (img.startsWith('http') ? img : `${BASE_URL}${img}`) : '');
 
-// --- 1. MANŞET SLIDER (KÜÇÜLTÜLMÜŞ SİYAH KUTU) ---
+// --- 1. MANŞET SLIDER (NET KUTU - SAĞA TAŞMAZ) ---
 function MainNewsSlider({ announcements }) {
   return (
-    <div className="w-full h-[320px] md:h-[480px] rounded-[24px] overflow-hidden shadow-2xl bg-black border border-gray-800 relative z-0">
+    // w-full dedik ama dışarıdaki container (px-6) onu sıkıştıracak.
+    // Artık sağa doğru sonsuza gitmez, container nerede biterse orada biter.
+    <div className="w-full h-[320px] md:h-[480px] rounded-[30px] overflow-hidden shadow-2xl bg-black border border-gray-800 relative z-0">
        {announcements.length > 0 ? (
          <Swiper
            modules={[Navigation, Pagination, Autoplay, EffectFade]}
+           // KİLİT NOKTA: 1 yapıyoruz. Ekrana tam 1 tane sığar, yanlardan taşmaz.
            slidesPerView={1}
            effect={'fade'} 
            fadeEffect={{ crossFade: true }}
@@ -37,11 +40,14 @@ function MainNewsSlider({ announcements }) {
             {announcements.map((ann) => (
                 <SwiperSlide key={ann.id} className="relative w-full h-full bg-black">
                     <Link href={`/duyuru/${ann.id}`} className="block w-full h-full relative">
+                        {/* RESİM */}
                         <img 
                             src={getImageUrl(ann.images[0])} 
                             alt={ann.title} 
                             className="w-full h-full object-cover opacity-60" 
                         />
+                        
+                        {/* İÇERİK */}
                         <div className="absolute bottom-0 left-0 w-full p-6 z-20">
                             <div className="inline-flex items-center gap-2 bg-[#E30613] text-white text-[10px] font-bold px-3 py-1 rounded-full mb-2 shadow-lg">
                                 <FaCalendarAlt /> {new Date(ann.date).toLocaleDateString('tr-TR')}
@@ -63,6 +69,7 @@ function MainNewsSlider({ announcements }) {
              <span className="text-4xl font-black text-gray-800 tracking-tighter">OMÜ</span>
          </div>
        )}
+       
        <style jsx global>{`
          .swiper-pagination-bullet { background: rgba(255,255,255,0.4); opacity: 1; }
          .swiper-pagination-bullet-active { background: #E30613 !important; width: 20px; border-radius: 4px; transition: all 0.3s; }
@@ -94,44 +101,48 @@ export default function Home() {
     <div className="min-h-screen bg-gray-50 font-sans flex flex-col overflow-x-hidden">
       <Header />
       
-      <main className="container mx-auto max-w-7xl px-5 py-6 flex-grow">
+      {/* px-6: SAĞ VE SOLA DUVAR ÖRER. 
+         İçerik bu duvarların dışına asla çıkamaz, dolayısıyla "sonsuza gitme" görüntüsü oluşmaz. */}
+      <main className="container mx-auto max-w-7xl px-6 py-6 flex-grow">
         
         <div className="grid lg:grid-cols-12 gap-8 md:gap-10 mb-16">
             
             {/* SOL TARAF */}
             <div className="lg:col-span-8 space-y-8">
                 
-                {/* 1. MANŞET */}
+                {/* 1. MANŞET (SİYAH KUTU) */}
                 <section>
                     <div className="flex items-center gap-2 mb-3 pl-1">
                         <span className="w-1.5 h-6 bg-[#E30613] rounded-full"></span>
                         <h2 className="text-xl font-extrabold text-gray-900">Duyurular</h2>
                     </div>
+                    {/* Bu component artık px-6 sınırları içinde kalacak */}
                     <MainNewsSlider announcements={announcements} />
                 </section>
 
-                {/* 2. DİĞER DUYURULAR (ORTALANMIŞ LİSTE) */}
+                {/* 2. DİĞER DUYURULAR (NET KUTU LİSTESİ) */}
                 {announcements.length > 0 && (
                 <section>
                     <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3 pl-1">Tüm Duyurular</h3>
                     
-                    {/* DEĞİŞİKLİK BURADA:
-                       centeredSlides={true} -> Aktif slayt tam ortada durur.
-                       slidesPerView={'auto'} -> Slayt genişliği içeriğe göre veya CSS ile ayarlanır.
-                       Slaytların kendisine "w-[95%]" gibi bir genişlik vererek ortada boşluklu durmasını sağlıyoruz.
+                    {/* BURASI ÇOK ÖNEMLİ: slidesPerView={1} 
+                        Bunu 1 yaptığımız için kartın tamamı görünür, yandaki kartın ucu görünmez.
+                        Böylece "devam ediyor" hissi biter, "burada bitti" hissi oluşur.
                     */}
                     <Swiper
                         modules={[Pagination]}
-                        spaceBetween={15}
-                        centeredSlides={true} // KİLİT NOKTA: Bu özellik ortalar
-                        slidesPerView={'auto'} // Genişliği biz belirleyeceğiz
+                        spaceBetween={20}
+                        slidesPerView={1} 
+                        breakpoints={{
+                            640: { slidesPerView: 2 },
+                            1024: { slidesPerView: 2.5 },
+                        }}
                         pagination={{ clickable: true }}
-                        className="pb-8 w-full"
+                        className="pb-8"
                     >
                         {announcements.map((ann) => (
-                            // w-[95%] sm:w-full -> Mobilde ekranın %95'i kadar genişlikte olur ve ORTADA durur.
-                            <SwiperSlide key={ann.id} className="!w-[95%] sm:!w-full">
-                                <Link href={`/duyuru/${ann.id}`} className="flex bg-white p-3 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition gap-3 items-center h-24 mx-auto">
+                            <SwiperSlide key={ann.id}>
+                                <Link href={`/duyuru/${ann.id}`} className="flex bg-white p-3 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition gap-3 items-center h-24">
                                     <div className="w-20 h-20 bg-gray-100 rounded-xl overflow-hidden flex-shrink-0 relative border border-gray-200">
                                         {ann.images && ann.images[0] ? (
                                             <img 
