@@ -5,17 +5,52 @@ import axios from 'axios';
 import { useRouter } from 'next/navigation';
 import { FaTrash, FaArrowLeft, FaUpload, FaImages, FaPlus, FaEdit, FaSave } from 'react-icons/fa';
 import { toast } from 'react-toastify';
-import API_URL from '../../utils/api';
 
-// --- RESİM URL DÜZELTME MANTIĞI ---
-// API_URL "..../api" ile bittiği için, yerel resimlerde kullanmak üzere "/api" kısmını siliyoruz.
-const BASE_URL = API_URL.replace('/api', '');
+// --- AYARLAR ---
+// !!! BURAYA KENDİ GERÇEK RENDER LİNKİNİ YAPIŞTIR !!!
+const RENDER_BACKEND_URL = " https://omu-backend.onrender.com"; 
 
-// Bu fonksiyon resim Cloudinary linki mi yoksa yerel sunucu linki mi kontrol eder
-const getImageUrl = (img) => {
-    if (!img) return '';
-    return img.startsWith('http') ? img : `${BASE_URL}${img}`;
+const getBaseUrl = () => {
+  if (typeof window !== "undefined" && window.location.hostname === "localhost") {
+    return "http://localhost:5000"; 
+  }
+  return RENDER_BACKEND_URL;
 };
+
+const API_URL = `${getBaseUrl()}/api`;
+const BASE_URL = getBaseUrl(); // Resimler için kök adres
+
+// --- AKILLI RESİM ÇÖZÜCÜ (Admin İçin) ---
+const getImageUrl = (imageData) => {
+    if (!imageData) return "https://placehold.co/100x100?text=Yok";
+    let url = "";
+  
+    // 1. Dizi içinde String geliyorsa (['/uploads/...'])
+    if (Array.isArray(imageData) && imageData.length > 0 && typeof imageData[0] === 'string') {
+        url = imageData[0];
+    }
+    // 2. Diğer yapılar
+    else if (Array.isArray(imageData) && imageData.length > 0) {
+        url = imageData[0].url || imageData[0].attributes?.url;
+    }
+    else if (imageData.url) {
+        url = imageData.url;
+    }
+    // 3. String ise (direkt '/uploads/...')
+    else if (typeof imageData === 'string') {
+        url = imageData;
+    }
+  
+    if (!url) return "https://placehold.co/100x100?text=Yok";
+  
+    // Cloudinary ise dokunma
+    if (url.startsWith("http") || url.startsWith("https")) {
+        return url;
+    }
+  
+    // Yerel ise sunucu adresini ekle
+    return `${BASE_URL}${url}`;
+  };
 
 export default function DuyurularPage() {
   const router = useRouter();
@@ -30,16 +65,20 @@ export default function DuyurularPage() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    const token = localStorage.getItem('adminToken');
-    if (!token) router.push('/login');
+    // Admin Token Kontrolü (Varsa)
+    // const token = localStorage.getItem('adminToken');
+    // if (!token) router.push('/login');
     fetchAnnouncements();
-  }, [router]);
+  }, []);
 
   const fetchAnnouncements = async () => {
     try {
       const res = await axios.get(`${API_URL}/announcements`);
       setAnnouncements(res.data);
-    } catch (error) { console.error(error); }
+    } catch (error) { 
+        console.error("Duyuru Çekme Hatası:", error); 
+        toast.error("Duyurular yüklenemedi. Sunucu hatası.");
+    }
   };
 
   const handleImageChange = (e) => {
@@ -48,14 +87,23 @@ export default function DuyurularPage() {
     setPreviews(files.map(file => URL.createObjectURL(file)));
   };
 
-  // LİSTEDEN SEÇİP DÜZENLEME MODUNA GEÇME
   const handleEditClick = (ann) => {
     setEditingId(ann.id);
     setTitle(ann.title);
     setDescription(ann.description);
     
-    // Mevcut resimleri göster (Cloudinary veya Yerel kontrolü ile)
-    setPreviews(ann.images ? ann.images.map(img => getImageUrl(img)) : []);
+    // Resim önizlemelerini ayarla
+    // Veritabanında 'image' veya 'images' olabilir
+    const rawImages = ann.image || ann.images;
+    
+    // Eğer array ise her birini dönüştür, değilse tekli işle
+    if (Array.isArray(rawImages)) {
+        setPreviews(rawImages.map(img => getImageUrl([img]))); // getImageUrl array beklediği için [] içine aldık
+    } else if (rawImages) {
+        setPreviews([getImageUrl(rawImages)]);
+    } else {
+        setPreviews([]);
+    }
     
     setImages([]); 
     window.scrollTo({ top: 0, behavior: 'smooth' }); 
@@ -77,22 +125,24 @@ export default function DuyurularPage() {
     const formData = new FormData();
     formData.append('title', title);
     formData.append('description', description);
-    // Yeni seçilen resimleri ekle
+    
+    // Resimleri ekle
     images.forEach((img) => formData.append('images', img));
 
     try {
       if (editingId) {
-        // GÜNCELLEME İŞLEMİ (PUT)
         await axios.put(`${API_URL}/announcements/${editingId}`, formData, { headers: { 'Content-Type': 'multipart/form-data' } });
         toast.success('Duyuru güncellendi! ✅');
       } else {
-        // YENİ EKLEME İŞLEMİ (POST)
         await axios.post(`${API_URL}/announcements`, formData, { headers: { 'Content-Type': 'multipart/form-data' } });
         toast.success('Duyuru yayınlandı! 🎉');
       }
       handleCancelEdit(); 
       fetchAnnouncements();
-    } catch (error) { toast.error('Hata oluştu.'); } 
+    } catch (error) { 
+        console.error(error);
+        toast.error('İşlem başarısız. Sunucu hatası.'); 
+    } 
     finally { setLoading(false); }
   };
 
@@ -104,7 +154,7 @@ export default function DuyurularPage() {
         fetchAnnouncements(); 
         toast.info('Silindi.'); 
     } 
-    catch (error) { toast.error('Hata.'); }
+    catch (error) { toast.error('Silinemedi.'); }
   };
 
   return (
@@ -164,17 +214,22 @@ export default function DuyurularPage() {
           {/* Liste Alanı */}
           <div className="lg:col-span-7 space-y-6">
             <h2 className="text-xl font-bold text-gray-800 mb-4">Yayındaki Duyurular</h2>
-            {announcements.map((ann) => (
+            {announcements.map((ann) => {
+                const rawImage = ann.image || ann.images;
+                const imgUrl = getImageUrl(rawImage);
+
+                return (
                 <div 
                     key={ann.id} 
                     onClick={() => handleEditClick(ann)} 
                     className={`p-5 rounded-2xl shadow-sm border flex gap-5 transition group cursor-pointer ${editingId === ann.id ? 'bg-blue-50 border-blue-300 ring-2 ring-blue-200' : 'bg-white border-gray-100 hover:shadow-md'}`}
                 >
                     <div className="w-32 h-32 flex-shrink-0 bg-gray-100 rounded-xl overflow-hidden relative">
-                        {ann.images && ann.images.length > 0 ? (
-                            // DÜZELTİLDİ: getImageUrl kullanıldı
-                            <img src={getImageUrl(ann.images[0])} className="w-full h-full object-cover group-hover:scale-110 transition duration-500" />
-                        ) : <div className="w-full h-full flex items-center justify-center text-xs text-gray-400">Resim Yok</div>}
+                        <img 
+                            src={imgUrl} 
+                            className="w-full h-full object-cover group-hover:scale-110 transition duration-500" 
+                            onError={(e) => { e.target.src = "https://placehold.co/100x100?text=Yok"; }}
+                        />
                     </div>
                     <div className="flex-grow flex flex-col">
                         <h3 className="font-bold text-lg text-gray-900 mb-2 line-clamp-1">{ann.title}</h3>
@@ -188,7 +243,7 @@ export default function DuyurularPage() {
                         </div>
                     </div>
                 </div>
-            ))}
+            )})}
           </div>
         </div>
       </div>
