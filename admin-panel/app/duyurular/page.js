@@ -23,36 +23,25 @@ const API_URL = `${getBaseUrl()}/api`;
 const BACKEND_ROOT = getBaseUrl(); // Resimlerin kök adresi (api'siz)
 
 // --- AKILLI RESİM URL DÜZELTİCİ ---
-const getImageUrl = (imgData) => {
-    if (!imgData) return "https://placehold.co/100x100?text=Yok";
+const getImageUrl = (imageData) => {
+    if (!imageData) return "https://placehold.co/100x100?text=Yok";
     
     let url = "";
 
-    // 1. Dizi içinde String geliyorsa (['/uploads/resim.jpg'])
-    if (Array.isArray(imgData) && imgData.length > 0 && typeof imgData[0] === 'string') {
-        url = imgData[0];
-    }
-    // 2. String ise (direkt '/uploads/resim.jpg')
-    else if (typeof imgData === 'string') {
-        url = imgData;
-    }
-    // 3. Cloudinary/Strapi Nesne yapıları
-    else if (Array.isArray(imgData) && imgData.length > 0) {
-        url = imgData[0].url || imgData[0].attributes?.url;
-    }
-    else if (imgData.url) {
-        url = imgData.url;
+    // Array kontrolü (Senin backend array yolluyor)
+    if (Array.isArray(imageData) && imageData.length > 0) {
+        url = imageData[0]; // Cloudinary linki buradadır
+    } 
+    else if (typeof imageData === 'string') {
+        url = imageData;
     }
 
-    if (!url) return "https://placehold.co/100x100?text=Yok";
-
-    // Eğer link "http" ile başlıyorsa (Cloudinary) olduğu gibi döndür
-    if (url.startsWith("http") || url.startsWith("https")) {
+    // Link "http" içeriyorsa direkt döndür (Backend adresi ekleme!)
+    if (url && (url.includes("http") || url.includes("https"))) {
         return url;
     }
 
-    // Yerel dosya ise (/uploads/...) başına Backend Adresini ekle
-    // Örnek: https://senin-app.onrender.com/uploads/resim.jpg
+    // Yerel yüklemeler için (Eskiden kalanlar)
     return `${BACKEND_ROOT}${url}`;
 };
 
