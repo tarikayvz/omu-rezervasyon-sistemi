@@ -9,7 +9,7 @@ import { FaChevronRight, FaCalendarAlt, FaMapMarkerAlt, FaArrowRight, FaClock, F
 // --- AYARLAR ---
 // Eğer Backend 4000 portundaysa burayı 4000 yap! (Terminalde yazar)
 const LOCAL_BACKEND_PORT = "5000"; 
-const RENDER_BACKEND_URL = "https://senin-render-adresin.onrender.com"; // Render linkini buraya yapıştır
+const RENDER_BACKEND_URL = " https://omu-backend.onrender.com"; // Render linkini buraya yapıştır
 
 // Sistem nerede çalıştığını (Local mi Render mı) otomatik anlar
 const getBaseUrl = () => {

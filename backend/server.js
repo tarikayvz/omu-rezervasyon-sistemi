@@ -9,7 +9,12 @@ const commentRoutes = require('./routes/commentRoutes'); // Eklendi
 const app = express();
 const PORT = 5000;
 
-app.use(cors());
+// --- BU KISMI EKLE (EN ÜSTE YAKIN OLSUN) ---
+app.use(cors({
+    origin: '*', // Her yerden gelen isteğe izin ver (Vercel için şart)
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+}));
 app.use(express.json());
 
 // Resim Klasörünü Dışarı Açma (EKLENDİ)
