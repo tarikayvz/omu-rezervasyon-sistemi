@@ -7,50 +7,54 @@ import { FaTrash, FaArrowLeft, FaUpload, FaImages, FaPlus, FaEdit, FaSave } from
 import { toast } from 'react-toastify';
 
 // --- AYARLAR ---
-// !!! BURAYA KENDİ GERÇEK RENDER LİNKİNİ YAPIŞTIR !!!
+// !!! BURAYA Render Dashboard'dan aldığın "https://...onrender.com" linkini yapıştır !!!
 const RENDER_BACKEND_URL = " https://omu-backend.onrender.com"; 
 
 const getBaseUrl = () => {
+  // Eğer tarayıcıda localhost açıksa, yerel backend'e bağlan
   if (typeof window !== "undefined" && window.location.hostname === "localhost") {
     return "http://localhost:5000"; 
   }
+  // Değilse Render adresine bağlan
   return RENDER_BACKEND_URL;
 };
 
 const API_URL = `${getBaseUrl()}/api`;
-const BASE_URL = getBaseUrl(); // Resimler için kök adres
+const BACKEND_ROOT = getBaseUrl(); // Resimlerin kök adresi (api'siz)
 
-// --- AKILLI RESİM ÇÖZÜCÜ (Admin İçin) ---
-const getImageUrl = (imageData) => {
-    if (!imageData) return "https://placehold.co/100x100?text=Yok";
+// --- AKILLI RESİM URL DÜZELTİCİ ---
+const getImageUrl = (imgData) => {
+    if (!imgData) return "https://placehold.co/100x100?text=Yok";
+    
     let url = "";
-  
-    // 1. Dizi içinde String geliyorsa (['/uploads/...'])
-    if (Array.isArray(imageData) && imageData.length > 0 && typeof imageData[0] === 'string') {
-        url = imageData[0];
+
+    // 1. Dizi içinde String geliyorsa (['/uploads/resim.jpg'])
+    if (Array.isArray(imgData) && imgData.length > 0 && typeof imgData[0] === 'string') {
+        url = imgData[0];
     }
-    // 2. Diğer yapılar
-    else if (Array.isArray(imageData) && imageData.length > 0) {
-        url = imageData[0].url || imageData[0].attributes?.url;
+    // 2. String ise (direkt '/uploads/resim.jpg')
+    else if (typeof imgData === 'string') {
+        url = imgData;
     }
-    else if (imageData.url) {
-        url = imageData.url;
+    // 3. Cloudinary/Strapi Nesne yapıları
+    else if (Array.isArray(imgData) && imgData.length > 0) {
+        url = imgData[0].url || imgData[0].attributes?.url;
     }
-    // 3. String ise (direkt '/uploads/...')
-    else if (typeof imageData === 'string') {
-        url = imageData;
+    else if (imgData.url) {
+        url = imgData.url;
     }
-  
+
     if (!url) return "https://placehold.co/100x100?text=Yok";
-  
-    // Cloudinary ise dokunma
+
+    // Eğer link "http" ile başlıyorsa (Cloudinary) olduğu gibi döndür
     if (url.startsWith("http") || url.startsWith("https")) {
         return url;
     }
-  
-    // Yerel ise sunucu adresini ekle
-    return `${BASE_URL}${url}`;
-  };
+
+    // Yerel dosya ise (/uploads/...) başına Backend Adresini ekle
+    // Örnek: https://senin-app.onrender.com/uploads/resim.jpg
+    return `${BACKEND_ROOT}${url}`;
+};
 
 export default function DuyurularPage() {
   const router = useRouter();
@@ -65,9 +69,6 @@ export default function DuyurularPage() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    // Admin Token Kontrolü (Varsa)
-    // const token = localStorage.getItem('adminToken');
-    // if (!token) router.push('/login');
     fetchAnnouncements();
   }, []);
 
@@ -76,8 +77,8 @@ export default function DuyurularPage() {
       const res = await axios.get(`${API_URL}/announcements`);
       setAnnouncements(res.data);
     } catch (error) { 
-        console.error("Duyuru Çekme Hatası:", error); 
-        toast.error("Duyurular yüklenemedi. Sunucu hatası.");
+        console.error("Hata:", error);
+        toast.error("Veri çekilemedi.");
     }
   };
 
@@ -92,14 +93,10 @@ export default function DuyurularPage() {
     setTitle(ann.title);
     setDescription(ann.description);
     
-    // Resim önizlemelerini ayarla
-    // Veritabanında 'image' veya 'images' olabilir
+    // Resim Önizlemesi
     const rawImages = ann.image || ann.images;
-    
-    // Eğer array ise her birini dönüştür, değilse tekli işle
-    if (Array.isArray(rawImages)) {
-        setPreviews(rawImages.map(img => getImageUrl([img]))); // getImageUrl array beklediği için [] içine aldık
-    } else if (rawImages) {
+    if (rawImages) {
+        // Mevcut resmi gösterirken de fonksiyonumuzu kullanıyoruz
         setPreviews([getImageUrl(rawImages)]);
     } else {
         setPreviews([]);
@@ -126,22 +123,22 @@ export default function DuyurularPage() {
     formData.append('title', title);
     formData.append('description', description);
     
-    // Resimleri ekle
+    // Yeni seçilen resimleri ekle
     images.forEach((img) => formData.append('images', img));
 
     try {
       if (editingId) {
         await axios.put(`${API_URL}/announcements/${editingId}`, formData, { headers: { 'Content-Type': 'multipart/form-data' } });
-        toast.success('Duyuru güncellendi! ✅');
+        toast.success('Güncellendi! ✅');
       } else {
         await axios.post(`${API_URL}/announcements`, formData, { headers: { 'Content-Type': 'multipart/form-data' } });
-        toast.success('Duyuru yayınlandı! 🎉');
+        toast.success('Yayınlandı! 🎉');
       }
       handleCancelEdit(); 
       fetchAnnouncements();
     } catch (error) { 
         console.error(error);
-        toast.error('İşlem başarısız. Sunucu hatası.'); 
+        toast.error('Hata oluştu.'); 
     } 
     finally { setLoading(false); }
   };

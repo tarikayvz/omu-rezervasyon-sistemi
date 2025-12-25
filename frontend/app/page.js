@@ -7,14 +7,12 @@ import Link from "next/link"
 import { FaChevronRight, FaCalendarAlt, FaMapMarkerAlt, FaArrowRight, FaClock, FaCalendarCheck } from "react-icons/fa"
 
 // --- AYARLAR ---
-// Eğer Backend 4000 portundaysa burayı 4000 yap! (Terminalde yazar)
-const LOCAL_BACKEND_PORT = "5000"; 
-const RENDER_BACKEND_URL = " https://omu-backend.onrender.com"; // Render linkini buraya yapıştır
+// !!! BURAYA Render Linkini Yapıştır (Sonunda / işareti olmasın) !!!
+const RENDER_BACKEND_URL = " https://omu-backend.onrender.com"; 
 
-// Sistem nerede çalıştığını (Local mi Render mı) otomatik anlar
 const getBaseUrl = () => {
   if (typeof window !== "undefined" && window.location.hostname === "localhost") {
-    return `http://localhost:${LOCAL_BACKEND_PORT}`; 
+    return "http://localhost:5000"; 
   }
   return RENDER_BACKEND_URL;
 };
@@ -32,38 +30,39 @@ import "swiper/css/effect-fade"
 // --- AKILLI RESİM ÇÖZÜCÜ ---
 const getImageUrl = (imageData) => {
   if (!imageData) return "https://placehold.co/600x400?text=Resim+Yok";
-
   let url = "";
 
-  // 1. SENİN VERİ YAPIN: Dizi içinde String ['/uploads/...']
+  // 1. Dizi içinde String ise (['/uploads/...'])
   if (Array.isArray(imageData) && imageData.length > 0 && typeof imageData[0] === 'string') {
       url = imageData[0];
   }
-  // 2. Cloudinary Nesne Yapısı (yeni yüklenenler böyle olabilir)
-  else if (imageData.path) {
-      url = imageData.path;
+  // 2. String ise ('/uploads/...')
+  else if (typeof imageData === 'string') {
+      url = imageData;
+  }
+  // 3. Cloudinary/Diğer Nesne Yapıları
+  else if (Array.isArray(imageData) && imageData.length > 0) {
+      url = imageData[0].url || imageData[0].attributes?.url;
   }
   else if (imageData.url) {
       url = imageData.url;
   }
-  // 3. Strapi/Diğer Yapılar
-  else if (Array.isArray(imageData) && imageData.length > 0) {
-      url = imageData[0].url || imageData[0].path;
-  }
 
   if (!url) return "https://placehold.co/600x400?text=Bulunamadi";
 
-  // Zaten http ile başlıyorsa (Cloudinary ise) dokunma
+  // Zaten http ile başlıyorsa (Cloudinary) olduğu gibi döndür
   if (url.startsWith("http") || url.startsWith("https")) {
       return url;
   }
 
-  // Yerel dosya ise (/uploads) başına sunucu adresini ekle
+  // Yerel dosya ise (/uploads/...) başına backend adresini ekle
   return `${getBaseUrl()}${url}`;
 };
 
 // --- 1. MANŞET SLIDER ---
 function MainNewsSlider({ announcements }) {
+  const shouldLoop = announcements.length > 1;
+
   return (
     <div className="w-full max-w-full h-[320px] md:h-[480px] rounded-[30px] overflow-hidden shadow-2xl bg-black border border-gray-800 relative z-0">
       {announcements.length > 0 ? (
@@ -72,14 +71,13 @@ function MainNewsSlider({ announcements }) {
           slidesPerView={1}
           effect={"fade"}
           fadeEffect={{ crossFade: true }}
-          loop={announcements.length > 1} // Sadece 1'den fazla resim varsa loop yap
+          loop={shouldLoop} 
           autoplay={{ delay: 5000, disableOnInteraction: false }}
           pagination={{ clickable: true, dynamicBullets: true }}
           navigation={true}
           className="h-full w-full"
         >
           {announcements.map((ann) => {
-             // Veritabanında 'image' veya 'images' olabilir
              const rawImage = ann.image || ann.images;
              const imgUrl = getImageUrl(rawImage);
 
@@ -137,7 +135,6 @@ export default function Home() {
           axios.get(`${API_URL}/events`),
         ])
         
-        console.log("Duyurular:", resAnn.data);
         setAnnouncements(resAnn.data)
         setUpcomingEvents(
           resEvt.data
