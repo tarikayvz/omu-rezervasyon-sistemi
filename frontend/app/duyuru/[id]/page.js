@@ -7,21 +7,17 @@ import Header from '../../../components/Header';
 import { FaCalendarAlt, FaArrowLeft, FaShareAlt } from 'react-icons/fa';
 import API_URL from '../../../utils/api';
 
-// Base URL (Eski tip /uploads resimleri için lazım olabilir, API kısmını atıyoruz)
+// Base URL
 const BASE_URL = API_URL.replace('/api', '');
 
 // --- AKILLI RESİM URL DÜZELTİCİ ---
-// Bu fonksiyon resmin türüne bakar ve doğru linki oluşturur.
 const getImageUrl = (imgData) => {
     if (!imgData) return "https://placehold.co/600x400?text=Resim+Yok";
     
-    // 1. Eğer resim Base64 (data:image...) veya Dış Link (http...) ise olduğu gibi döndür.
-    // Başına sunucu adresi EKLEME, yoksa resim bozulur.
     if (imgData.startsWith('data:') || imgData.startsWith('http')) {
         return imgData;
     }
 
-    // 2. Eğer eski tip yerel bir dosya ise (/uploads/...) başına sunucu adresini ekle.
     return `${BASE_URL}${imgData}`;
 };
 
@@ -69,31 +65,35 @@ export default function DuyuruDetayPage() {
             <h1 className="text-3xl md:text-5xl font-extrabold text-gray-900 leading-tight mb-6">{announcement.title}</h1>
         </div>
 
-        {/* --- GALERİ --- */}
+        {/* --- GALERİ (Düzeltildi: Tam Boyut) --- */}
         {announcement.images && announcement.images.length > 0 && (
-             <div className="mb-12">
-                <div className={`grid gap-4 ${announcement.images.length === 1 ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2'}`}>
-                    {announcement.images.map((img, idx) => (
-                        <div key={idx} className={`relative rounded-2xl overflow-hidden shadow-lg group ${announcement.images.length === 1 ? 'h-[500px]' : 'h-80'}`}>
-                             {/* DÜZELTME BURADA YAPILDI: getImageUrl fonksiyonu kullanıldı */}
-                             <img 
-                                src={getImageUrl(img)} 
-                                alt={`${announcement.title}-${idx}`} 
-                                className="w-full h-full object-cover transition duration-700 group-hover:scale-105" 
-                             />
-                        </div>
-                    ))}
-                </div>
+             <div className="mb-12 space-y-8">
+                {announcement.images.map((img, idx) => (
+                    <div key={idx} className="rounded-2xl overflow-hidden shadow-md border border-gray-100">
+                         {/* BURASI DEĞİŞTİ: 
+                            1. h-[500px] gibi sabit yükseklikleri kaldırdık.
+                            2. object-cover yerine w-full kullandık. 
+                            Böylece resim ne kadar uzun veya genişse tam haliyle gözükür.
+                         */}
+                         <img 
+                            src={getImageUrl(img)} 
+                            alt={`${announcement.title}-${idx}`} 
+                            className="w-full h-auto block" 
+                         />
+                    </div>
+                ))}
              </div>
         )}
 
-        {/* Metin İçeriği */}
-        <div className="prose prose-lg max-w-none text-gray-700 leading-loose">
-            <p className="whitespace-pre-wrap">{announcement.description}</p>
+        {/* --- METİN İÇERİĞİ (Düzeltildi: Arka Plan Eklendi) --- */}
+        <div className="bg-gray-50 p-8 md:p-10 rounded-3xl border border-gray-100 shadow-sm">
+            <div className="prose prose-lg max-w-none text-gray-700 leading-loose">
+                <p className="whitespace-pre-wrap">{announcement.description}</p>
+            </div>
         </div>
 
         {/* Alt Footer */}
-        <div className="border-t border-gray-100 mt-12 pt-8 flex justify-between items-center text-gray-500 text-sm">
+        <div className="mt-12 pt-4 flex justify-between items-center text-gray-500 text-sm px-2">
             <p>OMÜ Mühendislik Fakültesi</p>
             <button className="flex items-center gap-2 hover:text-omu-red transition"><FaShareAlt /> Paylaş</button>
         </div>
