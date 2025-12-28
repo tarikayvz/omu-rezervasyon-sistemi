@@ -3,13 +3,27 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useParams, useRouter } from 'next/navigation';
-// Header 3 seviye yukarıda olduğu için utils de muhtemelen oradadır
 import Header from '../../../components/Header';
 import { FaCalendarAlt, FaArrowLeft, FaShareAlt } from 'react-icons/fa';
 import API_URL from '../../../utils/api';
 
-// Resimler için Ana Sunucu Adresini ayarla (Sonundaki /api'yi siler)
+// Base URL (Eski tip /uploads resimleri için lazım olabilir, API kısmını atıyoruz)
 const BASE_URL = API_URL.replace('/api', '');
+
+// --- AKILLI RESİM URL DÜZELTİCİ ---
+// Bu fonksiyon resmin türüne bakar ve doğru linki oluşturur.
+const getImageUrl = (imgData) => {
+    if (!imgData) return "https://placehold.co/600x400?text=Resim+Yok";
+    
+    // 1. Eğer resim Base64 (data:image...) veya Dış Link (http...) ise olduğu gibi döndür.
+    // Başına sunucu adresi EKLEME, yoksa resim bozulur.
+    if (imgData.startsWith('data:') || imgData.startsWith('http')) {
+        return imgData;
+    }
+
+    // 2. Eğer eski tip yerel bir dosya ise (/uploads/...) başına sunucu adresini ekle.
+    return `${BASE_URL}${imgData}`;
+};
 
 export default function DuyuruDetayPage() {
   const { id } = useParams();
@@ -20,7 +34,6 @@ export default function DuyuruDetayPage() {
   useEffect(() => {
     const fetchAnnouncement = async () => {
       try {
-        // DÜZELTİLDİ: API_URL kullanıldı
         const res = await axios.get(`${API_URL}/announcements/${id}`);
         setAnnouncement(res.data);
         setLoading(false);
@@ -56,14 +69,18 @@ export default function DuyuruDetayPage() {
             <h1 className="text-3xl md:text-5xl font-extrabold text-gray-900 leading-tight mb-6">{announcement.title}</h1>
         </div>
 
-        {/* --- GALERİ (Modern Grid) --- */}
+        {/* --- GALERİ --- */}
         {announcement.images && announcement.images.length > 0 && (
              <div className="mb-12">
                 <div className={`grid gap-4 ${announcement.images.length === 1 ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2'}`}>
                     {announcement.images.map((img, idx) => (
                         <div key={idx} className={`relative rounded-2xl overflow-hidden shadow-lg group ${announcement.images.length === 1 ? 'h-[500px]' : 'h-80'}`}>
-                             {/* DÜZELTİLDİ: localhost yerine BASE_URL kullanıldı */}
-                             <img src={`${BASE_URL}${img}`} alt={`${announcement.title}-${idx}`} className="w-full h-full object-cover transition duration-700 group-hover:scale-105" />
+                             {/* DÜZELTME BURADA YAPILDI: getImageUrl fonksiyonu kullanıldı */}
+                             <img 
+                                src={getImageUrl(img)} 
+                                alt={`${announcement.title}-${idx}`} 
+                                className="w-full h-full object-cover transition duration-700 group-hover:scale-105" 
+                             />
                         </div>
                     ))}
                 </div>
