@@ -29,7 +29,7 @@ app.use('/api/announcements', announcementRoutes);
 app.use('/api/comments', commentRoutes);
 
 // Sunucuyu Başlat
-db.sequelize.sync().then(() => { 
+db.sequelize.sync({ alter: true }).then(() => { 
   console.log('PostgreSQL bağlantısı başarılı.');
   app.listen(PORT, () => {
     console.log(`Sunucu http://localhost:${PORT} adresinde çalışıyor...`);
