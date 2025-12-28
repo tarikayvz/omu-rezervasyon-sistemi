@@ -23,21 +23,38 @@ const API_URL = `${getBaseUrl()}/api`;
 
 // --- YENİ RESİM GÖSTERİCİ (Base64 Uyumlu) ---
 const getImageUrl = (imageData) => {
-    if (!imageData) return "https://placehold.co/100x100?text=Yok";
+    // 1. Veri yoksa placeholder göster
+    if (!imageData) return "https://placehold.co/100x100?text=Resim+Yok";
     
     let url = "";
 
-    // Backend'den dizi olarak geliyorsa ilkini al
+    // 2. Veri Backend'den Array (Liste) olarak geliyorsa:
+    // Örn: ['data:image/jpeg;base64,...']
     if (Array.isArray(imageData) && imageData.length > 0) {
         url = imageData[0]; 
     } 
+    // 3. Veri String olarak geliyorsa ama JSON formatındaysa (Eski veriler için):
+    // Örn: "['https://...']"
     else if (typeof imageData === 'string') {
-        url = imageData;
+        if (imageData.startsWith('[')) {
+            try {
+                const parsed = JSON.parse(imageData);
+                url = parsed[0];
+            } catch (e) {
+                url = imageData; // Parse edilemezse olduğu gibi al
+            }
+        } else {
+            url = imageData;
+        }
     }
 
-    // Base64 verisi (data:image...) veya http linki ise olduğu gibi döndür.
-    // Artık backend adresini başına EKLEMİYORUZ.
-    return url;
+    // 4. Eğer veri temiz bir Base64 ise veya http linki ise döndür
+    if (url && (url.startsWith('data:') || url.startsWith('http'))) {
+        return url;
+    }
+
+    // 5. Hiçbiri değilse (Eski yerel dosyalar veya bozuk veri) placeholder dön
+    return "https://placehold.co/100x100?text=Hata";
 };
 
 export default function DuyurularPage() {
