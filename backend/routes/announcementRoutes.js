@@ -1,25 +1,30 @@
 const express = require('express');
 const router = express.Router();
 const { Announcement } = require('../models');
-// DÜZELTME 1: Artık multer ayarlarını buradan yapmıyoruz, middleware'den çağırıyoruz.
 const upload = require('../middleware/upload'); 
 
-// --- ROTALAR ---
+// --- YARDIMCI FONKSİYON: BUFFER -> BASE64 ---
+// Bu fonksiyon resmi "data:image/jpeg;base64,..." formatına çevirir
+const bufferToBase64 = (file) => {
+    return `data:${file.mimetype};base64,${file.buffer.toString('base64')}`;
+};
 
-// 1. Yeni Duyuru Ekle (Çoklu Resim)
-router.post('/', upload.array('images', 10), async (req, res) => {
+// 1. Yeni Duyuru Ekle (Base64 Kayıt)
+router.post('/', upload.array('images', 5), async (req, res) => {
   try {
     const { title, description } = req.body;
     
-    // DÜZELTME 2: Cloudinary bize direkt tam linki (file.path) verir.
-    // Artık başına '/uploads/' koymamıza gerek yok.
-    const imagePaths = req.files ? req.files.map(file => file.path) : [];
+    // Resimleri Base64 String formatına çevirip listeye atıyoruz
+    let imageList = [];
+    if (req.files && req.files.length > 0) {
+        imageList = req.files.map(file => bufferToBase64(file));
+    }
 
     const newAnnouncement = await Announcement.create({
       title,
       description,
-      // Veritabanına Cloudinary linklerini JSON array string olarak kaydediyoruz
-      image: JSON.stringify(imagePaths), 
+      // Veritabanına String dizisi olarak kaydet
+      image: JSON.stringify(imageList), 
       date: new Date()
     });
 
@@ -40,7 +45,6 @@ router.get('/', async (req, res) => {
     const parsedAnnouncements = announcements.map(ann => {
         let images = [];
         try {
-            // Eski format veya yeni format kontrolü
             images = ann.image.startsWith('[') ? JSON.parse(ann.image) : [ann.image];
         } catch (e) { images = []; }
         
@@ -85,35 +89,41 @@ router.delete('/:id', async (req, res) => {
   }
 });
 
-// 5. Duyuru Güncelle
-router.put('/:id', upload.array('images', 10), async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { title, description } = req.body;
-
-    const announcement = await Announcement.findByPk(id);
-    if (!announcement) return res.status(404).json({ message: 'Duyuru bulunamadı' });
-
-    let currentImages = [];
+// 5. Duyuru Güncelle (Base64)
+router.put('/:id', upload.array('images', 5), async (req, res) => {
     try {
-      currentImages = announcement.image ? JSON.parse(announcement.image) : [];
-      if (!Array.isArray(currentImages)) currentImages = [announcement.image];
-    } catch (e) { currentImages = []; }
-
-    // DÜZELTME 3: Yeni yüklenenler de Cloudinary linki (file.path) olarak gelir
-    const newImagePaths = req.files ? req.files.map(file => file.path) : [];
-    const updatedImages = [...currentImages, ...newImagePaths];
-
-    announcement.title = title;
-    announcement.description = description;
-    announcement.image = JSON.stringify(updatedImages);
-    
-    await announcement.save();
-
-    res.status(200).json(announcement);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
+      const { id } = req.params;
+      const { title, description } = req.body;
+  
+      const announcement = await Announcement.findByPk(id);
+      if (!announcement) return res.status(404).json({ message: 'Duyuru bulunamadı' });
+  
+      // Mevcut resimleri al (Veritabanında zaten Base64 duruyorlar)
+      let currentImages = [];
+      try {
+        currentImages = announcement.image ? JSON.parse(announcement.image) : [];
+        if (!Array.isArray(currentImages)) currentImages = [announcement.image];
+      } catch (e) { currentImages = []; }
+  
+      // Yeni yüklenenleri de Base64'e çevir
+      let newImages = [];
+      if (req.files && req.files.length > 0) {
+          newImages = req.files.map(file => bufferToBase64(file));
+      }
+  
+      // Eskilerle yenileri birleştir
+      const updatedImages = [...currentImages, ...newImages];
+  
+      announcement.title = title;
+      announcement.description = description;
+      announcement.image = JSON.stringify(updatedImages);
+      
+      await announcement.save();
+  
+      res.status(200).json(announcement);
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  });
 
 module.exports = router;

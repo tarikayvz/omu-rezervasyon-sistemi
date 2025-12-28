@@ -7,8 +7,8 @@ import { FaTrash, FaArrowLeft, FaUpload, FaImages, FaPlus, FaEdit, FaSave } from
 import { toast } from 'react-toastify';
 
 // --- AYARLAR ---
-// !!! BURAYA Render Dashboard'dan aldığın "https://...onrender.com" linkini yapıştır !!!
-const RENDER_BACKEND_URL = " https://omu-backend.onrender.com"; 
+// Render linkinin başındaki boşluğu sildim ve doğru formatta bıraktım
+const RENDER_BACKEND_URL = "https://omu-backend.onrender.com"; 
 
 const getBaseUrl = () => {
   // Eğer tarayıcıda localhost açıksa, yerel backend'e bağlan
@@ -20,29 +20,24 @@ const getBaseUrl = () => {
 };
 
 const API_URL = `${getBaseUrl()}/api`;
-const BACKEND_ROOT = getBaseUrl(); // Resimlerin kök adresi (api'siz)
 
-// --- AKILLI RESİM URL DÜZELTİCİ ---
+// --- YENİ RESİM GÖSTERİCİ (Base64 Uyumlu) ---
 const getImageUrl = (imageData) => {
     if (!imageData) return "https://placehold.co/100x100?text=Yok";
     
     let url = "";
 
-    // Array kontrolü (Senin backend array yolluyor)
+    // Backend'den dizi olarak geliyorsa ilkini al
     if (Array.isArray(imageData) && imageData.length > 0) {
-        url = imageData[0]; // Cloudinary linki buradadır
+        url = imageData[0]; 
     } 
     else if (typeof imageData === 'string') {
         url = imageData;
     }
 
-    // Link "http" içeriyorsa direkt döndür (Backend adresi ekleme!)
-    if (url && (url.includes("http") || url.includes("https"))) {
-        return url;
-    }
-
-    // Yerel yüklemeler için (Eskiden kalanlar)
-    return `${BACKEND_ROOT}${url}`;
+    // Base64 verisi (data:image...) veya http linki ise olduğu gibi döndür.
+    // Artık backend adresini başına EKLEMİYORUZ.
+    return url;
 };
 
 export default function DuyurularPage() {
@@ -85,8 +80,10 @@ export default function DuyurularPage() {
     // Resim Önizlemesi
     const rawImages = ann.image || ann.images;
     if (rawImages) {
-        // Mevcut resmi gösterirken de fonksiyonumuzu kullanıyoruz
-        setPreviews([getImageUrl(rawImages)]);
+        // Mevcut resmi gösterirken yeni fonksiyonumuzu kullanıyoruz
+        // Array değilse array içine alıp gönderiyoruz ki fonksiyon şaşırmasın
+        const imgData = Array.isArray(rawImages) ? rawImages : [rawImages];
+        setPreviews([getImageUrl(imgData)]);
     } else {
         setPreviews([]);
     }

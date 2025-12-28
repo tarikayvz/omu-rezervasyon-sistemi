@@ -30,39 +30,20 @@ import "swiper/css/effect-fade"
 // --- AKILLI RESİM ÇÖZÜCÜ ---
 // --- AKILLI RESİM ÇÖZÜCÜ (CLOUDINARY İÇİN ÖZEL) ---
 const getImageUrl = (imageData) => {
-  // 1. Veri yoksa
   if (!imageData) return "https://placehold.co/600x400?text=Resim+Yok";
-
+  
   let url = "";
 
-  // 2. VERİ TİPİNİ BUL VE URL'Yİ ÇIKAR
+  // Array ise ilkini al
   if (Array.isArray(imageData) && imageData.length > 0) {
-      // Eğer backend array döndürüyorsa ilkini al
-      // Örnek: ["https://res.cloudinary.com/..."]
-      const item = imageData[0];
-      url = typeof item === 'string' ? item : (item.url || item.attributes?.url);
-  } 
-  else if (typeof imageData === 'object') {
-      // Tekil nesne ise
-      url = imageData.url || imageData.attributes?.url;
-  }
-  else if (typeof imageData === 'string') {
-      // Direkt string ise
+      url = imageData[0];
+  } else if (typeof imageData === 'string') {
       url = imageData;
   }
 
-  // URL hala bulunamadıysa
-  if (!url) return "https://placehold.co/600x400?text=Bulunamadi";
-
-  // --- KRİTİK NOKTA BURASI ---
-  // Eğer URL "http" ile başlıyorsa (Cloudinary linki ise), OLDUĞU GİBİ DÖNDÜR.
-  // Başına sakın Backend URL ekleme!
-  if (url.startsWith("http") || url.startsWith("https")) {
-      return url;
-  }
-
-  // Eğer yerel dosya ise (/uploads/...) o zaman backend adresini ekle
-  return `${getBaseUrl()}${url}`;
+  // Base64 veya normal link ise olduğu gibi döndür
+  // Artık backend adresi eklemeye gerek YOK.
+  return url;
 };
 
 // --- 1. MANŞET SLIDER ---
