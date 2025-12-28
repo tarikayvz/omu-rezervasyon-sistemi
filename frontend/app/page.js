@@ -81,7 +81,6 @@ function MainNewsSlider({ announcements }) {
                 <img
                   src={imgUrl}
                   alt={ann.title}
-                  // GÜNCELLEME: Resim kesilmesin (contain), ortalansın ve arka plan siyah kalsın.
                   className="w-full h-full object-contain opacity-90" 
                   onError={(e) => {
                       e.target.onerror = null; 
@@ -147,7 +146,38 @@ export default function Home() {
     <div className="min-h-screen bg-gray-50 font-sans flex flex-col overflow-x-hidden">
       <Header />
 
-      <main className="container mx-auto max-w-7xl px-4 sm:px-6 py-6 flex-grow overflow-x-hidden">
+      {/* --- GÜNCELLENMİŞ HERO ALANI (DAHA KÜÇÜK) --- */}
+      {/* Yükseklik h-[250px] md:h-[300px] olarak ayarlandı */}
+      <div className="relative bg-gradient-to-r from-red-900 via-red-800 to-red-900 h-[250px] md:h-[300px] w-full overflow-hidden flex flex-col items-center justify-center text-center px-4">
+         
+         {/* Desen */}
+         <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-20"></div>
+         
+         {/* Işık Efekti */}
+         <div className="absolute top-0 left-1/4 w-80 h-80 bg-red-600 rounded-full mix-blend-overlay filter blur-3xl opacity-30 animate-pulse"></div>
+         <div className="absolute bottom-0 right-1/4 w-80 h-80 bg-orange-600 rounded-full mix-blend-overlay filter blur-3xl opacity-20"></div>
+
+         {/* Yazılar (Boyutlar ve boşluklar küçültüldü) */}
+         <div className="relative z-10 max-w-3xl space-y-3 mt-2">
+             <span className="inline-block py-0.5 px-2.5 rounded-full bg-red-800/50 border border-red-700 text-red-100 text-[10px] md:text-xs font-bold tracking-widest uppercase mb-1 backdrop-blur-sm">
+                Mühendislik Fakültesi
+             </span>
+             {/* Başlık boyutu küçültüldü: text-2xl md:text-4xl */}
+             <h1 className="text-2xl md:text-4xl font-extrabold text-white tracking-tight leading-tight drop-shadow-lg">
+                Duyurular ve Etkinlikler
+             </h1>
+             {/* Alt metin boyutu küçültüldü: text-sm md:text-base */}
+             <p className="text-sm md:text-base text-red-100/90 max-w-xl mx-auto font-light leading-relaxed">
+                Fakültemizden en güncel akademik haberlere, etkinliklere ve duyurulara buradan ulaşabilirsiniz.
+             </p>
+         </div>
+
+         {/* Alt Geçiş (Yükseklik h-16 olarak ayarlandı) */}
+         <div className="absolute bottom-0 left-0 w-full h-16 bg-gradient-to-t from-gray-50 to-transparent"></div>
+      </div>
+      {/* --- HERO SONU --- */}
+
+      <main className="container mx-auto max-w-7xl px-4 sm:px-6 py-6 flex-grow overflow-x-hidden -mt-8 relative z-20">
         <div className="grid lg:grid-cols-12 gap-8 md:gap-10 mb-16">
           
           {/* SOL TARAF */}
@@ -155,7 +185,7 @@ export default function Home() {
             <section className="overflow-hidden">
               <div className="flex items-center gap-2 mb-3 pl-1">
                 <span className="w-1.5 h-6 bg-[#E30613] rounded-full"></span>
-                <h2 className="text-xl font-extrabold text-gray-900">Duyurular & Haberler</h2>
+                <h2 className="text-xl font-extrabold text-gray-900">Öne Çıkanlar</h2>
               </div>
               <MainNewsSlider announcements={announcements} />
             </section>
@@ -191,12 +221,11 @@ export default function Home() {
                       >
                         <div className="w-20 h-20 bg-black rounded-xl overflow-hidden flex-shrink-0 relative border border-gray-200">
                            <img
-                              src={imgUrl}
-                              // GÜNCELLEME: Burada da kesilmesini engelledik
-                              className="w-full h-full object-contain"
-                              alt={ann.title}
-                              onError={(e) => { e.target.src = "https://placehold.co/600x400?text=Resim+Yok" }}
-                            />
+                             src={imgUrl}
+                             className="w-full h-full object-contain"
+                             alt={ann.title}
+                             onError={(e) => { e.target.src = "https://placehold.co/600x400?text=Resim+Yok" }}
+                           />
                         </div>
                         <div className="flex flex-col justify-center h-full py-1 min-w-0">
                           <span className="text-[10px] font-bold text-gray-400 mb-0.5">
