@@ -17,7 +17,6 @@ const getImageUrl = (imgData) => {
     if (imgData.startsWith('data:') || imgData.startsWith('http')) {
         return imgData;
     }
-
     return `${BASE_URL}${imgData}`;
 };
 
@@ -65,27 +64,28 @@ export default function DuyuruDetayPage() {
             <h1 className="text-3xl md:text-5xl font-extrabold text-gray-900 leading-tight mb-6">{announcement.title}</h1>
         </div>
 
-        {/* --- GALERİ (Düzeltildi: Tam Boyut) --- */}
+        {/* --- GALERİ (Düzeltildi: Yükseklik Sınırı ve Ortalama) --- */}
         {announcement.images && announcement.images.length > 0 && (
              <div className="mb-12 space-y-8">
                 {announcement.images.map((img, idx) => (
-                    <div key={idx} className="rounded-2xl overflow-hidden shadow-md border border-gray-100">
-                         {/* BURASI DEĞİŞTİ: 
-                            1. h-[500px] gibi sabit yükseklikleri kaldırdık.
-                            2. object-cover yerine w-full kullandık. 
-                            Böylece resim ne kadar uzun veya genişse tam haliyle gözükür.
+                    <div key={idx} className="rounded-2xl overflow-hidden shadow-md border border-gray-100 bg-gray-50 flex justify-center p-2">
+                         {/* GÜNCELLEME:
+                            1. max-h-[500px]: Resim boyu en fazla 500px olur, ekranı kaplamaz.
+                            2. w-auto: Genişlik resmin oranına göre otomatik ayarlanır.
+                            3. mx-auto: Resim kutunun ortasında durur.
+                            4. object-contain: Resim asla kesilmez.
                          */}
                          <img 
                             src={getImageUrl(img)} 
                             alt={`${announcement.title}-${idx}`} 
-                            className="w-full h-auto block" 
+                            className="w-auto h-auto max-w-full max-h-[500px] object-contain mx-auto block" 
                          />
                     </div>
                 ))}
              </div>
         )}
 
-        {/* --- METİN İÇERİĞİ (Düzeltildi: Arka Plan Eklendi) --- */}
+        {/* Metin İçeriği */}
         <div className="bg-gray-50 p-8 md:p-10 rounded-3xl border border-gray-100 shadow-sm">
             <div className="prose prose-lg max-w-none text-gray-700 leading-loose">
                 <p className="whitespace-pre-wrap">{announcement.description}</p>
