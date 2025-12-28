@@ -14,10 +14,12 @@ import {
 } from 'react-icons/fa';
 import API_URL from '../../../utils/api';
 
+// Base URL
 const BASE_URL = API_URL.replace('/api', '');
 
+// --- AKILLI RESİM URL DÜZELTİCİ ---
 const getImageUrl = (imgData) => {
-    if (!imgData) return null; // Resim yoksa null dönelim ki CSS gradient kullansın
+    if (!imgData) return "https://placehold.co/800x400?text=Resim+Yok";
     if (imgData.startsWith('data:') || imgData.startsWith('http')) {
         return imgData;
     }
@@ -29,6 +31,8 @@ export default function DuyuruDetayPage() {
   const router = useRouter();
   const [announcement, setAnnouncement] = useState(null);
   const [loading, setLoading] = useState(true);
+  
+  // --- GALERİ STATE ---
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   useEffect(() => {
@@ -42,6 +46,7 @@ export default function DuyuruDetayPage() {
     if (id) fetchAnnouncement();
   }, [id]);
 
+  // --- GALERİ FONKSİYONLARI ---
   const nextImage = () => {
     if (!announcement?.images) return;
     setCurrentImageIndex((prev) => (prev === announcement.images.length - 1 ? 0 : prev + 1));
@@ -54,61 +59,40 @@ export default function DuyuruDetayPage() {
 
   if (loading) return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-red-600"></div>
+        <div className="flex flex-col items-center gap-4">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-red-600"></div>
+            <span className="text-gray-500 font-medium">Yükleniyor...</span>
+        </div>
     </div>
   );
 
-  if (!announcement) return <div className="min-h-screen flex items-center justify-center">İçerik bulunamadı.</div>;
-
-  // --- ARKA PLAN RESMİNİ BELİRLEME ---
-  // Duyurunun ilk resmi varsa onu arka plan yap, yoksa null
-  const bgImage = announcement.images && announcement.images.length > 0 
-                  ? getImageUrl(announcement.images[0]) 
-                  : null;
+  if (!announcement) return <div className="min-h-screen flex items-center justify-center text-gray-500">İçerik bulunamadı.</div>;
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans selection:bg-red-100 selection:text-red-900">
       <Header />
       
-      {/* --- DINAMIK BULANIK HERO ALANI --- */}
-      <div className="relative h-[400px] w-full overflow-hidden">
-         
-         {bgImage ? (
-            // DURUM 1: Resim Varsa (Bulanık Efekt)
-            <>
-                {/* Arka Plan Resmi */}
-                <div 
-                    className="absolute inset-0 bg-cover bg-center blur-xl scale-110" // scale-110: blur kenarlarını gizlemek için büyütür
-                    style={{ backgroundImage: `url('${bgImage}')` }}
-                ></div>
-                {/* Karartma Katmanı (Yazıların okunması için) */}
-                <div className="absolute inset-0 bg-black/50"></div>
-            </>
-         ) : (
-            // DURUM 2: Resim Yoksa (Standart Kırmızı Gradient)
-            <div className="absolute inset-0 bg-gradient-to-r from-red-900 via-red-800 to-red-900">
-                 <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
-            </div>
-         )}
-
-         {/* Alt kısımdan beyaza yumuşak geçiş */}
-         <div className="absolute bottom-0 left-0 w-full h-40 bg-gradient-to-t from-slate-50 to-transparent"></div>
+      {/* --- HERO BACKGROUND --- */}
+      <div className="relative bg-gradient-to-r from-red-900 via-red-800 to-red-900 h-[300px] w-full">
+         <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
+         <div className="absolute bottom-0 left-0 w-full h-24 bg-gradient-to-t from-slate-50 to-transparent"></div>
       </div>
 
       {/* --- ANA İÇERİK KARTI --- */}
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 relative -mt-52 pb-20">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 relative -mt-40 pb-20">
         
+        {/* Navigasyon Butonu */}
         <button 
             onClick={() => router.back()} 
-            className="mb-6 flex items-center gap-2 text-white hover:text-red-100 transition-colors group bg-black/20 backdrop-blur-md px-4 py-2 rounded-full w-fit border border-white/10"
+            className="mb-6 flex items-center gap-2 text-white/80 hover:text-white transition-colors group bg-white/10 backdrop-blur-md px-4 py-2 rounded-full w-fit"
         >
             <FaArrowLeft className="group-hover:-translate-x-1 transition-transform"/>
-            <span className="font-medium text-sm">Geri Dön</span>
+            <span className="font-medium text-sm">Duyurulara Dön</span>
         </button>
 
-        <div className="bg-white rounded-3xl shadow-2xl border border-gray-100 overflow-hidden">
+        <div className="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden">
             
-            {/* Kart Başlığı */}
+            {/* Üst Başlık ve Meta Alanı */}
             <div className="p-8 md:p-12 border-b border-gray-100">
                 <div className="flex flex-wrap items-center gap-4 text-sm font-semibold text-red-600 mb-6 uppercase tracking-wider">
                     <span className="bg-red-50 px-3 py-1 rounded-md border border-red-100 flex items-center gap-2">
@@ -127,35 +111,53 @@ export default function DuyuruDetayPage() {
 
             <div className="p-8 md:p-12">
                 
-                {/* GALERİ SLIDER (Aynı Kalıyor) */}
+                {/* --- YENİ SLIDER / GALERİ ALANI --- */}
                 {announcement.images && announcement.images.length > 0 && (
-                     <div className="mb-12 relative group rounded-2xl overflow-hidden bg-gray-100 border border-gray-200 shadow-inner h-[350px] md:h-[550px]">
-                        <div className="w-full h-full flex items-center justify-center bg-gray-50/50 backdrop-blur-sm">
+                     <div className="mb-12 relative group rounded-2xl overflow-hidden bg-gray-100 border border-gray-200 shadow-inner h-[400px] md:h-[550px]">
+                        
+                        {/* Resim */}
+                        <div className="w-full h-full flex items-center justify-center bg-gray-50">
                             <img 
                                 src={getImageUrl(announcement.images[currentImageIndex])} 
                                 alt={`Slide-${currentImageIndex}`} 
-                                className="w-full h-full object-contain" 
+                                className="max-w-full max-h-full object-contain p-2" 
                             />
                         </div>
 
+                        {/* --- SADECE BİRDEN FAZLA RESİM VARSA BUTONLARI GÖSTER --- */}
                         {announcement.images.length > 1 && (
                             <>
-                                <button onClick={prevImage} className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-white/90 hover:bg-white text-gray-800 rounded-full flex items-center justify-center shadow-lg transition-all opacity-0 group-hover:opacity-100 z-10">
+                                {/* Sol Ok */}
+                                <button 
+                                    onClick={prevImage}
+                                    className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 md:w-12 md:h-12 bg-white/80 hover:bg-white text-gray-800 rounded-full flex items-center justify-center shadow-lg backdrop-blur-sm transition-all opacity-0 group-hover:opacity-100"
+                                >
                                     <FaChevronLeft size={20} />
                                 </button>
-                                <button onClick={nextImage} className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-white/90 hover:bg-white text-gray-800 rounded-full flex items-center justify-center shadow-lg transition-all opacity-0 group-hover:opacity-100 z-10">
+
+                                {/* Sağ Ok */}
+                                <button 
+                                    onClick={nextImage}
+                                    className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 md:w-12 md:h-12 bg-white/80 hover:bg-white text-gray-800 rounded-full flex items-center justify-center shadow-lg backdrop-blur-sm transition-all opacity-0 group-hover:opacity-100"
+                                >
                                     <FaChevronRight size={20} />
                                 </button>
-                                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-10">
+
+                                {/* Alt Noktalar (Dots) */}
+                                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
                                     {announcement.images.map((_, idx) => (
                                         <button 
                                             key={idx}
                                             onClick={() => setCurrentImageIndex(idx)}
-                                            className={`w-2.5 h-2.5 rounded-full transition-all shadow-sm ${idx === currentImageIndex ? 'bg-red-600 scale-125 w-4' : 'bg-gray-300 hover:bg-white'}`}
+                                            className={`w-2.5 h-2.5 rounded-full transition-all shadow-sm ${
+                                                idx === currentImageIndex ? 'bg-red-600 scale-125 w-4' : 'bg-white/70 hover:bg-white'
+                                            }`}
                                         />
                                     ))}
                                 </div>
-                                <div className="absolute top-4 right-4 bg-black/60 text-white text-xs px-3 py-1 rounded-full backdrop-blur-md z-10">
+                                
+                                {/* Resim Sayısı Göstergesi (Sağ Üst) */}
+                                <div className="absolute top-4 right-4 bg-black/50 text-white text-xs px-3 py-1 rounded-full backdrop-blur-md">
                                     {currentImageIndex + 1} / {announcement.images.length}
                                 </div>
                             </>
@@ -163,10 +165,11 @@ export default function DuyuruDetayPage() {
                      </div>
                 )}
 
-                {/* İçerik Metni */}
+                {/* Metin İçeriği */}
                 <div className="prose prose-lg md:prose-xl max-w-none text-gray-700 leading-relaxed">
                     <p className="whitespace-pre-wrap">{announcement.description}</p>
                 </div>
+
             </div>
 
             {/* Footer */}
@@ -175,10 +178,13 @@ export default function DuyuruDetayPage() {
                     <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center text-red-600 font-bold">OMÜ</div>
                     <div className="text-sm">
                         <p className="font-bold text-gray-900">Mühendislik Fakültesi</p>
+                        <p className="text-gray-500">Resmi Duyuru</p>
                     </div>
                 </div>
+
                 <button className="flex items-center gap-2 px-5 py-2.5 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 hover:border-gray-300 text-gray-700 transition shadow-sm font-medium">
-                    <FaShareAlt className="text-red-500"/> Paylaş
+                    <FaShareAlt className="text-red-500"/> 
+                    Duyuruyu Paylaş
                 </button>
             </div>
 
