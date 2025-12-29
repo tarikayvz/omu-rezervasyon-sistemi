@@ -1,6 +1,6 @@
 'use client';
 
-// API Yolu Düzeltilmiş Hali
+// API Yolu
 import API_URL from '../../utils/api';
 import React, { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
@@ -8,7 +8,18 @@ import axios from 'axios';
 import Header from '../../components/Header';
 import { format, isPast, isFuture, isToday } from 'date-fns';
 import { tr } from 'date-fns/locale';
-import { FaClock, FaHistory, FaTimes, FaStar, FaCommentDots, FaChevronUp, FaUser, FaReplyAll } from 'react-icons/fa';
+import { 
+  FaClock, 
+  FaHistory, 
+  FaTimes, 
+  FaStar, 
+  FaCommentDots, 
+  FaChevronUp, 
+  FaUser, 
+  FaReplyAll,
+  FaCalendarCheck,
+  FaMapMarkerAlt
+} from 'react-icons/fa';
 import { toast } from 'react-toastify';
 
 // --- ÖZEL YILDIZ BİLEŞENİ ---
@@ -110,158 +121,239 @@ function TakvimContent() {
   const pastEvents = hallFilteredEvents.filter(event => isPast(new Date(event.endDate)) && !isToday(new Date(event.endDate)));
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      {/* Filtreler */}
-      <div className="flex flex-wrap gap-4 mb-8 justify-center">
-        {['tumu', 'mavi', 'pembe', 'konferans'].map(hall => (
-            <button key={hall} onClick={() => setSelectedHall(hall)} className={`px-6 py-2 rounded-full font-bold transition capitalize ${selectedHall === hall ? 'bg-gray-800 text-white' : 'bg-gray-200 text-gray-700'}`}>{hall} Salon</button>
-        ))}
+    <>
+      {/* --- HERO ALANI (NET VE KIRMIZI) --- */}
+      <div className="relative bg-gradient-to-r from-red-900 via-red-800 to-red-900 h-[250px] md:h-[300px] w-full flex flex-col items-center justify-center text-center px-4">
+         
+         {/* Desen */}
+         <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-20"></div>
+         
+         {/* Işık Efektleri */}
+         <div className="absolute top-0 left-1/4 w-80 h-80 bg-red-600 rounded-full mix-blend-overlay filter blur-3xl opacity-30 animate-pulse"></div>
+         <div className="absolute bottom-0 right-1/4 w-80 h-80 bg-orange-600 rounded-full mix-blend-overlay filter blur-3xl opacity-20"></div>
+
+         {/* Başlık ve İkon */}
+         <div className="relative z-10 max-w-3xl mt-2">
+             <span className="inline-flex items-center gap-2 py-1 px-3 rounded-full bg-red-800/50 border border-red-700 text-red-100 text-xs font-bold tracking-widest uppercase mb-3 backdrop-blur-sm">
+                <FaCalendarCheck /> Etkinlik Programı
+             </span>
+             <h1 className="text-3xl md:text-5xl font-extrabold text-white tracking-tight drop-shadow-lg mb-2">
+                Takvim & Etkinlikler
+             </h1>
+             <p className="text-sm md:text-base text-red-100/90 font-light">
+                Fakültemizdeki tüm akademik ve sosyal etkinlikleri buradan takip edebilirsiniz.
+             </p>
+         </div>
+
+         {/* Alt Geçiş */}
+         <div className="absolute bottom-0 left-0 w-full h-16 bg-gradient-to-t from-gray-50 to-transparent"></div>
       </div>
 
-      <h2 className="text-2xl font-bold text-omu-dark mb-6 border-l-4 border-omu-red pl-4">Güncel Takvim</h2>
-      
-      {loading ? <p className="text-center text-gray-500">Yükleniyor...</p> : (
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-16">
-            {upcomingEvents.length === 0 ? <p className="text-gray-500 col-span-3 text-center">Planlanmış etkinlik yok.</p> : 
-             upcomingEvents.map(event => <EventCard key={event.id} event={event} onClick={() => openModal(event)} />)}
+      {/* --- İÇERİK ALANI --- */}
+      <div className="container mx-auto px-4 py-8 relative z-20 -mt-8">
+        
+        {/* Filtreler */}
+        <div className="flex flex-wrap gap-3 mb-10 justify-center bg-white p-2 rounded-full shadow-lg border border-gray-100 w-fit mx-auto">
+          {['tumu', 'mavi', 'pembe', 'konferans'].map(hall => (
+             <button 
+                key={hall} 
+                onClick={() => setSelectedHall(hall)} 
+                className={`px-6 py-2 rounded-full font-bold text-sm transition-all capitalize
+                ${selectedHall === hall 
+                    ? 'bg-gray-900 text-white shadow-md transform scale-105' 
+                    : 'bg-transparent text-gray-500 hover:bg-gray-100 hover:text-gray-900'}`}
+             >
+                {hall === 'tumu' ? 'Tümü' : `${hall} Salon`}
+             </button>
+          ))}
         </div>
-      )}
 
-      {pastEvents.length > 0 && (
-        <div className="mt-12 pt-10 border-t-2 border-dashed border-gray-300">
-            <h2 className="text-xl font-bold text-gray-500 mb-6 flex items-center gap-2"><FaHistory /> Geçmiş Etkinlikler</h2>
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 opacity-75 grayscale hover:grayscale-0 transition duration-500">
-                {pastEvents.map(event => <EventCard key={event.id} event={event} onClick={() => openModal(event)} />)}
+        {/* Güncel Etkinlikler Başlığı */}
+        <div className="flex items-center gap-3 mb-8">
+            <span className="w-1.5 h-8 bg-red-600 rounded-full"></span>
+            <h2 className="text-2xl font-extrabold text-gray-900">Güncel Program</h2>
+        </div>
+        
+        {loading ? (
+            <div className="flex justify-center py-20">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-red-600"></div>
             </div>
-        </div>
-      )}
-
-      {/* --- MODAL --- */}
-      {selectedEvent && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-60 backdrop-blur-sm" onClick={closeModal}>
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden relative max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-             <div className="bg-gray-900 text-white p-6 flex justify-between items-center sticky top-0 z-10">
-                <div>
-                    <h2 className="text-xl font-bold leading-tight">{selectedEvent.title}</h2>
-                    <p className="text-sm text-gray-300 mt-1 flex items-center gap-2"><FaClock size={14}/> {format(new Date(selectedEvent.startDate), 'd MMMM yyyy', { locale: tr })}</p>
+        ) : (
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-16">
+             {upcomingEvents.length === 0 ? (
+                <div className="col-span-3 text-center py-12 bg-white rounded-2xl border border-dashed border-gray-300">
+                    <p className="text-gray-400 font-medium">Bu kategoride planlanmış güncel etkinlik yok.</p>
                 </div>
-                <button onClick={closeModal} className="bg-white/10 p-2 rounded-full hover:bg-white/20 transition"><FaTimes size={20} /></button>
+             ) : (
+                upcomingEvents.map(event => <EventCard key={event.id} event={event} onClick={() => openModal(event)} />)
+             )}
+          </div>
+        )}
+
+        {/* Geçmiş Etkinlikler */}
+        {pastEvents.length > 0 && (
+          <div className="mt-12 pt-10 border-t border-gray-200">
+             <div className="flex items-center gap-2 mb-6 opacity-70">
+                <FaHistory className="text-gray-400"/> 
+                <h2 className="text-xl font-bold text-gray-500">Geçmiş Etkinlikler</h2>
              </div>
-             
-             <div className="p-6 md:p-8">
-                <div className="mb-8">
-                    <h3 className="text-sm font-bold text-gray-400 uppercase mb-2 ls-wider">Etkinlik Detayı</h3>
-                    <p className="text-gray-700 text-lg leading-relaxed">{selectedEvent.description}</p>
-                </div>
-                
-                <div className="grid grid-cols-2 gap-6 bg-gray-50 p-5 rounded-xl border border-gray-100 text-sm mb-8">
-                    <div>
-                        <span className="block text-xs font-bold text-gray-400 uppercase mb-1">Başlangıç</span>
-                        <span className="font-bold text-gray-800 text-base">{format(new Date(selectedEvent.startDate), 'HH:mm')}</span>
-                    </div>
-                    <div>
-                        <span className="block text-xs font-bold text-gray-400 uppercase mb-1">Bitiş</span>
-                        <span className="font-bold text-gray-800 text-base">{format(new Date(selectedEvent.endDate), 'HH:mm')}</span>
-                    </div>
-                    <div>
-                        <span className="block text-xs font-bold text-gray-400 uppercase mb-1">Düzenleyen</span>
-                        <span className="font-semibold text-gray-800">{selectedEvent.organizer}</span>
-                    </div>
-                    <div>
-                        <span className="block text-xs font-bold text-gray-400 uppercase mb-1">Bölüm</span>
-                        <span className="font-semibold text-gray-800">{selectedEvent.department}</span>
-                    </div>
-                </div>
-
-                {isPast(new Date(selectedEvent.endDate)) && (
-                    <div className="border-t border-gray-100 pt-8">
-                        
-                        <div className="flex justify-between items-center mb-6">
-                            <h3 className="text-xl font-bold text-gray-800 flex items-center gap-3">
-                                <FaCommentDots className="text-omu-red"/> 
-                                Değerlendirmeler 
-                                <span className="text-sm font-normal text-gray-500">({comments.length})</span>
-                            </h3>
-                            <button 
-                                onClick={() => setShowCommentForm(!showCommentForm)} 
-                                className="text-sm bg-gray-900 text-white px-5 py-2.5 rounded-full font-bold hover:bg-gray-800 transition flex items-center gap-2 shadow-sm"
-                            >
-                                {showCommentForm ? <><FaChevronUp/> Vazgeç</> : <><FaStar className="text-yellow-400"/> Değerlendir</>}
-                            </button>
-                        </div>
-                        
-                        {showCommentForm && (
-                            <form onSubmit={submitComment} className="bg-gray-50 p-6 rounded-2xl border border-gray-200 mb-8 animate-fadeIn shadow-sm">
-                                <h4 className="font-bold text-gray-700 mb-4 text-sm uppercase tracking-wider text-center">Puanınız</h4>
-                                <div className="mb-6 flex justify-center">
-                                    <StarRating rating={newComment.rating} setRating={(val) => setNewComment({...newComment, rating: val})} hoverRating={hoverRating} setHoverRating={setHoverRating}/>
-                                </div>
-                                <div className="space-y-4">
-                                    <input type="text" placeholder="Adınız Soyadınız" className="w-full p-3 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-omu-red/20 focus:border-omu-red outline-none transition" value={newComment.username} onChange={e => setNewComment({...newComment, username: e.target.value})}/>
-                                    <textarea placeholder="Bu etkinlik nasıldı?" className="w-full p-3 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-omu-red/20 focus:border-omu-red outline-none transition resize-none" rows="3" value={newComment.text} onChange={e => setNewComment({...newComment, text: e.target.value})}></textarea>
-                                    <button type="submit" disabled={commentLoading} className="w-full bg-omu-red text-white py-3 rounded-lg font-bold hover:bg-red-700 transition flex justify-center items-center gap-2 shadow-md active:scale-[0.99]">{commentLoading ? 'Gönderiliyor...' : 'Yorumu Gönder'}</button>
-                                </div>
-                            </form>
-                        )}
-
-                        <div className="space-y-6 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
-                            {comments.length === 0 ? (
-                                <div className="text-center py-10 bg-gray-50 rounded-2xl border border-dashed border-gray-300">
-                                    <FaCommentDots className="mx-auto text-gray-300 text-4xl mb-3" />
-                                    <p className="text-gray-500 font-medium">Henüz bir değerlendirme yapılmamış.</p>
-                                    <p className="text-sm text-gray-400">İlk yorumu siz yapın!</p>
-                                </div>
-                            ) : comments.map(comment => (
-                                <div key={comment.id} className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 transition hover:shadow-md">
-                                    <div className="flex justify-between items-start mb-4">
-                                        <div className="flex items-center gap-4">
-                                            <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center text-gray-500 border border-gray-200 shadow-sm">
-                                                <FaUser size={16} />
-                                            </div>
-                                            <div>
-                                                <h4 className="font-bold text-gray-900 leading-tight">{comment.username}</h4>
-                                                <span className="text-xs font-medium text-gray-500">
-                                                    {format(new Date(comment.createdAt), 'd MMMM yyyy', { locale: tr })}
-                                                </span>
-                                            </div>
-                                        </div>
-                                        <div className="flex text-yellow-400 bg-yellow-50 px-2 py-1 rounded-full border border-yellow-100">
-                                            {[...Array(5)].map((_, i) => <FaStar key={i} size={14} color={i < comment.rating ? "#f59e0b" : "#e5e7eb"} />)}
-                                        </div>
-                                    </div>
-                                    <div className="pl-14">
-                                        <p className="text-gray-700 leading-relaxed">{comment.text}</p>
-                                    </div>
-                                    {comment.reply && (
-                                        <div className="mt-4 pl-14">
-                                            <div className="bg-red-50/50 p-4 rounded-xl border border-red-100 relative">
-                                                <FaReplyAll className="absolute top-4 left-[-12px] text-omu-red bg-white rounded-full p-1 shadow-sm border border-red-100 text-xl" />
-                                                <h5 className="text-xs font-bold text-omu-red uppercase tracking-wider mb-2">Yönetici Yanıtı</h5>
-                                                {/* BURASI DÜZELTİLDİ: Tırnak işaretleri escaped edildi */}
-                                                <p className="text-gray-800 italic text-sm leading-relaxed">&quot;{comment.reply}&quot;</p>
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                )}
+             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 opacity-60 hover:opacity-100 transition duration-500">
+                {pastEvents.map(event => <EventCard key={event.id} event={event} onClick={() => openModal(event)} />)}
              </div>
           </div>
-        </div>
-      )}
-    </div>
+        )}
+
+        {/* --- MODAL (Aynı Kalıyor) --- */}
+        {selectedEvent && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-60 backdrop-blur-sm" onClick={closeModal}>
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden relative max-h-[90vh] overflow-y-auto animate-fadeIn" onClick={(e) => e.stopPropagation()}>
+               <div className="bg-gray-900 text-white p-6 flex justify-between items-center sticky top-0 z-10">
+                  <div>
+                      <h2 className="text-xl font-bold leading-tight">{selectedEvent.title}</h2>
+                      <p className="text-sm text-gray-300 mt-1 flex items-center gap-2"><FaClock size={14}/> {format(new Date(selectedEvent.startDate), 'd MMMM yyyy', { locale: tr })}</p>
+                  </div>
+                  <button onClick={closeModal} className="bg-white/10 p-2 rounded-full hover:bg-white/20 transition"><FaTimes size={20} /></button>
+               </div>
+               
+               <div className="p-6 md:p-8">
+                  <div className="mb-8">
+                      <h3 className="text-xs font-bold text-gray-400 uppercase mb-2 tracking-wider">Etkinlik Detayı</h3>
+                      <p className="text-gray-700 text-lg leading-relaxed">{selectedEvent.description}</p>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-6 bg-gray-50 p-5 rounded-xl border border-gray-100 text-sm mb-8">
+                      <div>
+                          <span className="block text-xs font-bold text-gray-400 uppercase mb-1">Başlangıç</span>
+                          <span className="font-bold text-gray-800 text-base">{format(new Date(selectedEvent.startDate), 'HH:mm')}</span>
+                      </div>
+                      <div>
+                          <span className="block text-xs font-bold text-gray-400 uppercase mb-1">Bitiş</span>
+                          <span className="font-bold text-gray-800 text-base">{format(new Date(selectedEvent.endDate), 'HH:mm')}</span>
+                      </div>
+                      <div>
+                          <span className="block text-xs font-bold text-gray-400 uppercase mb-1">Düzenleyen</span>
+                          <span className="font-semibold text-gray-800">{selectedEvent.organizer}</span>
+                      </div>
+                      <div>
+                          <span className="block text-xs font-bold text-gray-400 uppercase mb-1">Bölüm</span>
+                          <span className="font-semibold text-gray-800">{selectedEvent.department}</span>
+                      </div>
+                  </div>
+
+                  {isPast(new Date(selectedEvent.endDate)) && (
+                      <div className="border-t border-gray-100 pt-8">
+                          
+                          <div className="flex justify-between items-center mb-6">
+                              <h3 className="text-xl font-bold text-gray-800 flex items-center gap-3">
+                                  <FaCommentDots className="text-omu-red"/> 
+                                  Değerlendirmeler 
+                                  <span className="text-sm font-normal text-gray-500">({comments.length})</span>
+                              </h3>
+                              <button 
+                                  onClick={() => setShowCommentForm(!showCommentForm)} 
+                                  className="text-sm bg-gray-900 text-white px-5 py-2.5 rounded-full font-bold hover:bg-gray-800 transition flex items-center gap-2 shadow-sm"
+                              >
+                                  {showCommentForm ? <><FaChevronUp/> Vazgeç</> : <><FaStar className="text-yellow-400"/> Değerlendir</>}
+                              </button>
+                          </div>
+                          
+                          {showCommentForm && (
+                              <form onSubmit={submitComment} className="bg-gray-50 p-6 rounded-2xl border border-gray-200 mb-8 animate-fadeIn shadow-sm">
+                                  <h4 className="font-bold text-gray-700 mb-4 text-sm uppercase tracking-wider text-center">Puanınız</h4>
+                                  <div className="mb-6 flex justify-center">
+                                      <StarRating rating={newComment.rating} setRating={(val) => setNewComment({...newComment, rating: val})} hoverRating={hoverRating} setHoverRating={setHoverRating}/>
+                                  </div>
+                                  <div className="space-y-4">
+                                      <input type="text" placeholder="Adınız Soyadınız" className="w-full p-3 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-omu-red/20 focus:border-omu-red outline-none transition" value={newComment.username} onChange={e => setNewComment({...newComment, username: e.target.value})}/>
+                                      <textarea placeholder="Bu etkinlik nasıldı?" className="w-full p-3 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-omu-red/20 focus:border-omu-red outline-none transition resize-none" rows="3" value={newComment.text} onChange={e => setNewComment({...newComment, text: e.target.value})}></textarea>
+                                      <button type="submit" disabled={commentLoading} className="w-full bg-omu-red text-white py-3 rounded-lg font-bold hover:bg-red-700 transition flex justify-center items-center gap-2 shadow-md active:scale-[0.99]">{commentLoading ? 'Gönderiliyor...' : 'Yorumu Gönder'}</button>
+                                  </div>
+                              </form>
+                          )}
+
+                          <div className="space-y-6 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+                              {comments.length === 0 ? (
+                                  <div className="text-center py-10 bg-gray-50 rounded-2xl border border-dashed border-gray-300">
+                                      <FaCommentDots className="mx-auto text-gray-300 text-4xl mb-3" />
+                                      <p className="text-gray-500 font-medium">Henüz bir değerlendirme yapılmamış.</p>
+                                  </div>
+                              ) : comments.map(comment => (
+                                  <div key={comment.id} className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 transition hover:shadow-md">
+                                      <div className="flex justify-between items-start mb-4">
+                                          <div className="flex items-center gap-4">
+                                              <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center text-gray-500 border border-gray-200 shadow-sm">
+                                                  <FaUser size={16} />
+                                              </div>
+                                              <div>
+                                                  <h4 className="font-bold text-gray-900 leading-tight">{comment.username}</h4>
+                                                  <span className="text-xs font-medium text-gray-500">
+                                                      {format(new Date(comment.createdAt), 'd MMMM yyyy', { locale: tr })}
+                                                  </span>
+                                              </div>
+                                          </div>
+                                          <div className="flex text-yellow-400 bg-yellow-50 px-2 py-1 rounded-full border border-yellow-100">
+                                              {[...Array(5)].map((_, i) => <FaStar key={i} size={14} color={i < comment.rating ? "#f59e0b" : "#e5e7eb"} />)}
+                                          </div>
+                                      </div>
+                                      <div className="pl-14">
+                                          <p className="text-gray-700 leading-relaxed">{comment.text}</p>
+                                      </div>
+                                      {comment.reply && (
+                                          <div className="mt-4 pl-14">
+                                              <div className="bg-red-50/50 p-4 rounded-xl border border-red-100 relative">
+                                                  <FaReplyAll className="absolute top-4 left-[-12px] text-omu-red bg-white rounded-full p-1 shadow-sm border border-red-100 text-xl" />
+                                                  <h5 className="text-xs font-bold text-omu-red uppercase tracking-wider mb-2">Yönetici Yanıtı</h5>
+                                                  <p className="text-gray-800 italic text-sm leading-relaxed">&quot;{comment.reply}&quot;</p>
+                                              </div>
+                                          </div>
+                                      )}
+                                  </div>
+                              ))}
+                          </div>
+                      </div>
+                  )}
+               </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </>
   );
 }
 
+// --- KART TASARIMI ---
 function EventCard({ event, onClick }) {
     return (
-        <div onClick={onClick} className="bg-white p-5 rounded-xl shadow-md border-t-4 border-omu-blue cursor-pointer hover:shadow-xl hover:-translate-y-1 transition duration-300 group">
-            <h3 className="font-bold text-gray-800 text-lg mb-2 group-hover:text-omu-blue transition">{event.title}</h3>
-            <div className="flex justify-between items-end">
-                <p className="text-sm text-gray-500 flex items-center gap-1"><FaClock /> {format(new Date(event.startDate), 'd MMM HH:mm', { locale: tr })}</p>
-                <span className={`text-xs px-2 py-1 rounded text-white font-bold shadow-sm ${event.hall.includes('mavi') ? 'bg-blue-600' : event.hall.includes('pembe') ? 'bg-pink-500' : 'bg-orange-600'}`}>{event.hall.toUpperCase()}</span>
+        <div onClick={onClick} className="bg-white rounded-2xl shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border border-gray-100 overflow-hidden cursor-pointer group flex flex-col h-full">
+            <div className={`h-2 w-full ${event.hall.includes('mavi') ? 'bg-blue-600' : event.hall.includes('pembe') ? 'bg-pink-500' : 'bg-orange-600'}`}></div>
+            <div className="p-6 flex flex-col flex-grow">
+                <div className="flex justify-between items-start mb-3">
+                    <span className={`text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wider ${
+                        event.hall.includes('mavi') ? 'bg-blue-50 text-blue-700' : 
+                        event.hall.includes('pembe') ? 'bg-pink-50 text-pink-700' : 
+                        'bg-orange-50 text-orange-700'
+                    }`}>
+                        {event.hall} Salon
+                    </span>
+                    <span className="text-xs font-bold text-gray-400 flex items-center gap-1 bg-gray-50 px-2 py-1 rounded-full">
+                         <FaClock size={10} /> {format(new Date(event.startDate), 'HH:mm')}
+                    </span>
+                </div>
+                
+                <h3 className="font-bold text-gray-900 text-lg mb-2 leading-tight group-hover:text-red-700 transition-colors line-clamp-2">
+                    {event.title}
+                </h3>
+                
+                <p className="text-gray-500 text-sm line-clamp-2 mb-4 flex-grow">
+                    {event.description}
+                </p>
+
+                <div className="mt-auto pt-4 border-t border-gray-50 flex items-center gap-2 text-sm text-gray-500">
+                    <FaCalendarCheck className="text-red-500" />
+                    <span className="font-medium text-gray-700">
+                        {format(new Date(event.startDate), 'd MMMM yyyy', { locale: tr })}
+                    </span>
+                </div>
             </div>
         </div>
     )
@@ -269,9 +361,16 @@ function EventCard({ event, onClick }) {
 
 export default function TakvimPage() {
   return (
-    <div className="min-h-screen bg-omu-gray flex flex-col font-sans">
+    <div className="min-h-screen bg-gray-50 flex flex-col font-sans selection:bg-red-100 selection:text-red-900">
       <Header />
-      <Suspense fallback={<div className="flex items-center justify-center h-screen text-gray-500 font-bold">Yükleniyor...</div>}><TakvimContent /></Suspense>
+      <Suspense fallback={
+          <div className="flex flex-col items-center justify-center h-screen gap-4">
+             <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-red-600"></div>
+             <span className="text-gray-500 font-bold animate-pulse">Yükleniyor...</span>
+          </div>
+      }>
+        <TakvimContent />
+      </Suspense>
     </div>
   );
 }

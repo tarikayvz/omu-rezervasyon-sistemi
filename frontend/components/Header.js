@@ -3,15 +3,16 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { FaBars, FaTimes, FaCalendarAlt, FaHome } from 'react-icons/fa';
+import { FaBars, FaTimes, FaCalendarAlt, FaHome, FaBullhorn } from 'react-icons/fa'; // FaBullhorn eklendi
 
 export default function Header() {
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
 
-  // "Salon Rezervasyonu" buradan kaldırıldı
+  // "Duyurular" linki buraya eklendi
   const navLinks = [
     { name: 'Ana Sayfa', href: '/', icon: <FaHome /> },
+    { name: 'Duyurular', href: '/duyurular', icon: <FaBullhorn /> }, // YENİ
     { name: 'Takvim & Etkinlikler', href: '/takvim', icon: <FaCalendarAlt /> },
   ];
 
@@ -52,7 +53,7 @@ export default function Header() {
               );
             })}
             
-            {/* Sadece bu buton kaldı (Müsaitlik sayfasına gider) */}
+            {/* Rezervasyon Butonu */}
             <Link href="/musaitlik" className="ml-4 bg-omu-red text-white px-6 py-2.5 rounded-full font-bold text-sm shadow-md hover:bg-red-700 hover:shadow-lg transition transform hover:-translate-y-0.5">
               Rezervasyon Yap
             </Link>

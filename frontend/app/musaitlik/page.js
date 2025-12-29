@@ -6,8 +6,22 @@ import Header from '../../components/Header';
 import API_URL from '../../utils/api';
 import { startOfWeek, addDays, format, addWeeks, subWeeks, isSameDay, parseISO, setHours, setMinutes, isBefore, isAfter } from 'date-fns';
 import { tr } from 'date-fns/locale';
-// DÜZELTME: FaCalendarAlt buraya eklendi
-import { FaChevronLeft, FaChevronRight, FaCircle, FaCheck, FaTimes, FaCalendarCheck, FaClock, FaUser, FaBuilding, FaEnvelope, FaPhone, FaMapMarkerAlt, FaInfoCircle, FaCalendarAlt, FaHourglassHalf } from 'react-icons/fa';
+import { 
+  FaChevronLeft, 
+  FaChevronRight, 
+  FaCircle, 
+  FaCheck, 
+  FaTimes, 
+  FaCalendarCheck, 
+  FaClock, 
+  FaUser, 
+  FaBuilding, 
+  FaEnvelope, 
+  FaPhone, 
+  FaMapMarkerAlt, 
+  FaInfoCircle, 
+  FaCalendarAlt 
+} from 'react-icons/fa';
 import { toast } from 'react-toastify';
 
 export default function MusaitlikPage() {
@@ -35,8 +49,7 @@ export default function MusaitlikPage() {
   useEffect(() => {
     fetchEvents();
     setSelection(null); 
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentDate, selectedHall]); // dependency uyarısı için eklendi
+  }, [currentDate, selectedHall]);
 
   const fetchEvents = async () => {
     setLoading(true);
@@ -141,48 +154,73 @@ export default function MusaitlikPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 font-sans pb-20">
+    <div className="min-h-screen bg-gray-50 font-sans pb-20 selection:bg-red-100 selection:text-red-900">
       <Header />
       
-      <div className="container mx-auto px-4 py-8">
+      {/* --- HERO ALANI (NET VE KIRMIZI) --- */}
+      <div className="relative bg-gradient-to-r from-red-900 via-red-800 to-red-900 h-[250px] md:h-[300px] w-full flex flex-col items-center justify-center text-center px-4">
+         
+         {/* Desen */}
+         <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-20"></div>
+         
+         {/* Işık Efektleri */}
+         <div className="absolute top-0 left-1/4 w-80 h-80 bg-red-600 rounded-full mix-blend-overlay filter blur-3xl opacity-30 animate-pulse"></div>
+         <div className="absolute bottom-0 right-1/4 w-80 h-80 bg-orange-600 rounded-full mix-blend-overlay filter blur-3xl opacity-20"></div>
+
+         {/* Başlık ve İkon */}
+         <div className="relative z-10 max-w-3xl mt-2">
+             <span className="inline-flex items-center gap-2 py-1 px-3 rounded-full bg-red-800/50 border border-red-700 text-red-100 text-xs font-bold tracking-widest uppercase mb-3 backdrop-blur-sm">
+                <FaCalendarCheck /> Online Rezervasyon
+             </span>
+             <h1 className="text-3xl md:text-5xl font-extrabold text-white tracking-tight drop-shadow-lg mb-2">
+                Salon Rezervasyonu
+             </h1>
+             <p className="text-sm md:text-base text-red-100/90 font-light max-w-xl mx-auto">
+                Aşağıdaki takvimden müsait saatleri seçerek etkinliğiniz için rezervasyon talebi oluşturabilirsiniz.
+             </p>
+         </div>
+
+         {/* Alt Geçiş */}
+         <div className="absolute bottom-0 left-0 w-full h-16 bg-gradient-to-t from-gray-50 to-transparent"></div>
+      </div>
+
+      <div className="container mx-auto px-4 py-8 relative z-20 -mt-10">
         
         {/* ÜST PANEL */}
-        <div className="bg-white rounded-[2rem] shadow-xl border border-gray-100 p-6 mb-8 relative overflow-hidden">
+        <div className="bg-white rounded-[2rem] shadow-xl border border-gray-100 p-6 md:p-8 mb-8 relative overflow-hidden">
             <div className="relative z-10">
-                <div className="text-center mb-8">
-                    <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">Rezervasyon Takvimi</h1>
-                    <p className="text-gray-500 mt-2">Müsait saatleri seçip talep oluşturabilirsiniz.</p>
-                </div>
-
+                
+                {/* Salon Seçimi */}
                 <div className="flex flex-wrap justify-center gap-4 mb-8">
                     {halls.map(hall => (
                         <button 
                             key={hall.id}
                             onClick={() => setSelectedHall(hall.id)}
-                            className={`group relative px-8 py-4 rounded-2xl font-bold transition-all duration-300 overflow-hidden shadow-md hover:shadow-lg hover:-translate-y-1
+                            className={`group relative px-6 py-3 md:px-8 md:py-4 rounded-2xl font-bold transition-all duration-300 overflow-hidden shadow-md hover:shadow-lg hover:-translate-y-1 w-full md:w-auto
                             ${selectedHall === hall.id 
-                                ? `bg-gradient-to-r ${hall.color} text-white ring-4 ring-white` 
-                                : 'bg-white text-gray-600 border border-gray-200 hover:border-gray-300'}`}
+                                ? `bg-gradient-to-r ${hall.color} text-white ring-4 ring-white shadow-xl scale-105` 
+                                : 'bg-gray-100 text-gray-600 hover:bg-white hover:border-gray-300 border border-transparent'}`}
                         >
-                            <span className="relative z-10 flex items-center gap-2">
+                            <span className="relative z-10 flex items-center justify-center gap-2">
                                 <FaMapMarkerAlt /> {hall.name}
                             </span>
                         </button>
                     ))}
                 </div>
 
-                <div className="flex justify-between items-center bg-gray-50/80 backdrop-blur p-2 rounded-2xl border border-gray-200 max-w-xl mx-auto">
-                    <button onClick={() => setCurrentDate(subWeeks(currentDate, 1))} className="p-4 bg-white rounded-xl shadow-sm text-gray-600 hover:text-omu-red hover:bg-red-50 transition"><FaChevronLeft /></button>
+                {/* Tarih Gezgin */}
+                <div className="flex justify-between items-center bg-gray-50/80 backdrop-blur p-2 rounded-2xl border border-gray-200 max-w-xl mx-auto mb-6">
+                    <button onClick={() => setCurrentDate(subWeeks(currentDate, 1))} className="p-3 bg-white rounded-xl shadow-sm text-gray-600 hover:text-omu-red hover:bg-red-50 transition"><FaChevronLeft /></button>
                     <div className="text-center px-4">
-                        <span className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">HAFTA</span>
-                        <span className="text-lg font-extrabold text-gray-800">
+                        <span className="block text-[10px] md:text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">HAFTA</span>
+                        <span className="text-sm md:text-lg font-extrabold text-gray-800">
                             {format(weekDays[0], 'd MMM', { locale: tr })} — {format(weekDays[6], 'd MMM yyyy', { locale: tr })}
                         </span>
                     </div>
-                    <button onClick={() => setCurrentDate(addWeeks(currentDate, 1))} className="p-4 bg-white rounded-xl shadow-sm text-gray-600 hover:text-omu-red hover:bg-red-50 transition"><FaChevronRight /></button>
+                    <button onClick={() => setCurrentDate(addWeeks(currentDate, 1))} className="p-3 bg-white rounded-xl shadow-sm text-gray-600 hover:text-omu-red hover:bg-red-50 transition"><FaChevronRight /></button>
                 </div>
                 
-                <div className="flex justify-center gap-4 mt-6 text-xs font-bold uppercase tracking-wider text-gray-500">
+                <div className="flex justify-center gap-4 text-[10px] md:text-xs font-bold uppercase tracking-wider text-gray-500">
                     <div className="flex items-center gap-2"><FaCircle className="text-green-500"/> Müsait (Talep Edilebilir)</div>
                     <div className="flex items-center gap-2"><FaCircle className="text-red-500"/> Dolu (Onaylanmış)</div>
                 </div>
@@ -237,7 +275,7 @@ export default function MusaitlikPage() {
                                             }`}
                                     >
                                         {isSelectionStart ? <FaCheck className="animate-bounce" /> : 
-                                         status === 'empty' ? <span className="opacity-0 hover:opacity-100 text-xs">Seç</span> : 
+                                         status === 'empty' ? <span className="opacity-0 hover:opacity-100 text-xs transition-opacity">Seç</span> : 
                                          status === 'full' ? <FaInfoCircle size={14} /> : 
                                          <FaCircle size={6} />}
                                     </button>
@@ -253,10 +291,10 @@ export default function MusaitlikPage() {
         {isModalOpen && modalData && (
             <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/80 backdrop-blur-sm" onClick={() => setIsModalOpen(false)}>
                 <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto animate-fadeIn" onClick={e => e.stopPropagation()}>
-                    <div className="bg-gray-900 text-white p-8 flex justify-between items-start">
+                    <div className="bg-gray-900 text-white p-8 flex justify-between items-start sticky top-0 z-10">
                         <div className="relative z-10">
                             <h2 className="text-2xl font-bold flex items-center gap-3"><FaCalendarCheck className="text-green-400"/> Rezervasyon Talebi</h2>
-                            <p className="text-gray-400 text-sm mt-2">Bilgileri doldurun.</p>
+                            <p className="text-gray-400 text-sm mt-2">Lütfen etkinlik detaylarını eksiksiz doldurun.</p>
                         </div>
                         <button onClick={() => setIsModalOpen(false)} className="bg-white/10 p-3 rounded-full hover:bg-white/20 transition z-10"><FaTimes /></button>
                     </div>
