@@ -4,12 +4,12 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useParams, useRouter } from 'next/navigation';
 import Header from '../../../components/Header';
-import { 
-  FaCalendarAlt, 
-  FaArrowLeft, 
-  FaShareAlt, 
-  FaClock, 
-  FaChevronLeft, 
+import {
+  FaCalendarAlt,
+  FaArrowLeft,
+  FaShareAlt,
+  FaClock,
+  FaChevronLeft,
   FaChevronRight,
   FaImages
 } from 'react-icons/fa';
@@ -32,7 +32,7 @@ export default function DuyuruDetayPage() {
   const router = useRouter();
   const [announcement, setAnnouncement] = useState(null);
   const [loading, setLoading] = useState(true);
-  
+
   // --- GALERİ STATE ---
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
@@ -67,40 +67,32 @@ export default function DuyuruDetayPage() {
   if (!announcement) return <div className="min-h-screen flex items-center justify-center text-gray-500">İçerik bulunamadı.</div>;
 
   // Aktif resmi al
-  const activeImage = announcement.images && announcement.images.length > 0 
-                      ? getImageUrl(announcement.images[currentImageIndex]) 
+  const activeImage = announcement.images && announcement.images.length > 0
+                      ? getImageUrl(announcement.images[currentImageIndex])
                       : null;
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans selection:bg-red-100 selection:text-red-900">
       <Header />
-      
+
       {/* --- 1. HERO BACKGROUND (DİNAMİK BULANIK ARKA PLAN) --- */}
       <div className="relative h-[450px] w-full overflow-hidden">
-         {/* Arka plan: Eğer resim varsa o resmin bulanık hali, yoksa kırmızı gradient */}
-         {activeImage ? (
-            <div className="absolute inset-0">
-                <div 
-                    className="absolute inset-0 bg-cover bg-center blur-2xl scale-110 transition-all duration-700 ease-in-out"
-                    style={{ backgroundImage: `url('${activeImage}')` }}
-                ></div>
-                <div className="absolute inset-0 bg-black/60"></div> {/* Karartma */}
-            </div>
-         ) : (
-            <div className="absolute inset-0 bg-gradient-to-r from-red-900 via-red-800 to-red-900">
-                 <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-20"></div>
-            </div>
-         )}
-         
+         {/* Arka plan: Anasayfadaki kırmızı gradient ve desen, üzerinde bulanıklık */}
+        <div className="absolute inset-0 bg-gradient-to-r from-red-900 via-red-800 to-red-900">
+             <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-20"></div>
+        </div>
+        {/* Bulanıklık Katmanı */}
+        <div className="absolute inset-0 bg-black/30 backdrop-blur-md"></div>
+
          <div className="absolute bottom-0 left-0 w-full h-32 bg-gradient-to-t from-slate-50 to-transparent"></div>
       </div>
 
       {/* --- 2. ANA İÇERİK KARTI --- */}
       <div className="max-w-5xl mx-auto px-4 sm:px-6 relative -mt-64 pb-20">
-        
+
         {/* Geri Dön Butonu */}
-        <button 
-            onClick={() => router.back()} 
+        <button
+            onClick={() => router.back()}
             className="mb-8 flex items-center gap-2 text-white hover:text-red-100 transition-colors group bg-black/20 backdrop-blur-md px-5 py-2.5 rounded-full border border-white/10"
         >
             <FaArrowLeft className="group-hover:-translate-x-1 transition-transform"/>
@@ -108,7 +100,7 @@ export default function DuyuruDetayPage() {
         </button>
 
         <div className="bg-white rounded-3xl shadow-2xl border border-gray-100 overflow-hidden">
-            
+
             {/* Başlık ve Bilgiler */}
             <div className="p-8 md:p-12 border-b border-gray-100">
                 <div className="flex flex-wrap items-center gap-3 text-sm font-semibold mb-6">
@@ -127,23 +119,23 @@ export default function DuyuruDetayPage() {
             </div>
 
             <div className="p-8 md:p-12">
-                
+
                 {/* --- 3. SABİT BOYUTLU SİNEMATİK GALERİ --- */}
                 {announcement.images && announcement.images.length > 0 && (
                      <div className="mb-12 relative group rounded-2xl overflow-hidden shadow-lg bg-black h-[400px] md:h-[500px]">
-                        
+
                         {/* A. Arka Plan Katmanı (Bulanık Dolgu) */}
-                        <div 
+                        <div
                             className="absolute inset-0 bg-cover bg-center opacity-50 blur-xl scale-110 transition-all duration-500"
                             style={{ backgroundImage: `url('${activeImage}')` }}
                         ></div>
 
                         {/* B. Ön Plan Resmi (Kesilmeden Sığdırılmış - Contain) */}
                         <div className="relative z-10 w-full h-full flex items-center justify-center backdrop-blur-sm bg-black/10">
-                            <img 
-                                src={activeImage} 
-                                alt="Slide" 
-                                className="max-h-full max-w-full object-contain shadow-2xl transition-transform duration-500" 
+                            <img
+                                src={activeImage}
+                                alt="Slide"
+                                className="max-h-full max-w-full object-contain shadow-2xl transition-transform duration-500"
                             />
                         </div>
 
@@ -160,14 +152,14 @@ export default function DuyuruDetayPage() {
                                 {/* Alt Gösterge */}
                                 <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-20 bg-black/40 px-3 py-1.5 rounded-full backdrop-blur-md">
                                     {announcement.images.map((_, idx) => (
-                                        <button 
+                                        <button
                                             key={idx}
                                             onClick={() => setCurrentImageIndex(idx)}
                                             className={`w-2 h-2 rounded-full transition-all ${idx === currentImageIndex ? 'bg-white w-4' : 'bg-white/40 hover:bg-white/80'}`}
                                         />
                                     ))}
                                 </div>
-                                
+
                                 <div className="absolute top-4 right-4 bg-black/60 text-white text-xs font-bold px-3 py-1.5 rounded-lg backdrop-blur-md z-20 flex items-center gap-2">
                                     <FaImages /> {currentImageIndex + 1} / {announcement.images.length}
                                 </div>
@@ -194,7 +186,7 @@ export default function DuyuruDetayPage() {
                 </div>
 
                 <button className="flex items-center gap-2 px-6 py-3 bg-white border border-gray-200 rounded-xl hover:bg-red-50 hover:border-red-200 hover:text-red-600 text-gray-700 transition-all shadow-sm font-semibold text-sm group">
-                    <FaShareAlt className="text-gray-400 group-hover:text-red-500 transition-colors"/> 
+                    <FaShareAlt className="text-gray-400 group-hover:text-red-500 transition-colors"/>
                     Paylaş
                 </button>
             </div>
