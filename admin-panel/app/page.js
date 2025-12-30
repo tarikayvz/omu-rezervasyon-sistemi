@@ -181,7 +181,13 @@ export default function AdminDashboard() {
                 <button onClick={closeModal} className="bg-gray-100 p-2 rounded-full hover:bg-gray-200 transition text-gray-500 hover:text-gray-900">✕</button>
             </div>
             <div className="p-8 space-y-6">
-                <div><p className="text-xs font-bold text-gray-400 uppercase mb-2">Açıklama</p><p className="text-gray-600 leading-relaxed bg-gray-50 p-4 rounded-2xl border border-gray-100 text-sm">{selectedEvent.description}</p></div>
+                <div>
+                    <p className="text-xs font-bold text-gray-400 uppercase mb-2">Açıklama</p>
+                    {/* GÜNCELLEME: Açıklama kutusu kaydırılabilir yapıldı */}
+                    <div className="text-gray-600 leading-relaxed bg-gray-50 p-4 rounded-2xl border border-gray-100 text-sm max-h-40 overflow-y-auto custom-scrollbar">
+                        {selectedEvent.description}
+                    </div>
+                </div>
                 <div className="grid grid-cols-2 gap-4 pt-4">
                     <button onClick={() => handleDelete(null, selectedEvent.id)} className="w-full py-3 bg-red-50 text-red-600 font-bold rounded-xl hover:bg-red-100 transition">Sil / Reddet</button>
                     {!selectedEvent.isApproved && (
