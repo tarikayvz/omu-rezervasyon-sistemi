@@ -130,6 +130,8 @@ export default function Home() {
   const [videoUrl, setVideoUrl] = useState("https://www.youtube.com/embed/LXb3EKWsInQ?si=7y-s4g-s-4g-s-4g");
 
   useEffect(() => {
+    let isMounted = true; 
+
     const fetchData = async () => {
       try {
         const [resAnn, resEvt] = await Promise.all([
@@ -137,33 +139,40 @@ export default function Home() {
           axios.get(`${API_URL}/events`),
         ])
         
-        const sortedAnnouncements = resAnn.data.sort((a, b) => new Date(b.date) - new Date(a.date));
-        setAnnouncements(sortedAnnouncements)
-        
-        setUpcomingEvents(
-          resEvt.data
-            .filter((e) => e.isApproved && new Date(e.endDate) >= new Date())
-            .sort((a, b) => new Date(a.startDate) - new Date(b.startDate))
-            .slice(0, 5),
-        )
+        if (isMounted) {
+            const sortedAnnouncements = resAnn.data.sort((a, b) => new Date(b.date) - new Date(a.date));
+            setAnnouncements(sortedAnnouncements)
+            
+            setUpcomingEvents(
+              resEvt.data
+                .filter((e) => e.isApproved && new Date(e.endDate) >= new Date())
+                .sort((a, b) => new Date(a.startDate) - new Date(b.startDate))
+                .slice(0, 5),
+            )
+        }
       } catch (error) {
         console.error("Veri Çekme Hatası:", error)
       }
     }
     fetchData()
 
-    const savedVideo = localStorage.getItem('homeVideoUrl');
-    if (savedVideo) {
-        let embedUrl = savedVideo;
-        if (savedVideo.includes("watch?v=")) {
-            const videoId = savedVideo.split("v=")[1].split("&")[0];
-            embedUrl = `https://www.youtube.com/embed/${videoId}`;
-        } else if (savedVideo.includes("youtu.be/")) {
-            const videoId = savedVideo.split("youtu.be/")[1];
-            embedUrl = `https://www.youtube.com/embed/${videoId}`;
+    // Video URL çekme (ESLint hatası olmadan)
+    if (typeof window !== 'undefined') {
+        const savedVideo = localStorage.getItem('homeVideoUrl');
+        if (savedVideo && isMounted) {
+            let embedUrl = savedVideo;
+            if (savedVideo.includes("watch?v=")) {
+                const videoId = savedVideo.split("v=")[1].split("&")[0];
+                embedUrl = `https://www.youtube.com/embed/${videoId}`;
+            } else if (savedVideo.includes("youtu.be/")) {
+                const videoId = savedVideo.split("youtu.be/")[1];
+                embedUrl = `https://www.youtube.com/embed/${videoId}`;
+            }
+            setVideoUrl(embedUrl);
         }
-        setVideoUrl(embedUrl);
     }
+
+    return () => { isMounted = false; };
   }, [])
 
   return (
@@ -192,11 +201,11 @@ export default function Home() {
 
       <main className="container mx-auto max-w-7xl px-4 sm:px-6 py-6 flex-grow overflow-x-hidden -mt-8 relative z-20">
         
-        {/* items-stretch: Sütunların yüksekliğini eşitler */}
+        {/* --- GRID YAPISI (EŞİTLEME İÇİN 'items-stretch' KULLANILDI) --- */}
         <div className="grid lg:grid-cols-12 gap-8 md:gap-10 mb-16 items-stretch">
           
-          {/* SOL TARAF - DUYURULAR */}
-          <div className="lg:col-span-8 space-y-8 overflow-hidden flex flex-col">
+          {/* SOL TARAF (8 KOLON) */}
+          <div className="lg:col-span-8 flex flex-col gap-8">
             <section className="overflow-hidden">
               <div className="flex justify-between items-end mb-4 pl-1 border-b border-gray-200 pb-2">
                 <div className="flex items-center gap-2">
@@ -221,71 +230,71 @@ export default function Home() {
                   Son Eklenenler
                 </h3>
                 
-                {/* --- DEĞİŞİKLİK BURADA: flex-grow eklendi, swiper ayarları güncellendi --- */}
+                {/* --- 3 TANE GÖZÜKMESİ İÇİN GÜNCELLENDİ --- */}
                 <div className="flex-grow">
                     <Swiper
-                        modules={[Pagination]}
-                        spaceBetween={20}
-                        slidesPerView={1}
-                        // Mobilde 2, Masaüstünde 3. 'auto' yerine sayı vererek taşmayı engelledik.
-                        breakpoints={{
-                            640: { slidesPerView: 2, spaceBetween: 20 },
-                            1024: { slidesPerView: 3, spaceBetween: 20 },
-                        }}
-                        pagination={{ clickable: true }}
-                        className="pb-10 !overflow-visible h-full"
-                        style={{ paddingBottom: '40px' }}
+                      modules={[Pagination]}
+                      spaceBetween={10} // Mobilde daha az boşluk
+                      slidesPerView={3} // MOBİLDE 3 TANE
+                      breakpoints={{
+                        640: { slidesPerView: 3, spaceBetween: 15 },
+                        1024: { slidesPerView: 3, spaceBetween: 20 },
+                      }}
+                      pagination={{ clickable: true }}
+                      className="pb-10 !overflow-visible h-full"
+                      style={{ paddingBottom: '40px' }}
                     >
-                    {announcements.map((ann) => {
+                      {announcements.map((ann) => {
                         const rawImage = ann.image || ann.images;
                         const imgUrl = getImageUrl(rawImage);
                         return (
-                        // h-auto: içeriğe göre esner, sabit yükseklik verilmezse bozulmaz
-                        <SwiperSlide key={ann.id} className="h-auto"> 
-                        {/* flex-col: Dikey düzen (Resim üstte, yazı altta) - 3 tane sığdırmak için şart */}
-                        <Link
+                        <SwiperSlide key={ann.id} className="h-auto">
+                          {/* flex-col: Dikey düzen (Mobilde sığması için) */}
+                          <Link
                             href={`/duyuru/${ann.id}`}
-                            className="flex flex-col bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-300 h-full overflow-hidden group"
-                        >
-                            {/* RESİM ALANI: h-48 Sabit Yükseklik -> Mobilde kaybolmayı engeller */}
-                            <div className="h-48 w-full bg-gray-100 relative shrink-0">
-                                <img
-                                    src={imgUrl}
-                                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                                    alt={ann.title}
-                                    onError={(e) => { e.target.src = "https://placehold.co/600x400?text=Resim+Yok" }}
-                                />
-                                <div className="absolute top-2 left-2 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-lg text-[10px] font-bold text-gray-600 flex items-center gap-1 shadow-sm z-10">
-                                    <FaCalendarAlt size={10} className="text-red-500"/> 
-                                    {new Date(ann.date).toLocaleDateString("tr-TR")}
-                                </div>
+                            className="flex flex-col bg-white rounded-xl md:rounded-2xl shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-300 h-full overflow-hidden group"
+                          >
+                            {/* Resim Alanı: Mobilde daha kısa (h-20), Masaüstünde (h-40) */}
+                            <div className="h-20 md:h-40 w-full bg-gray-100 relative shrink-0">
+                               <img
+                                 src={imgUrl}
+                                 className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                                 alt={ann.title}
+                                 onError={(e) => { e.target.src = "https://placehold.co/600x400?text=Resim+Yok" }}
+                               />
+                               {/* Mobilde tarih gizlendi veya çok küçültüldü */}
+                               <div className="hidden md:flex absolute top-2 left-2 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-lg text-[10px] font-bold text-gray-600 items-center gap-1 shadow-sm z-10">
+                                  <FaCalendarAlt size={10} className="text-red-500"/> 
+                                  {new Date(ann.date).toLocaleDateString("tr-TR")}
+                               </div>
                             </div>
                             
-                            <div className="p-4 flex flex-col flex-grow justify-between">
-                                <h4 className="font-bold text-gray-900 text-sm leading-snug line-clamp-2 group-hover:text-[#E30613] transition-colors">
-                                    {ann.title}
-                                </h4>
-                                <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-50">
-                                    <span className="text-[10px] text-blue-600 font-bold flex items-center gap-1 group-hover:gap-2 transition-all">
-                                        Oku <FaArrowRight size={8} />
-                                    </span>
-                                </div>
+                            <div className="p-2 md:p-4 flex flex-col flex-grow justify-between">
+                              {/* Font boyutu mobilde küçültüldü */}
+                              <h4 className="font-bold text-gray-900 text-[10px] md:text-sm leading-snug line-clamp-2 group-hover:text-[#E30613] transition-colors">
+                                  {ann.title}
+                              </h4>
+                              <div className="flex items-center justify-between mt-1 md:mt-2 pt-1 md:pt-2 border-t border-gray-50">
+                                  <span className="text-[8px] md:text-[10px] font-bold text-gray-400 uppercase tracking-wide hidden md:inline">Duyuru</span>
+                                  <span className="text-[9px] md:text-[10px] text-blue-600 font-bold flex items-center gap-1 group-hover:gap-2 transition-all">
+                                    Oku <FaArrowRight size={8} />
+                                  </span>
+                              </div>
                             </div>
-                        </Link>
+                          </Link>
                         </SwiperSlide>
-                        )})}
+                      )})}
                     </Swiper>
                 </div>
               </section>
             )}
           </div>
 
-          {/* SAĞ TARAF - YAN MENÜ */}
-          {/* h-full ve flex flex-col ile kapsayıcının tam boy olmasını sağladık */}
-          <div className="lg:col-span-4 space-y-6 flex flex-col h-full">
+          {/* SAĞ TARAF - YAN MENÜ (4 KOLON) */}
+          <div className="lg:col-span-4 flex flex-col gap-6 h-full">
             
             {/* 1. KUTU: YAKLAŞAN ETKİNLİKLER */}
-            <div className="bg-white rounded-[24px] shadow-lg border border-gray-100 p-5 relative overflow-hidden shrink-0">
+            <div className="bg-white rounded-[24px] shadow-lg border border-gray-100 p-5 relative overflow-hidden flex-shrink-0">
               <h2 className="text-lg font-extrabold text-gray-900 mb-4 flex items-center gap-2 relative z-10">
                 <span className="bg-blue-100 text-blue-600 p-1.5 rounded-lg">
                   <FaCalendarCheck size={14} />
@@ -330,7 +339,7 @@ export default function Home() {
             </div>
             
             {/* 2. KUTU: DİNAMİK TANITIM VİDEOSU */}
-            {/* flex-1: Kalan boşluğu doldurur, h-full: Yüksekliği ebeveynine eşitler */}
+            {/* flex-1 (kalan boşluğu doldur) ve h-full (yüksekliği eşitle) */}
             <div className="bg-white rounded-[24px] shadow-lg border border-gray-100 p-5 flex flex-col flex-1 h-full">
                <h2 className="text-lg font-extrabold text-gray-900 mb-4 flex items-center gap-2">
                   <span className="bg-red-100 text-red-600 p-1.5 rounded-lg">
