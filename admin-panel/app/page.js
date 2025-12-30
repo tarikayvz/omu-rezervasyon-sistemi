@@ -2,13 +2,11 @@
 
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-// GEREKSİZ İKONLAR SİLİNDİ
-import { FaCalendarAlt, FaSignOutAlt, FaSearch, FaFileExcel, FaClock, FaTimes } from 'react-icons/fa';
+import { FaSignOutAlt, FaSearch, FaFileExcel, FaCalendarAlt } from 'react-icons/fa'; // Gerekli ikonlar
 import { useRouter } from 'next/navigation';
 import DashboardStats from '../components/DashboardStats';
 import * as XLSX from 'xlsx';
 import { toast } from 'react-toastify';
-// Dosya yolu düzeltildi (utils bir üst klasörde)
 import API_URL from '../utils/api';
 
 export default function AdminDashboard() {
@@ -23,7 +21,7 @@ export default function AdminDashboard() {
     const token = localStorage.getItem('adminToken');
     if (!token) router.push('/login');
     else fetchEvents();
-  }, []); // router bağımlılığı kaldırıldı (loop olmasın diye)
+  }, []);
 
   useEffect(() => {
     if (!searchTerm) {
@@ -84,13 +82,17 @@ export default function AdminDashboard() {
   return (
     <div className="min-h-screen bg-gray-50 font-sans">
       <header className="bg-white border-b border-gray-200 sticky top-0 z-40 px-6 py-4 flex justify-between items-center shadow-sm">
-        <h1 className="text-xl font-extrabold text-gray-800 tracking-tight flex items-center gap-2">
+        <h1 className="text-xl font-extrabold text-gray-800 tracking-tight flex items-center gap-2 cursor-pointer" onClick={() => router.push('/admin')}>
             <span className="w-8 h-8 bg-omu-red text-white rounded-lg flex items-center justify-center">O</span>
             OMÜ Admin
         </h1>
         <div className="flex gap-3">
             <button onClick={() => router.push('/duyurular')} className="px-4 py-2 bg-gray-100 text-gray-600 rounded-lg font-bold text-sm hover:bg-gray-200 transition">Duyurular</button>
             <button onClick={() => router.push('/yorumlar')} className="px-4 py-2 bg-gray-100 text-gray-600 rounded-lg font-bold text-sm hover:bg-gray-200 transition">Yorumlar</button>
+            
+            {/* YENİ EKLENEN BUTON */}
+            <button onClick={() => router.push('/video-yonetimi')} className="px-4 py-2 bg-gray-100 text-gray-600 rounded-lg font-bold text-sm hover:bg-gray-200 transition">Video Yönetimi</button>
+            
             <button onClick={handleLogout} className="px-4 py-2 bg-red-50 text-red-600 rounded-lg font-bold text-sm hover:bg-red-100 transition flex items-center gap-2"><FaSignOutAlt /> Çıkış</button>
         </div>
       </header>
@@ -174,9 +176,9 @@ export default function AdminDashboard() {
             <div className="bg-white p-8 border-b border-gray-100 flex justify-between items-start">
                 <div>
                     <h2 className="text-2xl font-bold text-gray-900">{selectedEvent.title}</h2>
-                    <p className="text-sm text-gray-500 mt-1 flex items-center gap-2"><FaClock className="text-blue-500"/> {new Date(selectedEvent.startDate).toLocaleString('tr-TR')}</p>
+                    <p className="text-sm text-gray-500 mt-1 flex items-center gap-2"><FaCalendarAlt className="text-blue-500"/> {new Date(selectedEvent.startDate).toLocaleString('tr-TR')}</p>
                 </div>
-                <button onClick={closeModal} className="bg-gray-100 p-2 rounded-full hover:bg-gray-200 transition"><FaTimes /></button>
+                <button onClick={closeModal} className="bg-gray-100 p-2 rounded-full hover:bg-gray-200 transition text-gray-500 hover:text-gray-900">✕</button>
             </div>
             <div className="p-8 space-y-6">
                 <div><p className="text-xs font-bold text-gray-400 uppercase mb-2">Açıklama</p><p className="text-gray-600 leading-relaxed bg-gray-50 p-4 rounded-2xl border border-gray-100 text-sm">{selectedEvent.description}</p></div>

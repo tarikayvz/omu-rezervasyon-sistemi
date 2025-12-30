@@ -11,7 +11,7 @@ import {
   FaArrowRight, 
   FaClock, 
   FaCalendarCheck,
-  FaPlayCircle // YENİ: Video ikonu eklendi
+  FaPlayCircle 
 } from "react-icons/fa"
 
 // --- AYARLAR ---
@@ -127,6 +127,8 @@ function MainNewsSlider({ announcements }) {
 export default function Home() {
   const [announcements, setAnnouncements] = useState([])
   const [upcomingEvents, setUpcomingEvents] = useState([])
+  // VİDEO URL STATE'İ (Varsayılan video eklendi)
+  const [videoUrl, setVideoUrl] = useState("https://www.youtube.com/embed/LXb3EKWsInQ?si=7y-s4g-s-4g-s-4g");
 
   useEffect(() => {
     const fetchData = async () => {
@@ -151,6 +153,21 @@ export default function Home() {
       }
     }
     fetchData()
+
+    // --- VİDEOYU ÇEKME İŞLEMİ ---
+    const savedVideo = localStorage.getItem('homeVideoUrl');
+    if (savedVideo) {
+        let embedUrl = savedVideo;
+        // YouTube linkini embed formatına çevirme
+        if (savedVideo.includes("watch?v=")) {
+            const videoId = savedVideo.split("v=")[1].split("&")[0];
+            embedUrl = `https://www.youtube.com/embed/${videoId}`;
+        } else if (savedVideo.includes("youtu.be/")) {
+            const videoId = savedVideo.split("youtu.be/")[1];
+            embedUrl = `https://www.youtube.com/embed/${videoId}`;
+        }
+        setVideoUrl(embedUrl);
+    }
   }, [])
 
   return (
@@ -299,22 +316,21 @@ export default function Home() {
               </Link>
             </div>
             
-            {/* 2. KUTU: TANITIM VİDEOSU (YENİ EKLENEN) */}
+            {/* 2. KUTU: DİNAMİK TANITIM VİDEOSU */}
             <div className="bg-white rounded-[24px] shadow-lg border border-gray-100 p-5">
                <h2 className="text-lg font-extrabold text-gray-900 mb-4 flex items-center gap-2">
                   <span className="bg-red-100 text-red-600 p-1.5 rounded-lg">
                      <FaPlayCircle size={14} />
                   </span>
-                  Fakülteyi Keşfet
+                  Salonlarımızı Keşfet
                </h2>
                
                <div className="relative w-full aspect-video rounded-xl overflow-hidden shadow-sm bg-black group cursor-pointer">
-                  {/* ÖRNEK VİDEO IFRAME - URL'yi kendi videonla değiştirebilirsin */}
                   <iframe 
                     width="100%" 
                     height="100%" 
-                    src="https://www.youtube.com/embed/LXb3EKWsInQ?si=7y-s4g-s-4g-s-4g" // BURAYA KENDİ VİDEO URL'Nİ YAZ
-                    title="OMÜ Mühendislik Tanıtım" 
+                    src={videoUrl} // State'ten gelen dinamik URL
+                    title="Salon Tanıtım" 
                     frameBorder="0" 
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
                     allowFullScreen
