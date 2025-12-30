@@ -127,7 +127,6 @@ function MainNewsSlider({ announcements }) {
 export default function Home() {
   const [announcements, setAnnouncements] = useState([])
   const [upcomingEvents, setUpcomingEvents] = useState([])
-  // VİDEO URL STATE'İ (Varsayılan video eklendi)
   const [videoUrl, setVideoUrl] = useState("https://www.youtube.com/embed/LXb3EKWsInQ?si=7y-s4g-s-4g-s-4g");
 
   useEffect(() => {
@@ -138,7 +137,6 @@ export default function Home() {
           axios.get(`${API_URL}/events`),
         ])
         
-        // Duyuruları tarihe göre sırala (Yeni -> Eski)
         const sortedAnnouncements = resAnn.data.sort((a, b) => new Date(b.date) - new Date(a.date));
         setAnnouncements(sortedAnnouncements)
         
@@ -154,11 +152,9 @@ export default function Home() {
     }
     fetchData()
 
-    // --- VİDEOYU ÇEKME İŞLEMİ ---
     const savedVideo = localStorage.getItem('homeVideoUrl');
     if (savedVideo) {
         let embedUrl = savedVideo;
-        // YouTube linkini embed formatına çevirme
         if (savedVideo.includes("watch?v=")) {
             const videoId = savedVideo.split("v=")[1].split("&")[0];
             embedUrl = `https://www.youtube.com/embed/${videoId}`;
@@ -195,10 +191,11 @@ export default function Home() {
       </div>
 
       <main className="container mx-auto max-w-7xl px-4 sm:px-6 py-6 flex-grow overflow-x-hidden -mt-8 relative z-20">
-        {/* 'items-stretch' ekledik: Sağ ve Sol sütunlar eşit boyda olacak */}
+        
+        {/* --- GRID YAPISI --- */}
         <div className="grid lg:grid-cols-12 gap-8 md:gap-10 mb-16 items-stretch">
           
-          {/* SOL TARAF - DUYURULAR (8 KOLON) */}
+          {/* SOL TARAF (8 KOLON) */}
           <div className="lg:col-span-8 flex flex-col gap-8">
             <section className="overflow-hidden">
               <div className="flex justify-between items-end mb-4 pl-1 border-b border-gray-200 pb-2">
@@ -217,21 +214,22 @@ export default function Home() {
               <MainNewsSlider announcements={announcements} />
             </section>
 
-            {/* DİĞER DUYURULAR LİSTESİ */}
+            {/* SON EKLENENLER LİSTESİ */}
             {announcements.length > 0 && (
               <section className="overflow-hidden max-w-full flex-grow flex flex-col">
                 <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3 pl-1">
                   Son Eklenenler
                 </h3>
-                {/* 3'LÜ SLIDER AYARI */}
+                
+                {/* --- SWIPER AYARLARI GÜNCELLENDİ (MOBİL İÇİN 2) --- */}
                 <div className="flex-grow">
                     <Swiper
                       modules={[Pagination]}
-                      spaceBetween={20}
-                      slidesPerView={1}
+                      spaceBetween={12} // Mobilde aralık daha dar
+                      slidesPerView={2} // MOBİLDE 2 TANE GÖZÜKSÜN (İSTEĞİNİZ ÜZERİNE)
                       breakpoints={{
-                        640: { slidesPerView: 2 },
-                        1024: { slidesPerView: 3 }, // 3 Tane Yan Yana
+                        640: { slidesPerView: 2, spaceBetween: 20 }, // Tablette 2 tane
+                        1024: { slidesPerView: 3, spaceBetween: 20 }, // Masaüstünde 3 tane
                       }}
                       pagination={{ clickable: true }}
                       className="pb-10 !overflow-visible h-full"
@@ -246,24 +244,28 @@ export default function Home() {
                             href={`/duyuru/${ann.id}`}
                             className="flex flex-col bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-300 h-full overflow-hidden group"
                           >
-                            <div className="h-40 w-full bg-gray-100 overflow-hidden relative flex-shrink-0">
+                            {/* Resim Alanı */}
+                            <div className="h-28 md:h-40 w-full bg-gray-100 overflow-hidden relative flex-shrink-0">
                                <img
                                  src={imgUrl}
                                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                                  alt={ann.title}
                                  onError={(e) => { e.target.src = "https://placehold.co/600x400?text=Resim+Yok" }}
                                />
-                               <div className="absolute top-2 left-2 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-lg text-[10px] font-bold text-gray-600 flex items-center gap-1 shadow-sm">
+                               <div className="absolute top-2 left-2 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-lg text-[8px] md:text-[10px] font-bold text-gray-600 flex items-center gap-1 shadow-sm">
                                   <FaCalendarAlt size={10} className="text-red-500"/> 
                                   {new Date(ann.date).toLocaleDateString("tr-TR")}
                                </div>
                             </div>
                             
-                            <div className="p-4 flex flex-col flex-grow justify-between">
-                              <h4 className="font-bold text-gray-900 text-sm leading-snug line-clamp-2 group-hover:text-[#E30613] transition-colors">{ann.title}</h4>
+                            {/* İçerik Alanı */}
+                            <div className="p-3 md:p-4 flex flex-col flex-grow justify-between">
+                              <h4 className="font-bold text-gray-900 text-xs md:text-sm leading-snug line-clamp-2 group-hover:text-[#E30613] transition-colors">
+                                  {ann.title}
+                              </h4>
                               <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-50">
-                                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">Duyuru</span>
-                                  <span className="text-[10px] text-blue-600 font-bold flex items-center gap-1 group-hover:gap-2 transition-all">
+                                  <span className="text-[9px] md:text-[10px] font-bold text-gray-400 uppercase tracking-wide">Duyuru</span>
+                                  <span className="text-[9px] md:text-[10px] text-blue-600 font-bold flex items-center gap-1 group-hover:gap-2 transition-all">
                                     Oku <FaArrowRight size={8} />
                                   </span>
                               </div>
@@ -278,10 +280,9 @@ export default function Home() {
           </div>
 
           {/* SAĞ TARAF - YAN MENÜ (4 KOLON) */}
-          {/* h-full ve flex-col ekledik */}
           <div className="lg:col-span-4 flex flex-col gap-6 h-full">
             
-            {/* 1. KUTU: YAKLAŞAN ETKİNLİKLER */}
+            {/* 1. YAKLAŞAN ETKİNLİKLER */}
             <div className="bg-white rounded-[24px] shadow-lg border border-gray-100 p-5 relative overflow-hidden flex-shrink-0">
               <h2 className="text-lg font-extrabold text-gray-900 mb-4 flex items-center gap-2 relative z-10">
                 <span className="bg-blue-100 text-blue-600 p-1.5 rounded-lg">
@@ -326,8 +327,7 @@ export default function Home() {
               </Link>
             </div>
             
-            {/* 2. KUTU: DİNAMİK TANITIM VİDEOSU */}
-            {/* flex-1 (kalan boşluğu doldur) ve h-full (yüksekliği eşitle) */}
+            {/* 2. DİNAMİK TANITIM VİDEOSU */}
             <div className="bg-white rounded-[24px] shadow-lg border border-gray-100 p-5 flex flex-col flex-1 h-full">
                <h2 className="text-lg font-extrabold text-gray-900 mb-4 flex items-center gap-2">
                   <span className="bg-red-100 text-red-600 p-1.5 rounded-lg">
