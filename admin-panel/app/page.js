@@ -89,10 +89,7 @@ export default function AdminDashboard() {
         <div className="flex gap-3">
             <button onClick={() => router.push('/duyurular')} className="px-4 py-2 bg-gray-100 text-gray-600 rounded-lg font-bold text-sm hover:bg-gray-200 transition">Duyurular</button>
             <button onClick={() => router.push('/yorumlar')} className="px-4 py-2 bg-gray-100 text-gray-600 rounded-lg font-bold text-sm hover:bg-gray-200 transition">Yorumlar</button>
-            
-            {/* YENİ EKLENEN BUTON */}
             <button onClick={() => router.push('/video-yonetimi')} className="px-4 py-2 bg-gray-100 text-gray-600 rounded-lg font-bold text-sm hover:bg-gray-200 transition">Video Yönetimi</button>
-            
             <button onClick={handleLogout} className="px-4 py-2 bg-red-50 text-red-600 rounded-lg font-bold text-sm hover:bg-red-100 transition flex items-center gap-2"><FaSignOutAlt /> Çıkış</button>
         </div>
       </header>
@@ -183,8 +180,8 @@ export default function AdminDashboard() {
             <div className="p-8 space-y-6">
                 <div>
                     <p className="text-xs font-bold text-gray-400 uppercase mb-2">Açıklama</p>
-                    {/* GÜNCELLEME: Açıklama kutusu kaydırılabilir yapıldı */}
-                    <div className="text-gray-600 leading-relaxed bg-gray-50 p-4 rounded-2xl border border-gray-100 text-sm max-h-40 overflow-y-auto custom-scrollbar">
+                    {/* GÜNCELLEME: break-words ve whitespace-pre-wrap eklendi */}
+                    <div className="text-gray-600 leading-relaxed bg-gray-50 p-4 rounded-2xl border border-gray-100 text-sm max-h-40 overflow-y-auto custom-scrollbar break-words whitespace-pre-wrap">
                         {selectedEvent.description}
                     </div>
                 </div>
