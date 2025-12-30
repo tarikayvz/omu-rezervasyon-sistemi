@@ -127,7 +127,6 @@ function MainNewsSlider({ announcements }) {
 export default function Home() {
   const [announcements, setAnnouncements] = useState([])
   const [upcomingEvents, setUpcomingEvents] = useState([])
-  // VİDEO URL STATE'İ (Varsayılan video eklendi)
   const [videoUrl, setVideoUrl] = useState("https://www.youtube.com/embed/LXb3EKWsInQ?si=7y-s4g-s-4g-s-4g");
 
   useEffect(() => {
@@ -138,7 +137,6 @@ export default function Home() {
           axios.get(`${API_URL}/events`),
         ])
         
-        // Duyuruları tarihe göre sırala (Yeni -> Eski)
         const sortedAnnouncements = resAnn.data.sort((a, b) => new Date(b.date) - new Date(a.date));
         setAnnouncements(sortedAnnouncements)
         
@@ -154,11 +152,9 @@ export default function Home() {
     }
     fetchData()
 
-    // --- VİDEOYU ÇEKME İŞLEMİ ---
     const savedVideo = localStorage.getItem('homeVideoUrl');
     if (savedVideo) {
         let embedUrl = savedVideo;
-        // YouTube linkini embed formatına çevirme
         if (savedVideo.includes("watch?v=")) {
             const videoId = savedVideo.split("v=")[1].split("&")[0];
             embedUrl = `https://www.youtube.com/embed/${videoId}`;
@@ -195,11 +191,10 @@ export default function Home() {
       </div>
 
       <main className="container mx-auto max-w-7xl px-4 sm:px-6 py-6 flex-grow overflow-x-hidden -mt-8 relative z-20">
-        {/* 'items-stretch' ekledik: Sağ ve Sol sütunlar eşit boyda olacak */}
-        <div className="grid lg:grid-cols-12 gap-8 md:gap-10 mb-16 items-stretch">
+        <div className="grid lg:grid-cols-12 gap-8 md:gap-10 mb-16">
           
-          {/* SOL TARAF - DUYURULAR (8 KOLON) */}
-          <div className="lg:col-span-8 flex flex-col gap-8">
+          {/* SOL TARAF - DUYURULAR */}
+          <div className="lg:col-span-8 space-y-8 overflow-hidden">
             <section className="overflow-hidden">
               <div className="flex justify-between items-end mb-4 pl-1 border-b border-gray-200 pb-2">
                 <div className="flex items-center gap-2">
@@ -219,70 +214,72 @@ export default function Home() {
 
             {/* DİĞER DUYURULAR LİSTESİ */}
             {announcements.length > 0 && (
-              <section className="overflow-hidden max-w-full flex-grow flex flex-col">
+              <section className="overflow-hidden max-w-full">
                 <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3 pl-1">
                   Son Eklenenler
                 </h3>
-                {/* 3'LÜ SLIDER AYARI */}
-                <div className="flex-grow">
-                    <Swiper
-                      modules={[Pagination]}
-                      spaceBetween={20}
-                      slidesPerView={1}
-                      breakpoints={{
-                        640: { slidesPerView: 2 },
-                        1024: { slidesPerView: 3 }, // 3 Tane Yan Yana
-                      }}
-                      pagination={{ clickable: true }}
-                      className="pb-10 !overflow-visible h-full"
-                      style={{ paddingBottom: '40px' }}
-                    >
-                      {announcements.map((ann) => {
-                        const rawImage = ann.image || ann.images;
-                        const imgUrl = getImageUrl(rawImage);
-                        return (
-                        <SwiperSlide key={ann.id} className="h-auto">
-                          <Link
-                            href={`/duyuru/${ann.id}`}
-                            className="flex flex-col bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-300 h-full overflow-hidden group"
-                          >
-                            <div className="h-40 w-full bg-gray-100 overflow-hidden relative flex-shrink-0">
-                               <img
-                                 src={imgUrl}
-                                 className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                                 alt={ann.title}
-                                 onError={(e) => { e.target.src = "https://placehold.co/600x400?text=Resim+Yok" }}
-                               />
-                               <div className="absolute top-2 left-2 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-lg text-[10px] font-bold text-gray-600 flex items-center gap-1 shadow-sm">
-                                  <FaCalendarAlt size={10} className="text-red-500"/> 
-                                  {new Date(ann.date).toLocaleDateString("tr-TR")}
-                               </div>
-                            </div>
-                            
-                            <div className="p-4 flex flex-col flex-grow justify-between">
-                              <h4 className="font-bold text-gray-900 text-sm leading-snug line-clamp-2 group-hover:text-[#E30613] transition-colors">{ann.title}</h4>
-                              <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-50">
-                                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">Duyuru</span>
-                                  <span className="text-[10px] text-blue-600 font-bold flex items-center gap-1 group-hover:gap-2 transition-all">
-                                    Oku <FaArrowRight size={8} />
-                                  </span>
-                              </div>
-                            </div>
-                          </Link>
-                        </SwiperSlide>
-                      )})}
-                    </Swiper>
-                </div>
+                {/* --- BURASI DÜZELTİLDİ: slidesPerView ayarları güncellendi ve !w-full kaldırıldı --- */}
+                <Swiper
+                  modules={[Pagination]}
+                  spaceBetween={20} // Kartlar arası boşluk
+                  slidesPerView={1} // Mobilde 1 tane
+                  breakpoints={{
+                    640: { slidesPerView: 2 }, // Tablette 2 tane
+                    1024: { slidesPerView: 3 }, // Masaüstünde 3 tane
+                  }}
+                  pagination={{ clickable: true }}
+                  className="pb-10 !overflow-visible" // Alt nokta (pagination) için yer açtık
+                  style={{ paddingBottom: '40px' }} // Pagination'ın kesilmemesi için padding
+                >
+                  {announcements.map((ann) => {
+                    const rawImage = ann.image || ann.images;
+                    const imgUrl = getImageUrl(rawImage);
+                    return (
+                    <SwiperSlide key={ann.id}> {/* !w-full kaldırıldı */}
+                      <Link
+                        href={`/duyuru/${ann.id}`}
+                        className="flex flex-col bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-300 h-[280px] overflow-hidden group"
+                      >
+                        {/* Resim Alanı */}
+                        <div className="h-40 w-full bg-gray-100 overflow-hidden relative">
+                           <img
+                             src={imgUrl}
+                             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                             alt={ann.title}
+                             onError={(e) => { e.target.src = "https://placehold.co/600x400?text=Resim+Yok" }}
+                           />
+                           {/* Tarih Etiketi */}
+                           <div className="absolute top-2 left-2 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-lg text-[10px] font-bold text-gray-600 flex items-center gap-1 shadow-sm">
+                              <FaCalendarAlt size={10} className="text-red-500"/> 
+                              {new Date(ann.date).toLocaleDateString("tr-TR")}
+                           </div>
+                        </div>
+                        
+                        {/* İçerik Alanı */}
+                        <div className="p-4 flex flex-col flex-grow justify-between">
+                          <h4 className="font-bold text-gray-900 text-sm leading-snug line-clamp-2 group-hover:text-[#E30613] transition-colors">
+                              {ann.title}
+                          </h4>
+                          <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-50">
+                              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">Duyuru</span>
+                              <span className="text-[10px] text-blue-600 font-bold flex items-center gap-1 group-hover:gap-2 transition-all">
+                                Oku <FaArrowRight size={8} />
+                              </span>
+                          </div>
+                        </div>
+                      </Link>
+                    </SwiperSlide>
+                  )})}
+                </Swiper>
               </section>
             )}
           </div>
 
-          {/* SAĞ TARAF - YAN MENÜ (4 KOLON) */}
-          {/* h-full ve flex-col ekledik */}
-          <div className="lg:col-span-4 flex flex-col gap-6 h-full">
+          {/* SAĞ TARAF - YAN MENÜ */}
+          <div className="lg:col-span-4 space-y-6">
             
             {/* 1. KUTU: YAKLAŞAN ETKİNLİKLER */}
-            <div className="bg-white rounded-[24px] shadow-lg border border-gray-100 p-5 relative overflow-hidden flex-shrink-0">
+            <div className="bg-white rounded-[24px] shadow-lg border border-gray-100 p-5 relative overflow-hidden">
               <h2 className="text-lg font-extrabold text-gray-900 mb-4 flex items-center gap-2 relative z-10">
                 <span className="bg-blue-100 text-blue-600 p-1.5 rounded-lg">
                   <FaCalendarCheck size={14} />
@@ -327,8 +324,7 @@ export default function Home() {
             </div>
             
             {/* 2. KUTU: DİNAMİK TANITIM VİDEOSU */}
-            {/* flex-1 (kalan boşluğu doldur) ve h-full (yüksekliği eşitle) */}
-            <div className="bg-white rounded-[24px] shadow-lg border border-gray-100 p-5 flex flex-col flex-1 h-full">
+            <div className="bg-white rounded-[24px] shadow-lg border border-gray-100 p-5">
                <h2 className="text-lg font-extrabold text-gray-900 mb-4 flex items-center gap-2">
                   <span className="bg-red-100 text-red-600 p-1.5 rounded-lg">
                      <FaPlayCircle size={14} />
@@ -336,7 +332,7 @@ export default function Home() {
                   Salonlarımızı Keşfet
                </h2>
                
-               <div className="relative w-full flex-grow rounded-xl overflow-hidden shadow-sm bg-black group cursor-pointer min-h-[200px]">
+               <div className="relative w-full aspect-video rounded-xl overflow-hidden shadow-sm bg-black group cursor-pointer">
                   <iframe 
                     width="100%" 
                     height="100%" 
@@ -348,7 +344,7 @@ export default function Home() {
                     className="absolute top-0 left-0 w-full h-full"
                   ></iframe>
                </div>
-               <p className="text-xs text-gray-500 mt-3 leading-relaxed pt-2 border-t border-gray-50">
+               <p className="text-xs text-gray-500 mt-3 leading-relaxed">
                   Konferans salonlarımız, laboratuvarlarımız ve kampüs olanaklarımızı yakından inceleyin.
                </p>
             </div>
