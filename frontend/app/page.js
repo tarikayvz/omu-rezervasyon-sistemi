@@ -130,6 +130,8 @@ export default function Home() {
   const [videoUrl, setVideoUrl] = useState("https://www.youtube.com/embed/LXb3EKWsInQ?si=7y-s4g-s-4g-s-4g");
 
   useEffect(() => {
+    let isMounted = true; // Memory leak önlemek için
+
     const fetchData = async () => {
       try {
         const [resAnn, resEvt] = await Promise.all([
@@ -137,33 +139,40 @@ export default function Home() {
           axios.get(`${API_URL}/events`),
         ])
         
-        const sortedAnnouncements = resAnn.data.sort((a, b) => new Date(b.date) - new Date(a.date));
-        setAnnouncements(sortedAnnouncements)
-        
-        setUpcomingEvents(
-          resEvt.data
-            .filter((e) => e.isApproved && new Date(e.endDate) >= new Date())
-            .sort((a, b) => new Date(a.startDate) - new Date(b.startDate))
-            .slice(0, 5),
-        )
+        if (isMounted) {
+            const sortedAnnouncements = resAnn.data.sort((a, b) => new Date(b.date) - new Date(a.date));
+            setAnnouncements(sortedAnnouncements)
+            
+            setUpcomingEvents(
+              resEvt.data
+                .filter((e) => e.isApproved && new Date(e.endDate) >= new Date())
+                .sort((a, b) => new Date(a.startDate) - new Date(b.startDate))
+                .slice(0, 5),
+            )
+        }
       } catch (error) {
         console.error("Veri Çekme Hatası:", error)
       }
     }
     fetchData()
 
-    const savedVideo = localStorage.getItem('homeVideoUrl');
-    if (savedVideo) {
-        let embedUrl = savedVideo;
-        if (savedVideo.includes("watch?v=")) {
-            const videoId = savedVideo.split("v=")[1].split("&")[0];
-            embedUrl = `https://www.youtube.com/embed/${videoId}`;
-        } else if (savedVideo.includes("youtu.be/")) {
-            const videoId = savedVideo.split("youtu.be/")[1];
-            embedUrl = `https://www.youtube.com/embed/${videoId}`;
+    // --- VİDEOYU GÜVENLİ ÇEKME İŞLEMİ (ESLINT FIX) ---
+    if (typeof window !== 'undefined') {
+        const savedVideo = localStorage.getItem('homeVideoUrl');
+        if (savedVideo && isMounted) {
+            let embedUrl = savedVideo;
+            if (savedVideo.includes("watch?v=")) {
+                const videoId = savedVideo.split("v=")[1].split("&")[0];
+                embedUrl = `https://www.youtube.com/embed/${videoId}`;
+            } else if (savedVideo.includes("youtu.be/")) {
+                const videoId = savedVideo.split("youtu.be/")[1];
+                embedUrl = `https://www.youtube.com/embed/${videoId}`;
+            }
+            setVideoUrl(embedUrl);
         }
-        setVideoUrl(embedUrl);
     }
+
+    return () => { isMounted = false; };
   }, [])
 
   return (
@@ -192,7 +201,7 @@ export default function Home() {
 
       <main className="container mx-auto max-w-7xl px-4 sm:px-6 py-6 flex-grow overflow-x-hidden -mt-8 relative z-20">
         
-        {/* --- GRID YAPISI --- */}
+        {/* --- GRID YAPISI (EŞİTLEME İÇİN 'items-stretch' KULLANILDI) --- */}
         <div className="grid lg:grid-cols-12 gap-8 md:gap-10 mb-16 items-stretch">
           
           {/* SOL TARAF (8 KOLON) */}
@@ -214,22 +223,22 @@ export default function Home() {
               <MainNewsSlider announcements={announcements} />
             </section>
 
-            {/* SON EKLENENLER LİSTESİ */}
+            {/* SON EKLENENLER (3'lü Slider) */}
             {announcements.length > 0 && (
               <section className="overflow-hidden max-w-full flex-grow flex flex-col">
                 <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3 pl-1">
                   Son Eklenenler
                 </h3>
                 
-                {/* --- SWIPER AYARLARI GÜNCELLENDİ (MOBİL İÇİN 2) --- */}
+                {/* --- 3 TANE GÖZÜKMESİ İÇİN AYARLAR --- */}
                 <div className="flex-grow">
                     <Swiper
                       modules={[Pagination]}
-                      spaceBetween={12} // Mobilde aralık daha dar
-                      slidesPerView={2} // MOBİLDE 2 TANE GÖZÜKSÜN (İSTEĞİNİZ ÜZERİNE)
+                      spaceBetween={15} // Boşluk ayarı
+                      slidesPerView={2} // MOBİLDE 2 TANE
                       breakpoints={{
-                        640: { slidesPerView: 2, spaceBetween: 20 }, // Tablette 2 tane
-                        1024: { slidesPerView: 3, spaceBetween: 20 }, // Masaüstünde 3 tane
+                        640: { slidesPerView: 2, spaceBetween: 15 },
+                        1024: { slidesPerView: 3, spaceBetween: 20 }, // MASAÜSTÜNDE 3
                       }}
                       pagination={{ clickable: true }}
                       className="pb-10 !overflow-visible h-full"
@@ -244,21 +253,20 @@ export default function Home() {
                             href={`/duyuru/${ann.id}`}
                             className="flex flex-col bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-300 h-full overflow-hidden group"
                           >
-                            {/* Resim Alanı */}
-                            <div className="h-28 md:h-40 w-full bg-gray-100 overflow-hidden relative flex-shrink-0">
+                            {/* Resim Alanı DÜZELTİLDİ: h-40 ve relative position */}
+                            <div className="h-32 md:h-40 w-full bg-gray-100 relative flex-shrink-0">
                                <img
                                  src={imgUrl}
-                                 className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                                 className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                                  alt={ann.title}
                                  onError={(e) => { e.target.src = "https://placehold.co/600x400?text=Resim+Yok" }}
                                />
-                               <div className="absolute top-2 left-2 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-lg text-[8px] md:text-[10px] font-bold text-gray-600 flex items-center gap-1 shadow-sm">
+                               <div className="absolute top-2 left-2 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-lg text-[9px] md:text-[10px] font-bold text-gray-600 flex items-center gap-1 shadow-sm z-10">
                                   <FaCalendarAlt size={10} className="text-red-500"/> 
                                   {new Date(ann.date).toLocaleDateString("tr-TR")}
                                </div>
                             </div>
                             
-                            {/* İçerik Alanı */}
                             <div className="p-3 md:p-4 flex flex-col flex-grow justify-between">
                               <h4 className="font-bold text-gray-900 text-xs md:text-sm leading-snug line-clamp-2 group-hover:text-[#E30613] transition-colors">
                                   {ann.title}
@@ -279,10 +287,10 @@ export default function Home() {
             )}
           </div>
 
-          {/* SAĞ TARAF - YAN MENÜ (4 KOLON) */}
+          {/* SAĞ TARAF - YAN MENÜ */}
           <div className="lg:col-span-4 flex flex-col gap-6 h-full">
             
-            {/* 1. YAKLAŞAN ETKİNLİKLER */}
+            {/* 1. KUTU: YAKLAŞAN ETKİNLİKLER */}
             <div className="bg-white rounded-[24px] shadow-lg border border-gray-100 p-5 relative overflow-hidden flex-shrink-0">
               <h2 className="text-lg font-extrabold text-gray-900 mb-4 flex items-center gap-2 relative z-10">
                 <span className="bg-blue-100 text-blue-600 p-1.5 rounded-lg">
@@ -327,7 +335,7 @@ export default function Home() {
               </Link>
             </div>
             
-            {/* 2. DİNAMİK TANITIM VİDEOSU */}
+            {/* 2. KUTU: DİNAMİK TANITIM VİDEOSU */}
             <div className="bg-white rounded-[24px] shadow-lg border border-gray-100 p-5 flex flex-col flex-1 h-full">
                <h2 className="text-lg font-extrabold text-gray-900 mb-4 flex items-center gap-2">
                   <span className="bg-red-100 text-red-600 p-1.5 rounded-lg">
