@@ -127,11 +127,10 @@ function MainNewsSlider({ announcements }) {
 export default function Home() {
   const [announcements, setAnnouncements] = useState([])
   const [upcomingEvents, setUpcomingEvents] = useState([])
+  // VİDEO URL STATE'İ (Varsayılan video eklendi)
   const [videoUrl, setVideoUrl] = useState("https://www.youtube.com/embed/LXb3EKWsInQ?si=7y-s4g-s-4g-s-4g");
 
   useEffect(() => {
-    let isMounted = true; // Memory leak önlemek için
-
     const fetchData = async () => {
       try {
         const [resAnn, resEvt] = await Promise.all([
@@ -139,40 +138,36 @@ export default function Home() {
           axios.get(`${API_URL}/events`),
         ])
         
-        if (isMounted) {
-            const sortedAnnouncements = resAnn.data.sort((a, b) => new Date(b.date) - new Date(a.date));
-            setAnnouncements(sortedAnnouncements)
-            
-            setUpcomingEvents(
-              resEvt.data
-                .filter((e) => e.isApproved && new Date(e.endDate) >= new Date())
-                .sort((a, b) => new Date(a.startDate) - new Date(b.startDate))
-                .slice(0, 5),
-            )
-        }
+        // Duyuruları tarihe göre sırala (Yeni -> Eski)
+        const sortedAnnouncements = resAnn.data.sort((a, b) => new Date(b.date) - new Date(a.date));
+        setAnnouncements(sortedAnnouncements)
+        
+        setUpcomingEvents(
+          resEvt.data
+            .filter((e) => e.isApproved && new Date(e.endDate) >= new Date())
+            .sort((a, b) => new Date(a.startDate) - new Date(b.startDate))
+            .slice(0, 5),
+        )
       } catch (error) {
         console.error("Veri Çekme Hatası:", error)
       }
     }
     fetchData()
 
-    // --- VİDEOYU GÜVENLİ ÇEKME İŞLEMİ (ESLINT FIX) ---
-    if (typeof window !== 'undefined') {
-        const savedVideo = localStorage.getItem('homeVideoUrl');
-        if (savedVideo && isMounted) {
-            let embedUrl = savedVideo;
-            if (savedVideo.includes("watch?v=")) {
-                const videoId = savedVideo.split("v=")[1].split("&")[0];
-                embedUrl = `https://www.youtube.com/embed/${videoId}`;
-            } else if (savedVideo.includes("youtu.be/")) {
-                const videoId = savedVideo.split("youtu.be/")[1];
-                embedUrl = `https://www.youtube.com/embed/${videoId}`;
-            }
-            setVideoUrl(embedUrl);
+    // --- VİDEOYU ÇEKME İŞLEMİ ---
+    const savedVideo = localStorage.getItem('homeVideoUrl');
+    if (savedVideo) {
+        let embedUrl = savedVideo;
+        // YouTube linkini embed formatına çevirme
+        if (savedVideo.includes("watch?v=")) {
+            const videoId = savedVideo.split("v=")[1].split("&")[0];
+            embedUrl = `https://www.youtube.com/embed/${videoId}`;
+        } else if (savedVideo.includes("youtu.be/")) {
+            const videoId = savedVideo.split("youtu.be/")[1];
+            embedUrl = `https://www.youtube.com/embed/${videoId}`;
         }
+        setVideoUrl(embedUrl);
     }
-
-    return () => { isMounted = false; };
   }, [])
 
   return (
@@ -200,11 +195,10 @@ export default function Home() {
       </div>
 
       <main className="container mx-auto max-w-7xl px-4 sm:px-6 py-6 flex-grow overflow-x-hidden -mt-8 relative z-20">
-        
-        {/* --- GRID YAPISI (EŞİTLEME İÇİN 'items-stretch' KULLANILDI) --- */}
+        {/* 'items-stretch' ekledik: Sağ ve Sol sütunlar eşit boyda olacak */}
         <div className="grid lg:grid-cols-12 gap-8 md:gap-10 mb-16 items-stretch">
           
-          {/* SOL TARAF (8 KOLON) */}
+          {/* SOL TARAF - DUYURULAR (8 KOLON) */}
           <div className="lg:col-span-8 flex flex-col gap-8">
             <section className="overflow-hidden">
               <div className="flex justify-between items-end mb-4 pl-1 border-b border-gray-200 pb-2">
@@ -223,22 +217,21 @@ export default function Home() {
               <MainNewsSlider announcements={announcements} />
             </section>
 
-            {/* SON EKLENENLER (3'lü Slider) */}
+            {/* DİĞER DUYURULAR LİSTESİ */}
             {announcements.length > 0 && (
               <section className="overflow-hidden max-w-full flex-grow flex flex-col">
                 <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3 pl-1">
                   Son Eklenenler
                 </h3>
-                
-                {/* --- 3 TANE GÖZÜKMESİ İÇİN AYARLAR --- */}
+                {/* 3'LÜ SLIDER AYARI */}
                 <div className="flex-grow">
                     <Swiper
                       modules={[Pagination]}
-                      spaceBetween={15} // Boşluk ayarı
-                      slidesPerView={2} // MOBİLDE 2 TANE
+                      spaceBetween={20}
+                      slidesPerView={1}
                       breakpoints={{
-                        640: { slidesPerView: 2, spaceBetween: 15 },
-                        1024: { slidesPerView: 3, spaceBetween: 20 }, // MASAÜSTÜNDE 3
+                        640: { slidesPerView: 2 },
+                        1024: { slidesPerView: 3 }, // 3 Tane Yan Yana
                       }}
                       pagination={{ clickable: true }}
                       className="pb-10 !overflow-visible h-full"
@@ -253,27 +246,24 @@ export default function Home() {
                             href={`/duyuru/${ann.id}`}
                             className="flex flex-col bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-300 h-full overflow-hidden group"
                           >
-                            {/* Resim Alanı DÜZELTİLDİ: h-40 ve relative position */}
-                            <div className="h-32 md:h-40 w-full bg-gray-100 relative flex-shrink-0">
+                            <div className="h-40 w-full bg-gray-100 overflow-hidden relative flex-shrink-0">
                                <img
                                  src={imgUrl}
-                                 className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                                 className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                                  alt={ann.title}
                                  onError={(e) => { e.target.src = "https://placehold.co/600x400?text=Resim+Yok" }}
                                />
-                               <div className="absolute top-2 left-2 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-lg text-[9px] md:text-[10px] font-bold text-gray-600 flex items-center gap-1 shadow-sm z-10">
+                               <div className="absolute top-2 left-2 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-lg text-[10px] font-bold text-gray-600 flex items-center gap-1 shadow-sm">
                                   <FaCalendarAlt size={10} className="text-red-500"/> 
                                   {new Date(ann.date).toLocaleDateString("tr-TR")}
                                </div>
                             </div>
                             
-                            <div className="p-3 md:p-4 flex flex-col flex-grow justify-between">
-                              <h4 className="font-bold text-gray-900 text-xs md:text-sm leading-snug line-clamp-2 group-hover:text-[#E30613] transition-colors">
-                                  {ann.title}
-                              </h4>
+                            <div className="p-4 flex flex-col flex-grow justify-between">
+                              <h4 className="font-bold text-gray-900 text-sm leading-snug line-clamp-2 group-hover:text-[#E30613] transition-colors">{ann.title}</h4>
                               <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-50">
-                                  <span className="text-[9px] md:text-[10px] font-bold text-gray-400 uppercase tracking-wide">Duyuru</span>
-                                  <span className="text-[9px] md:text-[10px] text-blue-600 font-bold flex items-center gap-1 group-hover:gap-2 transition-all">
+                                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">Duyuru</span>
+                                  <span className="text-[10px] text-blue-600 font-bold flex items-center gap-1 group-hover:gap-2 transition-all">
                                     Oku <FaArrowRight size={8} />
                                   </span>
                               </div>
@@ -287,7 +277,8 @@ export default function Home() {
             )}
           </div>
 
-          {/* SAĞ TARAF - YAN MENÜ */}
+          {/* SAĞ TARAF - YAN MENÜ (4 KOLON) */}
+          {/* h-full ve flex-col ekledik */}
           <div className="lg:col-span-4 flex flex-col gap-6 h-full">
             
             {/* 1. KUTU: YAKLAŞAN ETKİNLİKLER */}
@@ -336,6 +327,7 @@ export default function Home() {
             </div>
             
             {/* 2. KUTU: DİNAMİK TANITIM VİDEOSU */}
+            {/* flex-1 (kalan boşluğu doldur) ve h-full (yüksekliği eşitle) */}
             <div className="bg-white rounded-[24px] shadow-lg border border-gray-100 p-5 flex flex-col flex-1 h-full">
                <h2 className="text-lg font-extrabold text-gray-900 mb-4 flex items-center gap-2">
                   <span className="bg-red-100 text-red-600 p-1.5 rounded-lg">
