@@ -127,7 +127,6 @@ function MainNewsSlider({ announcements }) {
 export default function Home() {
   const [announcements, setAnnouncements] = useState([])
   const [upcomingEvents, setUpcomingEvents] = useState([])
-  // VİDEO URL STATE'İ (Varsayılan video eklendi)
   const [videoUrl, setVideoUrl] = useState("https://www.youtube.com/embed/LXb3EKWsInQ?si=7y-s4g-s-4g-s-4g");
 
   useEffect(() => {
@@ -138,7 +137,6 @@ export default function Home() {
           axios.get(`${API_URL}/events`),
         ])
         
-        // Duyuruları tarihe göre sırala (Yeni -> Eski)
         const sortedAnnouncements = resAnn.data.sort((a, b) => new Date(b.date) - new Date(a.date));
         setAnnouncements(sortedAnnouncements)
         
@@ -154,11 +152,9 @@ export default function Home() {
     }
     fetchData()
 
-    // --- VİDEOYU ÇEKME İŞLEMİ ---
     const savedVideo = localStorage.getItem('homeVideoUrl');
     if (savedVideo) {
         let embedUrl = savedVideo;
-        // YouTube linkini embed formatına çevirme
         if (savedVideo.includes("watch?v=")) {
             const videoId = savedVideo.split("v=")[1].split("&")[0];
             embedUrl = `https://www.youtube.com/embed/${videoId}`;
@@ -222,13 +218,14 @@ export default function Home() {
                 <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3 pl-1">
                   Son Eklenenler
                 </h3>
+                {/* GÜNCELLEME BURADA: slidesPerView ayarlandı */}
                 <Swiper
                   modules={[Pagination]}
                   spaceBetween={16}
                   slidesPerView={1}
                   breakpoints={{
                     640: { slidesPerView: 2, spaceBetween: 20 },
-                    1024: { slidesPerView: 2, spaceBetween: 20 },
+                    1024: { slidesPerView: 3, spaceBetween: 20 }, // 3 Tane gösterir
                   }}
                   pagination={{ clickable: true }}
                   className="pb-8 !overflow-visible"
@@ -329,7 +326,7 @@ export default function Home() {
                   <iframe 
                     width="100%" 
                     height="100%" 
-                    src={videoUrl} // State'ten gelen dinamik URL
+                    src={videoUrl} 
                     title="Salon Tanıtım" 
                     frameBorder="0" 
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
