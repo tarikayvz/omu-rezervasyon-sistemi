@@ -12,7 +12,9 @@ import {
   FaChevronLeft,
   FaChevronRight,
   FaImages,
-  FaQuoteLeft
+  FaQuoteLeft,
+  FaFileDownload,
+  FaCommentDots
 } from 'react-icons/fa';
 import API_URL from '../../../utils/api';
 
@@ -33,6 +35,16 @@ export default function DuyuruDetayPage() {
   const [announcement, setAnnouncement] = useState(null);
   const [loading, setLoading] = useState(true);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
+  // Örnek Dökümanlar ve Yorumlar (Gerçek API'den çekilecek)
+  const documents = [
+    { name: 'Etkinlik Programı.pdf', size: '1.2 MB' },
+    { name: 'Katılım Formu.docx', size: '500 KB' },
+  ];
+  const comments = [
+    { user: 'Ahmet Yılmaz', date: '29 Aralık 2025', text: 'Çok faydalı bir etkinlik olacağa benziyor, kesinlikle katılacağım.' },
+    { user: 'Ayşe Demir', date: '30 Aralık 2025', text: 'Teşekkürler bilgilendirme için.' },
+  ];
 
   useEffect(() => {
     const fetchAnnouncement = async () => {
@@ -105,9 +117,6 @@ export default function DuyuruDetayPage() {
 
         <div className="bg-white rounded-[2.5rem] shadow-2xl shadow-gray-200/50 border border-gray-100 overflow-hidden ring-1 ring-gray-100 relative">
             
-            {/* Dekoratif Üst Çizgi */}
-            <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-red-500 via-red-600 to-red-800"></div>
-
             {/* Başlık Alanı */}
             <div className="p-8 md:p-14 border-b border-gray-50 bg-gradient-to-b from-white to-gray-50/50">
                 <div className="flex flex-wrap items-center gap-3 text-sm font-bold mb-6 tracking-wide">
@@ -129,7 +138,7 @@ export default function DuyuruDetayPage() {
 
                 {/* --- SİNEMATİK GALERİ --- */}
                 {announcement.images && announcement.images.length > 0 && (
-                     <div className="mb-14 relative group rounded-3xl overflow-hidden shadow-2xl bg-gray-900 h-[400px] md:h-[550px] ring-4 ring-white">
+                     <div className="mb-14 relative group rounded-3xl overflow-hidden shadow-2xl bg-gray-900 ring-4 ring-white">
                         {/* Arka Plan Blur */}
                         <div
                             className="absolute inset-0 bg-cover bg-center opacity-40 blur-2xl scale-125 transition-all duration-700"
@@ -137,11 +146,12 @@ export default function DuyuruDetayPage() {
                         ></div>
 
                         {/* Resim Container */}
-                        <div className="relative z-10 w-full h-full flex items-center justify-center p-4">
+                        <div className="relative z-10 w-full flex items-center justify-center p-4">
+                            {/* Resim Boyutu Sabitlendi: h-[400px] ve object-cover */}
                             <img
                                 src={activeImage}
                                 alt="Slide"
-                                className="max-h-full max-w-full object-contain shadow-2xl rounded-lg transition-transform duration-500 hover:scale-[1.02]"
+                                className="w-full h-[400px] object-cover shadow-2xl rounded-lg transition-transform duration-500 hover:scale-[1.02]"
                             />
                         </div>
 
@@ -180,17 +190,71 @@ export default function DuyuruDetayPage() {
                     
                     {/* Metin İçeriği */}
                     <div className="relative z-10 prose prose-lg md:prose-xl prose-slate max-w-none text-gray-700 leading-9">
-                        
-                        {/* Drop Cap Efekti (İlk Harf Büyük) */}
-                        <div className="first-letter:text-6xl first-letter:font-black first-letter:text-red-700 first-letter:float-left first-letter:mr-3 first-letter:mt-[-10px] first-letter:leading-none">
-                             <p className="whitespace-pre-wrap">{announcement.description}</p>
-                        </div>
-                    
+                        {/* Drop Cap Kaldırıldı */}
+                        <p className="whitespace-pre-wrap">{announcement.description}</p>
                     </div>
 
                     {/* Alt Dekoratif İkon */}
                     <div className="mt-12 flex justify-center opacity-20">
                          <FaQuoteLeft size={40} className="text-gray-400"/>
+                    </div>
+                </div>
+
+                {/* --- YENİ: İLGİLİ DÖKÜMANLAR --- */}
+                {documents.length > 0 && (
+                    <div className="mt-12 border-t border-gray-100 pt-8">
+                        <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                            <FaFileDownload className="text-red-600"/> İlgili Dökümanlar
+                        </h3>
+                        <div className="grid gap-4 md:grid-cols-2">
+                            {documents.map((doc, index) => (
+                                <a key={index} href="#" className="flex items-center gap-4 p-4 bg-gray-50 rounded-2xl border border-gray-200 hover:bg-white hover:shadow-md transition-all group">
+                                    <div className="w-12 h-12 bg-red-100 text-red-600 rounded-xl flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">
+                                        <FaFileDownload />
+                                    </div>
+                                    <div>
+                                        <p className="font-bold text-gray-900">{doc.name}</p>
+                                        <p className="text-sm text-gray-500">{doc.size}</p>
+                                    </div>
+                                </a>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
+                {/* --- YENİ: YORUMLAR --- */}
+                <div className="mt-12 border-t border-gray-100 pt-8">
+                    <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                        <FaCommentDots className="text-red-600"/> Yorumlar ({comments.length})
+                    </h3>
+                    
+                    {/* Yorum Yapma Formu */}
+                    <div className="bg-gray-50 p-6 rounded-2xl border border-gray-200 mb-8">
+                        <h4 className="font-bold text-gray-700 mb-4">Bir Yorum Bırakın</h4>
+                        <div className="grid gap-4 md:grid-cols-2 mb-4">
+                            <input type="text" placeholder="Adınız Soyadınız" className="w-full p-3 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-red-200 focus:border-red-500 outline-none transition" />
+                            <input type="email" placeholder="E-posta Adresiniz" className="w-full p-3 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-red-200 focus:border-red-500 outline-none transition" />
+                        </div>
+                        <textarea placeholder="Yorumunuzu buraya yazın..." rows="4" className="w-full p-3 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-red-200 focus:border-red-500 outline-none transition resize-none mb-4"></textarea>
+                        <button className="bg-red-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-red-700 transition-all shadow-md hover:shadow-lg">Yorumu Gönder</button>
+                    </div>
+
+                    {/* Yorum Listesi */}
+                    <div className="space-y-6">
+                        {comments.map((comment, index) => (
+                            <div key={index} className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+                                <div className="flex justify-between items-start mb-4">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center text-gray-500 font-bold">{comment.user.charAt(0)}</div>
+                                        <div>
+                                            <h5 className="font-bold text-gray-900">{comment.user}</h5>
+                                            <p className="text-sm text-gray-500">{comment.date}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <p className="text-gray-700 leading-relaxed">{comment.text}</p>
+                            </div>
+                        ))}
                     </div>
                 </div>
 
