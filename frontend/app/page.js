@@ -218,44 +218,54 @@ export default function Home() {
                 <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3 pl-1">
                   Son Eklenenler
                 </h3>
-                {/* GÜNCELLEME BURADA: slidesPerView ayarlandı */}
+                {/* --- BURASI DÜZELTİLDİ: slidesPerView ayarları güncellendi ve !w-full kaldırıldı --- */}
                 <Swiper
                   modules={[Pagination]}
-                  spaceBetween={16}
-                  slidesPerView={1}
+                  spaceBetween={20} // Kartlar arası boşluk
+                  slidesPerView={1} // Mobilde 1 tane
                   breakpoints={{
-                    640: { slidesPerView: 2, spaceBetween: 20 },
-                    1024: { slidesPerView: 3, spaceBetween: 20 }, // 3 Tane gösterir
+                    640: { slidesPerView: 2 }, // Tablette 2 tane
+                    1024: { slidesPerView: 3 }, // Masaüstünde 3 tane
                   }}
                   pagination={{ clickable: true }}
-                  className="pb-8 !overflow-visible"
-                  style={{ overflow: "hidden" }}
+                  className="pb-10 !overflow-visible" // Alt nokta (pagination) için yer açtık
+                  style={{ paddingBottom: '40px' }} // Pagination'ın kesilmemesi için padding
                 >
                   {announcements.map((ann) => {
                     const rawImage = ann.image || ann.images;
                     const imgUrl = getImageUrl(rawImage);
                     return (
-                    <SwiperSlide key={ann.id} className="!w-full">
+                    <SwiperSlide key={ann.id}> {/* !w-full kaldırıldı */}
                       <Link
                         href={`/duyuru/${ann.id}`}
-                        className="flex bg-white p-3 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition gap-3 items-center h-24 group"
+                        className="flex flex-col bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-300 h-[280px] overflow-hidden group"
                       >
-                        <div className="w-20 h-20 bg-black rounded-xl overflow-hidden flex-shrink-0 relative border border-gray-200">
+                        {/* Resim Alanı */}
+                        <div className="h-40 w-full bg-gray-100 overflow-hidden relative">
                            <img
                              src={imgUrl}
-                             className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-110"
+                             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                              alt={ann.title}
                              onError={(e) => { e.target.src = "https://placehold.co/600x400?text=Resim+Yok" }}
                            />
+                           {/* Tarih Etiketi */}
+                           <div className="absolute top-2 left-2 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-lg text-[10px] font-bold text-gray-600 flex items-center gap-1 shadow-sm">
+                              <FaCalendarAlt size={10} className="text-red-500"/> 
+                              {new Date(ann.date).toLocaleDateString("tr-TR")}
+                           </div>
                         </div>
-                        <div className="flex flex-col justify-center h-full py-1 min-w-0">
-                          <span className="text-[10px] font-bold text-gray-400 mb-0.5 flex items-center gap-1">
-                            <FaCalendarAlt size={10}/> {new Date(ann.date).toLocaleDateString("tr-TR")}
-                          </span>
-                          <h4 className="font-bold text-gray-800 text-sm leading-tight line-clamp-2 group-hover:text-[#E30613] transition-colors">{ann.title}</h4>
-                          <span className="text-[10px] text-blue-600 font-bold mt-auto flex items-center gap-1">
-                            Oku <FaArrowRight size={8} />
-                          </span>
+                        
+                        {/* İçerik Alanı */}
+                        <div className="p-4 flex flex-col flex-grow justify-between">
+                          <h4 className="font-bold text-gray-900 text-sm leading-snug line-clamp-2 group-hover:text-[#E30613] transition-colors">
+                              {ann.title}
+                          </h4>
+                          <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-50">
+                              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">Duyuru</span>
+                              <span className="text-[10px] text-blue-600 font-bold flex items-center gap-1 group-hover:gap-2 transition-all">
+                                Oku <FaArrowRight size={8} />
+                              </span>
+                          </div>
                         </div>
                       </Link>
                     </SwiperSlide>
