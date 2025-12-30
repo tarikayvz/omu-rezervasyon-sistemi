@@ -4,7 +4,15 @@ import { useState, useEffect } from "react"
 import axios from "axios"
 import Header from "../components/Header"
 import Link from "next/link"
-import { FaChevronRight, FaCalendarAlt, FaMapMarkerAlt, FaArrowRight, FaClock, FaCalendarCheck } from "react-icons/fa"
+import { 
+  FaChevronRight, 
+  FaCalendarAlt, 
+  FaMapMarkerAlt, 
+  FaArrowRight, 
+  FaClock, 
+  FaCalendarCheck,
+  FaPlayCircle // YENİ: Video ikonu eklendi
+} from "react-icons/fa"
 
 // --- AYARLAR ---
 const RENDER_BACKEND_URL = "https://omu-backend.onrender.com"; 
@@ -128,7 +136,10 @@ export default function Home() {
           axios.get(`${API_URL}/events`),
         ])
         
-        setAnnouncements(resAnn.data)
+        // Duyuruları tarihe göre sırala (Yeni -> Eski)
+        const sortedAnnouncements = resAnn.data.sort((a, b) => new Date(b.date) - new Date(a.date));
+        setAnnouncements(sortedAnnouncements)
+        
         setUpcomingEvents(
           resEvt.data
             .filter((e) => e.isApproved && new Date(e.endDate) >= new Date())
@@ -146,57 +157,54 @@ export default function Home() {
     <div className="min-h-screen bg-gray-50 font-sans flex flex-col overflow-x-hidden">
       <Header />
 
-      {/* --- GÜNCELLENMİŞ HERO ALANI (DAHA KÜÇÜK) --- */}
-      {/* Yükseklik h-[250px] md:h-[300px] olarak ayarlandı */}
+      {/* --- HERO ALANI --- */}
       <div className="relative bg-gradient-to-r from-red-900 via-red-800 to-red-900 h-[250px] md:h-[300px] w-full overflow-hidden flex flex-col items-center justify-center text-center px-4">
-         
-         {/* Desen */}
          <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-20"></div>
-         
-         {/* Işık Efekti */}
          <div className="absolute top-0 left-1/4 w-80 h-80 bg-red-600 rounded-full mix-blend-overlay filter blur-3xl opacity-30 animate-pulse"></div>
          <div className="absolute bottom-0 right-1/4 w-80 h-80 bg-orange-600 rounded-full mix-blend-overlay filter blur-3xl opacity-20"></div>
 
-         {/* Yazılar (Boyutlar ve boşluklar küçültüldü) */}
          <div className="relative z-10 max-w-3xl space-y-3 mt-2">
              <span className="inline-block py-0.5 px-2.5 rounded-full bg-red-800/50 border border-red-700 text-red-100 text-[10px] md:text-xs font-bold tracking-widest uppercase mb-1 backdrop-blur-sm">
                 Mühendislik Fakültesi
              </span>
-             {/* Başlık boyutu küçültüldü: text-2xl md:text-4xl */}
              <h1 className="text-2xl md:text-4xl font-extrabold text-white tracking-tight leading-tight drop-shadow-lg">
                 Duyurular ve Etkinlikler
              </h1>
-             {/* Alt metin boyutu küçültüldü: text-sm md:text-base */}
              <p className="text-sm md:text-base text-red-100/90 max-w-xl mx-auto font-light leading-relaxed">
                 Fakültemizden en güncel akademik haberlere, etkinliklere ve duyurulara buradan ulaşabilirsiniz.
              </p>
          </div>
-
-         {/* Alt Geçiş (Yükseklik h-16 olarak ayarlandı) */}
          <div className="absolute bottom-0 left-0 w-full h-16 bg-gradient-to-t from-gray-50 to-transparent"></div>
       </div>
-      {/* --- HERO SONU --- */}
 
       <main className="container mx-auto max-w-7xl px-4 sm:px-6 py-6 flex-grow overflow-x-hidden -mt-8 relative z-20">
         <div className="grid lg:grid-cols-12 gap-8 md:gap-10 mb-16">
           
-          {/* SOL TARAF */}
+          {/* SOL TARAF - DUYURULAR */}
           <div className="lg:col-span-8 space-y-8 overflow-hidden">
             <section className="overflow-hidden">
-              <div className="flex items-center gap-2 mb-3 pl-1">
-                <span className="w-1.5 h-6 bg-[#E30613] rounded-full"></span>
-                <h2 className="text-xl font-extrabold text-gray-900">Öne Çıkanlar</h2>
+              <div className="flex justify-between items-end mb-4 pl-1 border-b border-gray-200 pb-2">
+                <div className="flex items-center gap-2">
+                   <span className="w-1.5 h-6 bg-[#E30613] rounded-full"></span>
+                   <h2 className="text-xl font-extrabold text-gray-900">Duyurular & Haberler</h2>
+                </div>
+                <Link 
+                    href="/duyurular" 
+                    className="group flex items-center gap-1 text-xs font-bold text-gray-500 hover:text-[#E30613] transition-colors mb-1"
+                >
+                    Tümünü Gör
+                    <FaArrowRight size={10} className="group-hover:translate-x-1 transition-transform" />
+                </Link>
               </div>
               <MainNewsSlider announcements={announcements} />
             </section>
 
-            {/* DİĞER DUYURULAR */}
+            {/* DİĞER DUYURULAR LİSTESİ */}
             {announcements.length > 0 && (
               <section className="overflow-hidden max-w-full">
                 <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3 pl-1">
-                  Tüm Duyurular Listesi
+                  Son Eklenenler
                 </h3>
-
                 <Swiper
                   modules={[Pagination]}
                   spaceBetween={16}
@@ -212,26 +220,25 @@ export default function Home() {
                   {announcements.map((ann) => {
                     const rawImage = ann.image || ann.images;
                     const imgUrl = getImageUrl(rawImage);
-                    
                     return (
                     <SwiperSlide key={ann.id} className="!w-full">
                       <Link
                         href={`/duyuru/${ann.id}`}
-                        className="flex bg-white p-3 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition gap-3 items-center h-24"
+                        className="flex bg-white p-3 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition gap-3 items-center h-24 group"
                       >
                         <div className="w-20 h-20 bg-black rounded-xl overflow-hidden flex-shrink-0 relative border border-gray-200">
                            <img
                              src={imgUrl}
-                             className="w-full h-full object-contain"
+                             className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-110"
                              alt={ann.title}
                              onError={(e) => { e.target.src = "https://placehold.co/600x400?text=Resim+Yok" }}
                            />
                         </div>
                         <div className="flex flex-col justify-center h-full py-1 min-w-0">
-                          <span className="text-[10px] font-bold text-gray-400 mb-0.5">
-                            {new Date(ann.date).toLocaleDateString("tr-TR")}
+                          <span className="text-[10px] font-bold text-gray-400 mb-0.5 flex items-center gap-1">
+                            <FaCalendarAlt size={10}/> {new Date(ann.date).toLocaleDateString("tr-TR")}
                           </span>
-                          <h4 className="font-bold text-gray-800 text-sm leading-tight line-clamp-2">{ann.title}</h4>
+                          <h4 className="font-bold text-gray-800 text-sm leading-tight line-clamp-2 group-hover:text-[#E30613] transition-colors">{ann.title}</h4>
                           <span className="text-[10px] text-blue-600 font-bold mt-auto flex items-center gap-1">
                             Oku <FaArrowRight size={8} />
                           </span>
@@ -244,8 +251,10 @@ export default function Home() {
             )}
           </div>
 
-          {/* SAĞ TARAF */}
+          {/* SAĞ TARAF - YAN MENÜ */}
           <div className="lg:col-span-4 space-y-6">
+            
+            {/* 1. KUTU: YAKLAŞAN ETKİNLİKLER */}
             <div className="bg-white rounded-[24px] shadow-lg border border-gray-100 p-5 relative overflow-hidden">
               <h2 className="text-lg font-extrabold text-gray-900 mb-4 flex items-center gap-2 relative z-10">
                 <span className="bg-blue-100 text-blue-600 p-1.5 rounded-lg">
@@ -259,7 +268,7 @@ export default function Home() {
                   <p className="text-gray-400 text-center py-4 text-sm">Etkinlik yok.</p>
                 ) : (
                   upcomingEvents.map((evt) => (
-                    <div key={evt.id} className="flex gap-3 items-center p-2.5 bg-gray-50 rounded-xl border border-gray-100">
+                    <div key={evt.id} className="flex gap-3 items-center p-2.5 bg-gray-50 rounded-xl border border-gray-100 hover:bg-gray-50 transition">
                       <div className="bg-white text-blue-700 rounded-lg p-1.5 text-center min-w-[50px] shadow-sm border border-gray-100">
                         <span className="block text-base font-black leading-none">
                           {new Date(evt.startDate).getDate()}
@@ -289,6 +298,34 @@ export default function Home() {
                 Tüm Takvimi Görüntüle
               </Link>
             </div>
+            
+            {/* 2. KUTU: TANITIM VİDEOSU (YENİ EKLENEN) */}
+            <div className="bg-white rounded-[24px] shadow-lg border border-gray-100 p-5">
+               <h2 className="text-lg font-extrabold text-gray-900 mb-4 flex items-center gap-2">
+                  <span className="bg-red-100 text-red-600 p-1.5 rounded-lg">
+                     <FaPlayCircle size={14} />
+                  </span>
+                  Fakülteyi Keşfet
+               </h2>
+               
+               <div className="relative w-full aspect-video rounded-xl overflow-hidden shadow-sm bg-black group cursor-pointer">
+                  {/* ÖRNEK VİDEO IFRAME - URL'yi kendi videonla değiştirebilirsin */}
+                  <iframe 
+                    width="100%" 
+                    height="100%" 
+                    src="https://www.youtube.com/embed/LXb3EKWsInQ?si=7y-s4g-s-4g-s-4g" // BURAYA KENDİ VİDEO URL'Nİ YAZ
+                    title="OMÜ Mühendislik Tanıtım" 
+                    frameBorder="0" 
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+                    allowFullScreen
+                    className="absolute top-0 left-0 w-full h-full"
+                  ></iframe>
+               </div>
+               <p className="text-xs text-gray-500 mt-3 leading-relaxed">
+                  Konferans salonlarımız, laboratuvarlarımız ve kampüs olanaklarımızı yakından inceleyin.
+               </p>
+            </div>
+
           </div>
         </div>
 
